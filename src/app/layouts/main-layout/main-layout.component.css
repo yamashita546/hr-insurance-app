@@ -1,14 +1,29 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 :host {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  min-height: 100vh;
 }
 
 .main-layout-container {
   display: flex;
   flex: 1 1 auto;
-  background: #f4f6f8;
   min-height: 0;
+  background: #f4f6f8;
+  align-items: stretch;
+  height: 100%;
+  overflow: hidden;
 }
 
 .main-content {
@@ -18,4 +33,6 @@
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   min-height: 0;
+  height: 100%;
+  overflow: auto;
 }

@@ -1,0 +1,17 @@
+{
+  "hosting": {
+    "site": "hr-insurance",
+    "public": "dist/hr-insurance",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

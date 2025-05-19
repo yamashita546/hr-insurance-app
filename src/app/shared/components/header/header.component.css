@@ -1,0 +1,20 @@
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 12px 32px;
+  border: none;
+  border-radius: 0 0 8px 8px;
+}
+.header-title {
+  font-weight: bold;
+  font-size: 1.3rem;
+  letter-spacing: 0.05em;
+}
+.header-account {
+  font-size: 1rem;
+  opacity: 0.9;
+}

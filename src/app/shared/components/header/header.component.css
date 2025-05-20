@@ -18,3 +18,12 @@
   font-size: 1rem;
   opacity: 0.9;
 }
+.header-title a,
+.header-title a:visited {
+  color: #f5f8fa;         /* お好きな色に */
+  text-decoration: none;
+  font-weight: bold;
+}
+.header-title a:hover {
+  text-decoration: underline;
+}

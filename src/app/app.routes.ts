@@ -7,16 +7,24 @@ import { SalaryListComponent } from './features/salary-data/pages/salary-list/sa
 import { AttendanceListComponent } from './features/attendance/pages/attendance-list/attendance-list.component';
 import { CsvExportComponent } from './features/export-import/pages/csv-export/csv-export.component';
 import { HistoryListComponent } from './features/history/pages/history-list/history-list.component';
-import { MasterListComponent } from './features/master/pages/master-list/master-list.component';
+import { MasterMainComponent } from './features/master/pages/master-main/master-main.component';
 import { RateListComponent } from './features/settings/pages/rate-list/rate-list.component';
 import { NotificationComponent } from './features/notification/pages/notification.component';
 import { DashboardComponent } from './features/dashboard/pages/dashboard/dashboard.component';
 import { HelpComponent } from './features/help/pages/help/help.component';
+import { LoginComponent } from './features/auth/pages/login/login.component';
+import { authGuard } from './core/guards/auth.guards';
+import { CompaniesComponent } from './features/master/pages/companies/companies.component';
+
+
+
 
 export const routes: Routes = [
+  { path: 'login', component: LoginComponent },
   {
     path: '',
     component: MainLayoutComponent,
+    canActivate: [authGuard],
     children: [
       { path: '', component: HomeComponent },
       { path: 'insurance-calc', component: InsuranceListComponent },
@@ -25,12 +33,12 @@ export const routes: Routes = [
       { path: 'attendance', component: AttendanceListComponent },
       { path: 'csv-export', component: CsvExportComponent },
       { path: 'history', component: HistoryListComponent },
-      { path: 'master', component: MasterListComponent },
+      { path: 'master', component: MasterMainComponent },
       { path: 'settings', component: RateListComponent },
       { path: 'notification', component: NotificationComponent },
       { path: 'dashboard', component: DashboardComponent },
       { path: 'help', component: HelpComponent },
+      { path: 'company-info', component: CompaniesComponent },
     ],
-    // canActivate: [AuthGuard],
   },
 ];

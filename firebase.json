@@ -1,7 +1,7 @@
 {
   "hosting": {
     "site": "hr-insurance",
-    "public": "dist/hr-insurance",
+    "public": "dist/hr-insurance/browser",
     "ignore": [
       "firebase.json",
       "**/.*",

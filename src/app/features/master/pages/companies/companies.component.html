@@ -1,0 +1,35 @@
+<div class="company-container">
+  <h1>企業情報管理</h1>
+  <div class="company-list">
+    <div class="company-item">
+      <button class="add-button" (click)="openAddCompanyDialog()">追加</button>
+      <button class="edit-button">編集</button>
+      <button class="delete-button">削除</button>
+    </div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>会社名</th>
+        <th>業種</th>
+        <th>所在地</th>
+        <th>代表メール</th>
+        <th>管理者メール</th>
+        <th>管理者名</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let company of companies">
+        <td>{{ company.name }}</td>
+        <td>{{ company.industry }}</td>
+        <td>{{ company.address }}</td>
+        <td>{{ company.contactEmail }}</td>
+        <td>{{ company.ownerEmail }}</td>
+        <td>{{ company.ownerName }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+

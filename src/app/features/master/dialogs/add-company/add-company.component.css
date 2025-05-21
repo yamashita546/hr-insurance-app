@@ -1,0 +1,75 @@
+.add-company-dialog {
+  min-width: 400px;
+  max-width: 400px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  padding: 28px 24px 20px 24px;
+}
+.add-company-dialog h2 {
+  font-size: 1.3rem;
+  margin-bottom: 18px;
+  text-align: center;
+  color: #1976d2;
+}
+.form-section {
+  margin-bottom: 18px;
+}
+.form-section h3 {
+  font-size: 1.08rem;
+  margin-bottom: 10px;
+  color: #333;
+}
+label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.98rem;
+  margin-bottom: 10px;
+  color: #222;
+}
+.input {
+  margin-top: 4px;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #fafbfc;
+  transition: border 0.2s;
+}
+.input:focus {
+  border: 1.5px solid #1976d2;
+  outline: none;
+  background: #fff;
+}
+.required {
+  color: #e53935;
+  font-size: 0.95em;
+  margin-left: 2px;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 18px;
+}
+.cancel-btn, .register-btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+.cancel-btn {
+  background: #eee;
+  color: #444;
+}
+.register-btn {
+  background: #1976d2;
+  color: #fff;
+  transition: background 0.2s;
+}
+.register-btn:hover {
+  background: #1565c0;
+}

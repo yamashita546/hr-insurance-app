@@ -1,1 +1,7 @@
-<p>register works!</p>
+<div class="register-container">
+  <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
+    <input type="email" formControlName="email" placeholder="メールアドレス" />
+    <input type="password" formControlName="password" placeholder="仮パスワード" />
+    <button type="submit">本登録</button>
+  </form>
+</div>

@@ -8,7 +8,7 @@ import { AttendanceListComponent } from './features/attendance/pages/attendance-
 import { CsvExportComponent } from './features/export-import/pages/csv-export/csv-export.component';
 import { HistoryListComponent } from './features/history/pages/history-list/history-list.component';
 import { MasterMainComponent } from './features/master/pages/master-main/master-main.component';
-import { RateListComponent } from './features/settings/pages/rate-list/rate-list.component';
+import { CompanySettingComponent } from './features/settings/pages/company-setting/company-setting.component';
 import { NotificationComponent } from './features/notification/pages/notification.component';
 import { DashboardComponent } from './features/dashboard/pages/dashboard/dashboard.component';
 import { HelpComponent } from './features/help/pages/help/help.component';
@@ -19,9 +19,11 @@ import { InsuranceRateComponent } from './features/master/pages/insurance-rate/i
 import { ManageAdminComponent } from './features/master/pages/manage-admin/manage-admin.component';
 import { StandardMonthlyComponent } from './features/master/pages/standard-monthly/standard-monthly.component';
 import { ManageUserComponent } from './features/auth/pages/manage-user/manage-user.component';
+import { RegisterComponent } from './features/auth/pages/register/register.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
   {
     path: '',
     component: MainLayoutComponent,
@@ -35,7 +37,7 @@ export const routes: Routes = [
       { path: 'csv-export', component: CsvExportComponent },
       { path: 'history', component: HistoryListComponent },
       { path: 'master', component: MasterMainComponent },
-      { path: 'settings', component: RateListComponent },
+      { path: 'settings', component: CompanySettingComponent },
       { path: 'notification', component: NotificationComponent },
       { path: 'dashboard', component: DashboardComponent },
       { path: 'help', component: HelpComponent },

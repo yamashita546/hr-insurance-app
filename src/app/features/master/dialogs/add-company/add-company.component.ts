@@ -5,6 +5,8 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { collection, query } from '@angular/fire/firestore';
 import { collectionData } from '@angular/fire/firestore';
+import { AppUser } from '../../../../core/models/user.model';
+
 
 @Component({
   selector: 'app-add-company',
@@ -52,7 +54,8 @@ export class AddCompanyComponent {
         email: this.form.value.ownerEmail,
         displayName: this.form.value.ownerName,
         companyId,
-        role: 'company_admin'
+        role: 'owner',
+        uid: this.form.value.ownerEmail
       }, this.form.value.ownerEmail);
       this.dialogRef.close(true);
     } catch (e: any) {

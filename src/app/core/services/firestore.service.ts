@@ -9,29 +9,9 @@ import {
   collectionData
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
+import { AppUser } from '../models/user.model';
+import { Company } from '../models/company.model';
 
-export type Company = {
-  companyId: string;
-  name: string;
-  industry?: string;
-  address?: string;
-  contactEmail?: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  isActive: boolean;
-};
-
-export type User = {
-  uid: string;
-  email: string;
-  displayName?: string;
-  companyId: string;
-  role: 'system_admin' | 'company_admin' | 'hr_staff' | 'employee';
-  invitedBy?: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  lastLoginAt?: Timestamp;
-};
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreService {
@@ -50,7 +30,7 @@ export class FirestoreService {
     return companyId;
   }
 
-  async addUser(user: Omit<User, 'uid' | 'createdAt' | 'updatedAt'>, uid: string) {
+  async addUser(user: Omit<AppUser, 'createdAt' | 'updatedAt'>, uid: string) {
     const now = Timestamp.now();
     await setDoc(doc(this.firestore, 'users', uid), {
       ...user,

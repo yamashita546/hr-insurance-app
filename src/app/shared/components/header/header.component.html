@@ -1,4 +1,15 @@
 <div class="header-container">
-  <div class="header-title" ><a routerLink="/">社会保険料管理システム</a></div>
-  <div class="header-account">アカウント情報</div>
+  <div class="header-title"><a routerLink="/">社会保険料管理システム</a></div>
+  <div class="header-account" (click)="toggleMenu()" tabindex="0">
+    <div class="account-icon">{{ userInitial }}</div>
+    <div class="account-name">{{ userName }}</div>
+    <div class="account-menu" *ngIf="menuOpen">
+      <div class="account-menu-item" (click)="goToAccountSettings($event)">
+        <span class="material-icons"></span> アカウント設定
+      </div>
+      <div class="account-menu-item" (click)="logout($event)">
+        <span class="material-icons"></span> ログアウト
+      </div>
+    </div>
+  </div>
 </div>

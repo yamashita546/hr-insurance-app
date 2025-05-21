@@ -15,9 +15,10 @@ import { HelpComponent } from './features/help/pages/help/help.component';
 import { LoginComponent } from './features/auth/pages/login/login.component';
 import { authGuard } from './core/guards/auth.guards';
 import { CompaniesComponent } from './features/master/pages/companies/companies.component';
-
-
-
+import { InsuranceRateComponent } from './features/master/pages/insurance-rate/insurance-rate.component';
+import { ManageAdminComponent } from './features/master/pages/manage-admin/manage-admin.component';
+import { StandardMonthlyComponent } from './features/master/pages/standard-monthly/standard-monthly.component';
+import { ManageUserComponent } from './features/auth/pages/manage-user/manage-user.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -39,6 +40,10 @@ export const routes: Routes = [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'help', component: HelpComponent },
       { path: 'company-info', component: CompaniesComponent },
+      { path: 'insurance-rate', component: InsuranceRateComponent },
+      { path: 'manage-admin', component: ManageAdminComponent },
+      { path: 'standard-monthly', component: StandardMonthlyComponent },
+      { path: 'manage-user', component: ManageUserComponent },
     ],
   },
 ];

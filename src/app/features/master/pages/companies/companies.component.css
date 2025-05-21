@@ -1,0 +1,80 @@
+/* 企業情報管理画面用スタイル */
+.company-container {
+  max-width: 900px;
+  padding: 32px 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+}
+.company-container h1 {
+  font-size: 1.7rem;
+  color: #1976d2;
+  margin-bottom: 28px;
+  text-align: center;
+}
+.company-list {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+.company-item button {
+  margin-left: 8px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.add-button {
+  background: #1976d2;
+  color: #fff;
+}
+.add-button:hover {
+  background: #1565c0;
+}
+.edit-button {
+  background: #fff3e0;
+  color: #ff9800;
+  border: 1px solid #ff9800;
+}
+.edit-button:hover {
+  background: #ffe0b2;
+}
+.delete-button {
+  background: #ffebee;
+  color: #e53935;
+  border: 1px solid #e53935;
+}
+.delete-button:hover {
+  background: #ffcdd2;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fafbfc;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+thead {
+  background: #f5f5f5;
+}
+th, td {
+  padding: 14px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 1rem;
+}
+th {
+  color: #1976d2;
+  font-weight: bold;
+  background: #f0f7ff;
+}
+tr:last-child td {
+  border-bottom: none;
+}
+tr:hover {
+  background: #f5faff;
+}

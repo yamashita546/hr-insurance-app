@@ -7,12 +7,13 @@ import {
   Timestamp,
   query,
   collectionData,
-  addDoc
+  addDoc,
+  deleteDoc
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { AppUser } from '../models/user.model';
 import { Company } from '../models/company.model';
-
+import { InsuranceRate } from '../models/insurance-rate.model';
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreService {
@@ -59,5 +60,36 @@ export class FirestoreService {
     const ref = collection(this.firestore, 'companies');
     const q = query(ref);
     return collectionData(q, { idField: 'companyId' }) as Observable<Company[]>;
+  }
+
+  // 健康保険料率マスタ追加
+  async addInsuranceRate(rate: Omit<InsuranceRate, 'id' | 'updatedAt'>) {
+    const now = Timestamp.now();
+    const docRef = await addDoc(collection(this.firestore, 'insuranceRates'), {
+      ...rate,
+      updatedAt: now
+    });
+    return docRef.id;
+  }
+
+  // 健康保険料率マスタ更新
+  async updateInsuranceRate(id: string, rate: Partial<InsuranceRate>) {
+    const now = Timestamp.now();
+    await setDoc(doc(this.firestore, 'insuranceRates', id), {
+      ...rate,
+      updatedAt: now
+    }, { merge: true });
+  }
+
+  // 健康保険料率マスタ削除
+  async deleteInsuranceRate(id: string) {
+    await deleteDoc(doc(this.firestore, 'insuranceRates', id));
+  }
+
+  // 健康保険料率マスタ一覧取得
+  getInsuranceRates(): Observable<InsuranceRate[]> {
+    const ref = collection(this.firestore, 'insuranceRates');
+    const q = query(ref);
+    return collectionData(q, { idField: 'id' }) as Observable<InsuranceRate[]>;
   }
 }

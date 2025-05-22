@@ -11,6 +11,7 @@
     <button class="add-btn" (click)="onAdd()">追加</button>
     <button class="edit-btn" [disabled]="!selectedRate" (click)="onEdit()">編集</button>
     <button class="delete-btn" [disabled]="!selectedRate" (click)="onDelete()">削除</button>
+    <button (click)="sortByPrefectureName()">都道府県名でソート</button>
   </div>
   <table class="rate-table">
     <thead>
@@ -19,10 +20,14 @@
         <th>年度</th>
         <th>適用開始</th>
         <th>適用終了</th>
+        <th>基本保険料率</th>
+        <th>特定保険料率</th>
         <th>健康保険料率</th>
-        <th>事業主負担</th>
-        <th>被保険者負担</th>
+        <th>健康保険折半割合</th>
         <th>介護保険料率</th>
+        <th>介護保険折半割合</th>
+        <th>厚生年金保険料率</th>
+        <th>厚生年金折半割合</th>
         <th>編集</th>
       </tr>
     </thead>
@@ -30,12 +35,16 @@
       <tr *ngFor="let rate of filteredRates" [class.selected]="rate === selectedRate" (click)="selectRate(rate)">
         <td>{{ rate.prefectureName }}</td>
         <td>{{ rate.validFrom | dateTimestamp:'yyyy' }}</td>
-        <td>{{ rate.validFrom | dateTimestamp:'yyyy/MM/dd' }}</td>
-        <td>{{ rate.validTo | dateTimestamp:'yyyy/MM/dd' }}</td>
+        <td>{{ rate.validFrom }}</td>
+        <td>{{ rate.validTo || '-' }}</td>
+        <td>{{ rate.healthInsuranceBaseRate }}</td>
+        <td>{{ rate.healthInsuranceSpecificRate }}</td>
         <td>{{ rate.healthInsuranceRate }}</td>
-        <td>{{ rate.employerShare }}</td>
-        <td>{{ rate.employeeShare }}</td>
+        <td>{{ rate.healthInsuranceShareRate }}</td>
         <td>{{ rate.careInsuranceRate || '-' }}</td>
+        <td>{{ rate.careInsuranceShareRate || '-' }}</td>
+        <td>{{ rate.employeePensionInsuranceRate }}</td>
+        <td>{{ rate.employeePensionShareRate }}</td>
         <td><button (click)="onEdit(rate); $event.stopPropagation();">編集</button></td>
       </tr>
     </tbody>

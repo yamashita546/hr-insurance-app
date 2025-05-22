@@ -34,23 +34,32 @@ export class InsuranceRateComponent {
   selectedRate: InsuranceRate | null = null;
 
   constructor(private dialog: MatDialog, private firestore: FirestoreService) {
+    // localStorageから前回の選択値を取得
+    const savedYear = localStorage.getItem('insuranceRateSelectedYear');
+    const savedPref = localStorage.getItem('insuranceRateSelectedPrefecture');
+    this.selectedYear = savedYear ? Number(savedYear) : 0;
+    this.selectedPrefecture = savedPref || '';
+
     this.firestore.getInsuranceRates().subscribe(rates => {
       this.rates = rates.map(r => ({ ...r }));
       this.originalRates = rates.map(r => ({ ...r }));
-      // 年度リストを自動生成
-      const yearSet = new Set(rates.map(rate => rate.validFrom?.substr(0, 4)).filter(y => !!y));
-      this.years = Array.from(yearSet).map(Number).sort((a, b) => b - a);
-      // デフォルト選択も最新年度に
-      this.selectedYear = this.years[0];
+      // 年度リストをデータベースにある年度＋未来3年分で生成
+      const currentYear = new Date().getFullYear();
+      const dbYears = rates.map(rate => Number(rate.validFrom?.substr(0, 4))).filter(y => !!y);
+      const futureYears = [0, 1, 2].map(offset => currentYear + offset);
+      const allYears = Array.from(new Set([...dbYears, ...futureYears])).sort((a, b) => b - a);
+      this.years = allYears;
       this.applyFilter();
     });
   }
 
   onYearChange(event: any) {
+    localStorage.setItem('insuranceRateSelectedYear', String(this.selectedYear));
     this.applyFilter();
   }
 
   onPrefectureChange(event: any) {
+    localStorage.setItem('insuranceRateSelectedPrefecture', this.selectedPrefecture);
     this.applyFilter();
   }
 
@@ -121,11 +130,123 @@ export class InsuranceRateComponent {
   }
 
   onExportCsv() {
-    // CSVひな型出力処理
+    // CSVヘッダー（取り込み側が期待するカラム名）
+    const headers = [
+      'prefectureCode',
+      'prefectureName',
+      'validFrom',
+      'validTo',
+      'healthInsuranceBaseRate',
+      'healthInsuranceSpecificRate',
+      'healthInsuranceRate',
+      'healthInsuranceShareRate',
+      'careInsuranceRate',
+      'careInsuranceShareRate',
+      'employeePensionInsuranceRate',
+      'employeePensionShareRate'
+    ];
+    // データ行
+    const rows = this.rates.map(rate => [
+      rate.prefectureCode || '',
+      rate.prefectureName || '',
+      rate.validFrom || '',
+      rate.validTo || '',
+      rate.healthInsuranceBaseRate ?? '',
+      rate.healthInsuranceSpecificRate ?? '',
+      rate.healthInsuranceRate ?? '',
+      rate.healthInsuranceShareRate ?? '',
+      rate.careInsuranceRate ?? '',
+      rate.careInsuranceShareRate ?? '',
+      rate.employeePensionInsuranceRate ?? '',
+      rate.employeePensionShareRate ?? ''
+    ]);
+    // CSV文字列生成
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    // ダウンロード処理
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'insurance-rate-template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 
   onImportCsv(event: any) {
-    // CSV取込処理
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const text = e.target.result;
+      const { data, errors } = this.parseCsv(text);
+      if (errors.length > 0) {
+        alert('CSV取込エラー:\n' + errors.join('\n'));
+        return;
+      }
+      // 既存データとマージ
+      data.forEach(newRate => {
+        const idx = this.rates.findIndex(r =>
+          r.prefectureCode === newRate.prefectureCode &&
+          r.validFrom === newRate.validFrom
+        );
+        if (idx !== -1) {
+          // 上書き
+          this.rates[idx] = { ...this.rates[idx], ...newRate };
+        } else {
+          // 追加
+          this.rates.push(newRate);
+        }
+      });
+      this.applyFilter();
+      alert('CSVデータを一時反映しました。内容を確認し「変更を適用」してください。');
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  parseCsv(text: string): { data: InsuranceRate[], errors: string[] } {
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) return { data: [], errors: ['CSVにデータがありません'] };
+    const headers = lines[0].split(',');
+    const data: InsuranceRate[] = [];
+    const errors: string[] = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',');
+      if (cols.length !== headers.length) {
+        errors.push(`${i+1}行目: 列数が一致しません`);
+        continue;
+      }
+      // 必須項目チェック
+      const prefectureCode = cols[headers.indexOf('prefectureCode')]?.trim();
+      const validFrom = cols[headers.indexOf('validFrom')]?.trim();
+      if (!prefectureCode || !validFrom) {
+        errors.push(`${i+1}行目: 都道府県コードまたは適用開始日がありません`);
+        continue;
+      }
+      // 数値変換・バリデーション例
+      const healthInsuranceBaseRate = Number(cols[headers.indexOf('healthInsuranceBaseRate')]);
+      if (isNaN(healthInsuranceBaseRate) || healthInsuranceBaseRate < 0) {
+        errors.push(`${i+1}行目: 基本保険料率が不正です`);
+        continue;
+      }
+      // ...他の項目も同様に
+      data.push({
+        id: `${prefectureCode}_${validFrom}`,
+        prefectureCode,
+        prefectureName: this.prefectures.find(p => p.code === prefectureCode)?.name || '',
+        validFrom,
+        validTo: cols[headers.indexOf('validTo')]?.trim() || null,
+        healthInsuranceBaseRate,
+        healthInsuranceSpecificRate: Number(cols[headers.indexOf('healthInsuranceSpecificRate')]) || 0,
+        healthInsuranceRate: Number(cols[headers.indexOf('healthInsuranceRate')]) || 0,
+        healthInsuranceShareRate: Number(cols[headers.indexOf('healthInsuranceShareRate')]) || 0,
+        careInsuranceRate: Number(cols[headers.indexOf('careInsuranceRate')]) || 0,
+        careInsuranceShareRate: Number(cols[headers.indexOf('careInsuranceShareRate')]) || 0,
+        employeePensionInsuranceRate: Number(cols[headers.indexOf('employeePensionInsuranceRate')]) || 0,
+        employeePensionShareRate: Number(cols[headers.indexOf('employeePensionShareRate')]) || 0,
+        updatedAt: new Date(),
+      } as InsuranceRate);
+    }
+    return { data, errors };
   }
 
   isCellChanged(rate: InsuranceRate, field: keyof InsuranceRate): boolean {

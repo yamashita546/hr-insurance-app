@@ -2,6 +2,7 @@
   <h1>健康保険料率マスタ管理</h1>
   <div class="toolbar">
     <select [(ngModel)]="selectedYear" (change)="onYearChange($event)">
+      <option value="0">全年度</option>
       <option *ngFor="let year of years" [value]="year">{{ year }}年度</option>
     </select>
     <select [(ngModel)]="selectedPrefecture" (change)="onPrefectureChange($event)">

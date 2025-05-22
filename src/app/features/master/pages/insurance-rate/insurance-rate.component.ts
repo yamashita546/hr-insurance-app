@@ -94,7 +94,7 @@ export class InsuranceRateComponent {
   onEdit(rate?: InsuranceRate) {
     if (!rate) return;
     const dialogRef = this.dialog.open(EditInsuranceRateComponent, {
-      width: '500px',
+      width: '480px',
       height: '400px',
       data: { ...rate }
     });

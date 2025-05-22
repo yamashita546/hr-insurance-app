@@ -19,18 +19,45 @@
   margin-bottom: 18px;
   justify-content: flex-end;
 }
-.add-btn {
-  background: #1976d2;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
+/* ボタン共通デザイン */
+button.add-btn, button.delete-btn, button.apply-btn, button.csv-btn {
+  min-width: 90px;
   padding: 8px 20px;
   font-size: 1rem;
   font-weight: bold;
+  border-radius: 6px;
+  border: none;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, color 0.2s;
+  margin-left: 8px;
 }
-.add-btn:hover { background: #1565c0; }
+button.add-btn {
+  background: #1976d2;
+  color: #fff;
+}
+button.add-btn:hover { background: #1565c0; }
+button.delete-btn {
+  background: #ffebee;
+  color: #e53935;
+  border: 1px solid #e53935;
+}
+button.delete-btn:hover { background: #ffcdd2; }
+button.apply-btn {
+  background: #43a047;
+  color: #fff;
+}
+button.apply-btn:hover { background: #388e3c; }
+button.csv-btn {
+  background: #f0f7ff;
+  color: #1976d2;
+  border: 1px solid #1976d2;
+}
+button.csv-btn:hover { background: #e3f2fd; }
+button[disabled] {
+  background: #ccc !important;
+  color: #888 !important;
+  cursor: not-allowed;
+}
 .edit-btn {
   background: #fff3e0;
   color: #ff9800;
@@ -43,18 +70,6 @@
   transition: background 0.2s;
 }
 .edit-btn:hover { background: #ffe0b2; }
-.delete-btn {
-  background: #ffebee;
-  color: #e53935;
-  border: 1px solid #e53935;
-  border-radius: 6px;
-  padding: 8px 20px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.delete-btn:hover { background: #ffcdd2; }
 .rate-table {
   width: 100%;
   border-collapse: collapse;

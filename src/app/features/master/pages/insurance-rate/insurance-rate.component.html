@@ -11,7 +11,7 @@
     <button class="add-btn" (click)="onAdd()">追加</button>
     <button class="edit-btn" [disabled]="!selectedRate" (click)="onEdit()">編集</button>
     <button class="delete-btn" [disabled]="!selectedRate" (click)="onDelete()">削除</button>
-    <button (click)="sortByPrefectureName()">都道府県名でソート</button>
+    <button class="apply-btn" (click)="applyChanges()">変更を適用</button>
   </div>
   <table class="rate-table">
     <thead>
@@ -52,10 +52,7 @@
     </tbody>
   </table>
   <div class="csv-toolbar">
-    <button (click)="onExportCsv()">CSVひな型出力</button>
+    <button class="csv-btn" (click)="onExportCsv()">CSVひな型出力</button>
     <input type="file" (change)="onImportCsv($event)" accept=".csv" />
-  </div>
-  <div class="apply-toolbar">
-    <button class="apply-btn" (click)="applyChanges()">変更を適用</button>
   </div>
 </div>

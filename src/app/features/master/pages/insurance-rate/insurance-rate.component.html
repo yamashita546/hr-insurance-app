@@ -28,23 +28,25 @@
         <th>介護保険折半割合</th>
         <th>厚生年金保険料率</th>
         <th>厚生年金折半割合</th>
+        <th>最終更新</th>
         <th>編集</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let rate of filteredRates" [class.selected]="rate === selectedRate" (click)="selectRate(rate)">
         <td>{{ rate.prefectureName }}</td>
-        <td>{{ rate.validFrom | dateTimestamp:'yyyy' }}</td>
-        <td>{{ rate.validFrom }}</td>
-        <td>{{ rate.validTo || '-' }}</td>
-        <td>{{ rate.healthInsuranceBaseRate }}</td>
-        <td>{{ rate.healthInsuranceSpecificRate }}</td>
-        <td>{{ rate.healthInsuranceRate }}</td>
-        <td>{{ rate.healthInsuranceShareRate }}</td>
-        <td>{{ rate.careInsuranceRate || '-' }}</td>
-        <td>{{ rate.careInsuranceShareRate || '-' }}</td>
-        <td>{{ rate.employeePensionInsuranceRate }}</td>
-        <td>{{ rate.employeePensionShareRate }}</td>
+        <td [ngClass]="{highlight: isCellChanged(rate, 'validFrom')}">{{ rate.validFrom | dateTimestamp:'yyyy' }}</td>
+        <td [ngClass]="{highlight: isCellChanged(rate, 'validFrom')}">{{ rate.validFrom }}</td>
+        <td [ngClass]="{highlight: isCellChanged(rate, 'validTo')}">{{ rate.validTo || '-' }}</td>
+        <td [ngClass]="{highlight: isCellChanged(rate, 'healthInsuranceBaseRate')}">{{ rate.healthInsuranceBaseRate }}</td>
+        <td [ngClass]="{highlight: isCellChanged(rate, 'healthInsuranceSpecificRate')}">{{ rate.healthInsuranceSpecificRate }}</td>
+        <td [ngClass]="{highlight: isCellChanged(rate, 'healthInsuranceRate')}">{{ rate.healthInsuranceRate }}</td>
+        <td [ngClass]="{highlight: isCellChanged(rate, 'healthInsuranceShareRate')}">{{ rate.healthInsuranceShareRate }}</td>
+        <td [ngClass]="{highlight: isCellChanged(rate, 'careInsuranceRate')}">{{ rate.careInsuranceRate || '-' }}</td>
+        <td [ngClass]="{highlight: isCellChanged(rate, 'careInsuranceShareRate')}">{{ rate.careInsuranceShareRate || '-' }}</td>
+        <td [ngClass]="{highlight: isCellChanged(rate, 'employeePensionInsuranceRate')}">{{ rate.employeePensionInsuranceRate }}</td>
+        <td [ngClass]="{highlight: isCellChanged(rate, 'employeePensionShareRate')}">{{ rate.employeePensionShareRate }}</td>
+        <td [ngClass]="{highlight: isCellChanged(rate, 'updatedAt')}">{{ rate.updatedAt | dateTimestamp:'yyyy/MM/dd HH:mm' }}</td>
         <td><button (click)="onEdit(rate); $event.stopPropagation();">編集</button></td>
       </tr>
     </tbody>
@@ -52,5 +54,8 @@
   <div class="csv-toolbar">
     <button (click)="onExportCsv()">CSVひな型出力</button>
     <input type="file" (change)="onImportCsv($event)" accept=".csv" />
+  </div>
+  <div class="apply-toolbar">
+    <button class="apply-btn" (click)="applyChanges()">変更を適用</button>
   </div>
 </div>

@@ -91,3 +91,8 @@
   margin-top: 12px;
   justify-content: flex-end;
 }
+/* 変更セルのハイライト */
+.highlight {
+  background-color: #fff3cd !important; /* 薄い黄色 */
+  transition: background 0.3s;
+}

@@ -9,6 +9,7 @@ import { FirestoreService } from '../../../../core/services/firestore.service';
 import { CommonModule } from '@angular/common';
 import { toDate } from '../../../../core/utils/date-util';
 import { Validators } from '@angular/forms';
+import { EditInsuranceRateComponent } from '../../dialogs/edit-insurance-rate/edit-insurance-rate.component';
 
 interface Prefecture {
   code: string;
@@ -28,12 +29,14 @@ export class InsuranceRateComponent {
   selectedYear: number = 0; // データ取得後にセット
   selectedPrefecture: string = '';
   rates: InsuranceRate[] = [];
+  originalRates: InsuranceRate[] = [];
   filteredRates: InsuranceRate[] = [];
   selectedRate: InsuranceRate | null = null;
 
   constructor(private dialog: MatDialog, private firestore: FirestoreService) {
     this.firestore.getInsuranceRates().subscribe(rates => {
-      this.rates = rates;
+      this.rates = rates.map(r => ({ ...r }));
+      this.originalRates = rates.map(r => ({ ...r }));
       // 年度リストを自動生成
       const yearSet = new Set(rates.map(rate => rate.validFrom?.substr(0, 4)).filter(y => !!y));
       this.years = Array.from(yearSet).map(Number).sort((a, b) => b - a);
@@ -89,7 +92,28 @@ export class InsuranceRateComponent {
   }
 
   onEdit(rate?: InsuranceRate) {
-    // 編集ダイアログ表示処理
+    if (!rate) return;
+    const dialogRef = this.dialog.open(EditInsuranceRateComponent, {
+      width: '500px',
+      height: '400px',
+      data: { ...rate }
+    });
+    const instance = dialogRef.componentInstance;
+    if (instance) {
+      instance.data = { ...rate };
+      instance.saved.subscribe((updated: InsuranceRate) => {
+        // ローカルrates配列を更新
+        const idx = this.rates.findIndex(r => r.id === updated.id);
+        if (idx !== -1) {
+          this.rates[idx] = { ...updated };
+          this.applyFilter();
+        }
+        dialogRef.close();
+      });
+      instance.cancelled.subscribe(() => {
+        dialogRef.close();
+      });
+    }
   }
 
   onDelete() {
@@ -102,5 +126,42 @@ export class InsuranceRateComponent {
 
   onImportCsv(event: any) {
     // CSV取込処理
+  }
+
+  isCellChanged(rate: InsuranceRate, field: keyof InsuranceRate): boolean {
+    const original = this.originalRates.find(r => r.id === rate.id);
+    if (!original) return false;
+    // null/undefined/数値/文字列の厳密比較
+    const current = rate[field];
+    const orig = original[field];
+    if (current == null && orig == null) return false;
+    if (typeof current === 'number' && typeof orig === 'number') {
+      return current !== orig;
+    }
+    return current !== orig;
+  }
+
+  applyChanges() {
+    // 差分のみ抽出
+    const updatedRates = this.rates.filter(rate => {
+      const original = this.originalRates.find(r => r.id === rate.id);
+      return original && Object.keys(rate).some(key => rate[key as keyof InsuranceRate] !== original[key as keyof InsuranceRate]);
+    });
+    if (updatedRates.length === 0) {
+      alert('変更はありません');
+      return;
+    }
+    // Firestoreへの更新処理（サービスに委譲する想定）
+    updatedRates.forEach(rate => {
+      this.firestore.updateInsuranceRate(rate.id, rate).then(() => {
+        // 成功時の処理
+      }).catch(err => {
+        alert('更新に失敗しました: ' + err);
+      });
+    });
+    alert('変更を適用しました');
+    // originalRatesを最新化し、ハイライトを解除
+    this.originalRates = this.rates.map(r => ({ ...r }));
+    this.applyFilter();
   }
 }

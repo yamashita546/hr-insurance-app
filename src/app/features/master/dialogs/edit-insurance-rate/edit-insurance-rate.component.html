@@ -1,0 +1,50 @@
+<form [formGroup]="form" class="edit-insurance-rate-form">
+  <div class="form-group">
+    <label>都道府県</label>
+    <input type="text" [formControlName]="'prefectureName'" readonly />
+  </div>
+  <div class="form-group">
+    <label>適用開始年月</label>
+    <input type="month" formControlName="validFrom" [ngClass]="{'highlight': isChanged('validFrom')}" />
+  </div>
+  <div class="form-group">
+    <label>適用終了年月</label>
+    <input type="month" formControlName="validTo" [ngClass]="{'highlight': isChanged('validTo')}" />
+  </div>
+  <div class="form-group">
+    <label>基本保険料率</label>
+    <input type="number" step="0.01" formControlName="healthInsuranceBaseRate" [ngClass]="{'highlight': isChanged('healthInsuranceBaseRate')}" />
+  </div>
+  <div class="form-group">
+    <label>特定保険料率</label>
+    <input type="number" step="0.01" formControlName="healthInsuranceSpecificRate" [ngClass]="{'highlight': isChanged('healthInsuranceSpecificRate')}" />
+  </div>
+  <div class="form-group">
+    <label>健康保険料率</label>
+    <input type="number" step="0.01" formControlName="healthInsuranceRate" [ngClass]="{'highlight': isChanged('healthInsuranceRate')}" />
+  </div>
+  <div class="form-group">
+    <label>健康保険折半割合</label>
+    <input type="number" step="0.01" formControlName="healthInsuranceShareRate" [ngClass]="{'highlight': isChanged('healthInsuranceShareRate')}" />
+  </div>
+  <div class="form-group">
+    <label>介護保険料率</label>
+    <input type="number" step="0.01" formControlName="careInsuranceRate" [ngClass]="{'highlight': isChanged('careInsuranceRate')}" />
+  </div>
+  <div class="form-group">
+    <label>介護保険折半割合</label>
+    <input type="number" step="0.01" formControlName="careInsuranceShareRate" [ngClass]="{'highlight': isChanged('careInsuranceShareRate')}" />
+  </div>
+  <div class="form-group">
+    <label>厚生年金保険料率</label>
+    <input type="number" step="0.01" formControlName="employeePensionInsuranceRate" [ngClass]="{'highlight': isChanged('employeePensionInsuranceRate')}" />
+  </div>
+  <div class="form-group">
+    <label>厚生年金折半割合</label>
+    <input type="number" step="0.01" formControlName="employeePensionShareRate" [ngClass]="{'highlight': isChanged('employeePensionShareRate')}" />
+  </div>
+  <div class="form-actions">
+    <button type="button" (click)="onSave()" [disabled]="form.invalid">保存</button>
+    <button type="button" (click)="onCancel()">キャンセル</button>
+  </div>
+</form>

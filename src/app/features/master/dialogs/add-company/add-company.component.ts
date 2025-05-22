@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { collection, query } from '@angular/fire/firestore';
 import { collectionData } from '@angular/fire/firestore';
 import { AppUser } from '../../../../core/models/user.model';
-
+import { Auth, createUserWithEmailAndPassword } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-add-company',
@@ -23,7 +23,8 @@ export class AddCompanyComponent {
   constructor(
     private fb: FormBuilder,
     private firestoreService: FirestoreService,
-    private dialogRef: MatDialogRef<AddCompanyComponent>
+    private dialogRef: MatDialogRef<AddCompanyComponent>,
+    private auth: Auth
   ) {
     this.form = this.fb.group({
       companyName: ['', Validators.required],
@@ -49,14 +50,32 @@ export class AddCompanyComponent {
         contactEmail: this.form.value.contactEmail,
         isActive: true
       });
-      // 2. ownerユーザーを保存（uidは仮でownerEmailを使う。実際はAuth作成後のuid推奨）
+
+      // 2. ownerユーザーをFirebase Authに仮登録
+      const cred = await createUserWithEmailAndPassword(
+        this.auth,
+        this.form.value.ownerEmail,
+        this.form.value.ownerPassword
+      );
+      const ownerUid = cred.user.uid;
+
+      // 3. Firestoreのusersコレクションに仮登録
       await this.firestoreService.addUser({
         email: this.form.value.ownerEmail,
         displayName: this.form.value.ownerName,
         companyId,
         role: 'owner',
-        uid: this.form.value.ownerEmail
-      }, this.form.value.ownerEmail);
+        uid: ownerUid,
+        isRegistered: false
+      }, ownerUid);
+
+      // 4. invitesコレクションにも追加（必要に応じて）
+      await this.firestoreService.inviteOwner(
+        this.form.value.ownerEmail,
+        companyId,
+        this.form.value.ownerPassword
+      );
+
       this.dialogRef.close(true);
     } catch (e: any) {
       this.error = e.message || '登録に失敗しました';

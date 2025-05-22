@@ -1,7 +1,8 @@
 <div class="register-container">
   <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
     <input type="email" formControlName="email" placeholder="メールアドレス" />
-    <input type="password" formControlName="password" placeholder="仮パスワード" />
+    <input type="password" formControlName="tempPassword" placeholder="仮パスワード" />
+    <input type="password" formControlName="newPassword" placeholder="新しいパスワード（8文字以上）" />
     <button type="submit">本登録</button>
   </form>
 </div>

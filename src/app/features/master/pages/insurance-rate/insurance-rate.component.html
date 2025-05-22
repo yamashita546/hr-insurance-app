@@ -1,1 +1,47 @@
-<p>insurance-rate works!</p>
+<div class="insurance-rate-container">
+  <h1>健康保険料率マスタ管理</h1>
+  <div class="toolbar">
+    <select [(ngModel)]="selectedYear" (change)="onYearChange($event)">
+      <option *ngFor="let year of years" [value]="year">{{ year }}年度</option>
+    </select>
+    <select [(ngModel)]="selectedPrefecture" (change)="onPrefectureChange($event)">
+      <option value="">全都道府県</option>
+      <option *ngFor="let pref of prefectures" [value]="pref.code">{{ pref.name }}</option>
+    </select>
+    <button class="add-btn" (click)="onAdd()">追加</button>
+    <button class="edit-btn" [disabled]="!selectedRate" (click)="onEdit()">編集</button>
+    <button class="delete-btn" [disabled]="!selectedRate" (click)="onDelete()">削除</button>
+  </div>
+  <table class="rate-table">
+    <thead>
+      <tr>
+        <th>都道府県</th>
+        <th>年度</th>
+        <th>適用開始</th>
+        <th>適用終了</th>
+        <th>健康保険料率</th>
+        <th>事業主負担</th>
+        <th>被保険者負担</th>
+        <th>介護保険料率</th>
+        <th>編集</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let rate of filteredRates" [class.selected]="rate === selectedRate" (click)="selectRate(rate)">
+        <td>{{ rate.prefectureName }}</td>
+        <td>{{ rate.validFrom | dateTimestamp:'yyyy' }}</td>
+        <td>{{ rate.validFrom | dateTimestamp:'yyyy/MM/dd' }}</td>
+        <td>{{ rate.validTo | dateTimestamp:'yyyy/MM/dd' }}</td>
+        <td>{{ rate.healthInsuranceRate }}</td>
+        <td>{{ rate.employerShare }}</td>
+        <td>{{ rate.employeeShare }}</td>
+        <td>{{ rate.careInsuranceRate || '-' }}</td>
+        <td><button (click)="onEdit(rate); $event.stopPropagation();">編集</button></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="csv-toolbar">
+    <button (click)="onExportCsv()">CSVひな型出力</button>
+    <input type="file" (change)="onImportCsv($event)" accept=".csv" />
+  </div>
+</div>

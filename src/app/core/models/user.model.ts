@@ -8,7 +8,7 @@ export interface AppUser {
   createdAt: any; // FirestoreのTimestamp型
   updatedAt: any;
   lastLoginAt?: any;
+  isRegistered?: boolean;
 }
-
 
 

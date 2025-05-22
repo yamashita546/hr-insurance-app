@@ -6,7 +6,8 @@ import {
   setDoc,
   Timestamp,
   query,
-  collectionData
+  collectionData,
+  addDoc
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { AppUser } from '../models/user.model';
@@ -38,6 +39,20 @@ export class FirestoreService {
       createdAt: now,
       updatedAt: now
     });
+  }
+
+  async inviteOwner(email: string, companyId: string, tempPassword: string) {
+    const token = Math.random().toString(36).slice(2);
+    await addDoc(collection(this.firestore, 'invites'), {
+      email,
+      companyId,
+      tempPassword,
+      token,
+      role: 'owner',
+      createdAt: Timestamp.now(),
+      expiresAt: Timestamp.fromDate(new Date(Date.now() + 1000 * 60 * 60 * 24)), // 24時間有効
+    });
+    return token;
   }
 
   getCompanies(): Observable<Company[]> {

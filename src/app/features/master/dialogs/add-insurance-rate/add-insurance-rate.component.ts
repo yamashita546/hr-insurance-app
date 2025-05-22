@@ -83,20 +83,10 @@ export class AddInsuranceRateComponent implements OnInit {
     try {
       const value = this.form.value;
       const prefectureName = this.prefectures.find(p => p.code === value.prefectureCode)?.name || '';
-      await this.firestore.addInsuranceRate({
-        prefectureCode: value.prefectureCode,
-        prefectureName,
-        validFrom: value.validFrom,
-        validTo: value.validTo || null,
-        healthInsuranceBaseRate: Number(value.healthInsuranceBaseRate),
-        healthInsuranceSpecificRate: Number(value.healthInsuranceSpecificRate),
-        healthInsuranceRate: Number(value.healthInsuranceRate),
-        healthInsuranceShareRate: Number(value.healthInsuranceShareRate),
-        careInsuranceRate: value.careInsuranceRate ? Number(value.careInsuranceRate) : undefined,
-        careInsuranceShareRate: value.careInsuranceShareRate ? Number(value.careInsuranceShareRate) : undefined,
-        employeePensionInsuranceRate: Number(value.employeePensionInsuranceRate),
-        employeePensionShareRate: Number(value.employeePensionShareRate),
-      });
+      const docId = `${value.prefectureCode}_${value.validFrom}`;
+      // FirestoreServiceのupdateInsuranceRateを呼び出す（実装例）
+      await this.firestore.updateInsuranceRate(docId, { ...value, prefectureName });
+      // サンプルとしてemitのみ
       this.added.emit();
       this.form.reset();
       this.dialogRef.close();

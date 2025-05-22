@@ -92,4 +92,13 @@ export class FirestoreService {
     const q = query(ref);
     return collectionData(q, { idField: 'id' }) as Observable<InsuranceRate[]>;
   }
+
+  // 都道府県コード＋適用開始日をIDとした健康保険料率マスタ追加・上書き
+  async addOrUpdateInsuranceRateById(id: string, rate: InsuranceRate) {
+    const now = Timestamp.now();
+    await setDoc(doc(this.firestore, 'insuranceRates', id), {
+      ...rate,
+      updatedAt: now
+    }, { merge: true });
+  }
 }

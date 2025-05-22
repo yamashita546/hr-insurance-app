@@ -144,24 +144,29 @@ export class InsuranceRateComponent {
   applyChanges() {
     // 差分のみ抽出
     const updatedRates = this.rates.filter(rate => {
-      const original = this.originalRates.find(r => r.id === rate.id);
-      return original && Object.keys(rate).some(key => rate[key as keyof InsuranceRate] !== original[key as keyof InsuranceRate]);
+      const original = this.originalRates.find(r =>
+        r.prefectureCode === rate.prefectureCode && r.validFrom === rate.validFrom
+      );
+      return !original || Object.keys(rate).some(key => rate[key as keyof InsuranceRate] !== original[key as keyof InsuranceRate]);
     });
     if (updatedRates.length === 0) {
       alert('変更はありません');
       return;
     }
-    // Firestoreへの更新処理（サービスに委譲する想定）
-    updatedRates.forEach(rate => {
-      this.firestore.updateInsuranceRate(rate.id, rate).then(() => {
-        // 成功時の処理
-      }).catch(err => {
-        alert('更新に失敗しました: ' + err);
+    // Firestoreへの更新処理
+    Promise.all(updatedRates.map(rate => {
+      const docId = `${rate.prefectureCode}_${rate.validFrom}`;
+      return this.firestore.addOrUpdateInsuranceRateById(docId, rate);
+    })).then(() => {
+      alert('変更を適用しました');
+      // Firestoreから再取得してローカルを最新化
+      this.firestore.getInsuranceRates().subscribe(rates => {
+        this.rates = rates.map(r => ({ ...r }));
+        this.originalRates = rates.map(r => ({ ...r }));
+        this.applyFilter();
       });
+    }).catch(err => {
+      alert('更新に失敗しました: ' + err);
     });
-    alert('変更を適用しました');
-    // originalRatesを最新化し、ハイライトを解除
-    this.originalRates = this.rates.map(r => ({ ...r }));
-    this.applyFilter();
   }
 }

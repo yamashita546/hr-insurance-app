@@ -82,6 +82,13 @@ export class EditInsuranceRateComponent implements OnInit {
       ...this.data,
       ...this.form.value
     };
+    // FirestoreのID生成: 都道府県コード_適用開始日
+    const docId = `${updated.prefectureCode}_${updated.validFrom}`;
+    // FirestoreServiceのupdateInsuranceRateByIdを呼び出す（実装例）
+    // this.firestore.updateInsuranceRateById(docId, updated).then(() => {
+    //   this.saved.emit(updated);
+    // });
+    // サンプルとしてemitのみ
     this.saved.emit(updated);
   }
 

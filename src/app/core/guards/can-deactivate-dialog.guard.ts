@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { CanDeactivate } from '@angular/router';
 import { StandardMonthlyComponent } from '../../features/master/pages/standard-monthly/standard-monthly.component';
-import { CompaniesComponent } from '../../features/master/pages/companies/companies.component';
+import { CompaniesComponent } from '../../features/master/pages/companies/company.base.info/companies.component';
 
 type DialogComponent = StandardMonthlyComponent | CompaniesComponent;
 

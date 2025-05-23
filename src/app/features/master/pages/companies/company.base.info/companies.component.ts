@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { AddCompanyComponent } from '../../dialogs/add-company/add-company.component';
-import { FirestoreService } from '../../../../core/services/firestore.service';
+import { AddCompanyComponent } from '../../../dialogs/add-company/add-company.component';
+import { FirestoreService } from '../../../../../core/services/firestore.service';
 import { CommonModule } from '@angular/common';
 
 @Component({

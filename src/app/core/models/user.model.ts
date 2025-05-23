@@ -1,3 +1,8 @@
+import { Timestamp } from "@angular/fire/firestore";
+
+
+
+// ユーザーモデル
 export interface AppUser {
   uid: string;
   email: string;
@@ -5,9 +10,9 @@ export interface AppUser {
   companyId: string;
   role: 'admin' | 'owner' | 'leader' | 'operator';
   invitedBy?: string;
-  createdAt: any; // FirestoreのTimestamp型
-  updatedAt: any;
-  lastLoginAt?: any;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  lastLoginAt?: Timestamp;
   isRegistered?: boolean;
 }
 

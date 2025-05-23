@@ -33,7 +33,8 @@ export class AddCompanyComponent {
       contactEmail: ['', Validators.email],
       ownerEmail: ['', [Validators.required, Validators.email]],
       ownerName: [''],
-      ownerPassword: ['', Validators.required]
+      ownerPassword: ['', Validators.required],
+      establishmentDate: ['', Validators.required]
     });
   }
 
@@ -46,9 +47,11 @@ export class AddCompanyComponent {
       const companyId = await this.firestoreService.addCompany({
         name: this.form.value.companyName,
         industry: this.form.value.industry,
-        address: this.form.value.address,
-        contactEmail: this.form.value.contactEmail,
-        isActive: true
+        headOfficeAddress: this.form.value.address,
+        establishmentDate: this.form.value.establishmentDate,
+        isActive: true,
+        companyCode: this.form.value.companyCode,
+        displayId: this.form.value.displayId
       });
 
       // 2. ownerユーザーをFirebase Authに仮登録

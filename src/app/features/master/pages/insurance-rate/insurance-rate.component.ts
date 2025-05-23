@@ -11,7 +11,7 @@ import { toDate } from '../../../../core/utils/date-util';
 import { Validators } from '@angular/forms';
 import { EditInsuranceRateComponent } from '../../dialogs/edit-insurance-rate/edit-insurance-rate.component';
 import { INSURANCE_TYPES } from '../../../../core/models/insurance-type';
-
+import { Timestamp } from '@angular/fire/firestore';
 interface Prefecture {
   code: string;
   name: string;
@@ -280,7 +280,7 @@ export class InsuranceRateComponent {
         careInsuranceShareRate: Number(cols[headers.indexOf('careInsuranceShareRate')]) || 0,
         employeePensionInsuranceRate: Number(cols[headers.indexOf('employeePensionInsuranceRate')]) || 0,
         employeePensionShareRate: Number(cols[headers.indexOf('employeePensionShareRate')]) || 0,
-        updatedAt: new Date(),
+        updatedAt: Timestamp.now(),
       } as InsuranceRate);
     }
     return { data, errors };

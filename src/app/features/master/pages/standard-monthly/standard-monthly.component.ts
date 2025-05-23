@@ -8,6 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AddStandardMonthlyComponent } from '../../dialogs/add-standard-monthly/add-standard-monthly.component';
 import { EditStandardMonthlyComponent } from '../../dialogs/edit-standard-monthly/edit-standard-monthly.component';
 import { CommonModule } from '@angular/common';
+import { Timestamp } from '@angular/fire/firestore';  
 
 @Component({
   selector: 'app-standard-monthly',
@@ -345,7 +346,7 @@ export class StandardMonthlyComponent {
         upperLimit,
         validFrom,
         validTo,
-        updatedAt: new Date()
+        updatedAt: Timestamp.now()
       } as HealthInsuranceGrade | PensionInsuranceGrade);
     }
     return { data, errors };

@@ -14,13 +14,15 @@ import { DashboardComponent } from './features/dashboard/pages/dashboard/dashboa
 import { HelpComponent } from './features/help/pages/help/help.component';
 import { LoginComponent } from './features/auth/pages/login/login.component';
 import { authGuard } from './core/guards/auth.guards';
-import { CompaniesComponent } from './features/master/pages/companies/companies.component';
+import { CompaniesComponent } from './features/master/pages/companies/company.base.info/companies.component';
 import { InsuranceRateComponent } from './features/master/pages/insurance-rate/insurance-rate.component';
 import { ManageAdminComponent } from './features/master/pages/manage-admin/manage-admin.component';
 import { StandardMonthlyComponent } from './features/master/pages/standard-monthly/standard-monthly.component';
 import { ManageUserComponent } from './features/auth/pages/manage-user/manage-user.component';
 import { RegisterComponent } from './features/auth/pages/register/register.component';
 import { CanDeactivateDialogGuard } from './core/guards/can-deactivate-dialog.guard';
+import { ManageCompaniesComponent } from './features/master/pages/companies/manage-companies/manage-companies.component';
+import { CompanyOwnerComponent } from './features/master/pages/companies/company-owner/company-owner.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -42,7 +44,9 @@ export const routes: Routes = [
       { path: 'notification', component: NotificationComponent },
       { path: 'dashboard', component: DashboardComponent },
       { path: 'help', component: HelpComponent },
+      { path: 'manage-company', component: ManageCompaniesComponent},
       { path: 'company-info', component: CompaniesComponent, canDeactivate: [CanDeactivateDialogGuard] },
+      { path: 'company-owner', component: CompanyOwnerComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'insurance-rate', component: InsuranceRateComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'manage-admin', component: ManageAdminComponent },
       { path: 'standard-monthly', component: StandardMonthlyComponent, canDeactivate: [CanDeactivateDialogGuard] },

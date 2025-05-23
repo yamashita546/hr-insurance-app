@@ -10,26 +10,36 @@
   <table>
     <thead>
       <tr>
+        <th>企業ID</th>
+        <th>企業コード</th>
         <th>会社名</th>
         <th>業種</th>
+        <th>代表者</th>
         <th>所在地</th>
-        <th>代表メール</th>
-        <th>管理者メール</th>
-        <th>管理者名</th>
+        <th>設立日</th>
+        <th>作成日</th>
+        <th>更新日</th>
+        <th>有効</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let company of companies">
+        <td>{{ company.displayId }}</td>
+        <td>{{ company.companyCode }}</td>
         <td>{{ company.name }}</td>
         <td>{{ company.industry }}</td>
-        <td>{{ company.address }}</td>
-        <td>{{ company.contactEmail }}</td>
-        <td>{{ company.ownerEmail }}</td>
-        <td>{{ company.ownerName }}</td>
+        <td>{{ company.companyOwner }}</td>
+        <td>{{ company.headOfficeAddress?.addressLine1 }}</td>
+        <td>{{ company.establishmentDate }}</td>
+        <td>{{ company.createdAt.toDate() | date:'yyyy/MM/dd' }}</td>
+        <td>{{ company.updatedAt.toDate() | date:'yyyy/MM/dd' }}</td>
+        <td>{{ company.isActive ? '○' : '×' }}</td>
       </tr>
     </tbody>
   </table>
 </div>
+
+
 
 
 

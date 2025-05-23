@@ -1,3 +1,7 @@
+import { Timestamp } from "@angular/fire/firestore";
+
+
+// 健康保険標準報酬月額マスタ
 export enum GradeType {
     HEALTH = 'health',
     PENSION = 'pension'
@@ -15,7 +19,7 @@ export interface HealthInsuranceGrade {
     upperLimit: number;
     validFrom: string;       // 例: '2025-04'
     validTo?: string;
-    updatedAt: Date;
+    updatedAt: Timestamp;
   }
   
 // 厚生年金標準報酬月額マスタ
@@ -29,6 +33,6 @@ export interface PensionInsuranceGrade {
     upperLimit: number;
     validFrom: string;
     validTo?: string;
-    updatedAt: Date;
+    updatedAt: Timestamp;
   }
   

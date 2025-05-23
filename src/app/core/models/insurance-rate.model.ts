@@ -1,3 +1,5 @@
+import { Timestamp } from "@angular/fire/firestore";
+
 // 保険料率モデル
 
 export interface InsuranceRate {
@@ -19,6 +21,6 @@ export interface InsuranceRate {
     employeePensionInsuranceRate: number;   // 厚生年金保険料率（例: 18.3）
     employeePensionShareRate: number;       // 厚生年金折半割合（例: 9.15）
 
-    updatedAt: Date;
+    updatedAt: Timestamp;
 }
 

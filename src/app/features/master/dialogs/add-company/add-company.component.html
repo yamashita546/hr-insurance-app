@@ -1,8 +1,11 @@
 <div class="add-company-dialog">
-  <h2>企業情報・管理者登録</h2>
+  <h2>企業情報登録</h2>
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
     <div class="form-section">
       <h3>企業情報</h3>
+      <label>表示用ID
+        <input type="text" class="input" formControlName="displayId" placeholder="例：1234567890123（法人番号など）" />
+      </label>
       <label>会社名 <span class="required">*</span>
         <input type="text" class="input" formControlName="companyName" placeholder="例：株式会社サンプル" />
         <div class="error" *ngIf="form.get('companyName')?.invalid && form.get('companyName')?.touched">会社名は必須です</div>
@@ -16,19 +19,9 @@
       <label>代表連絡先メール
         <input type="email" class="input" formControlName="contactEmail" placeholder="info@example.com" />
       </label>
-    </div>
-    <div class="form-section">
-      <h3>管理者ユーザー（owner）</h3>
-      <label>メールアドレス <span class="required">*</span>
-        <input type="email" class="input" formControlName="ownerEmail" placeholder="owner@example.com" />
-        <div class="error" *ngIf="form.get('ownerEmail')?.invalid && form.get('ownerEmail')?.touched">有効なメールアドレスを入力してください</div>
-      </label>
-      <label>表示名
-        <input type="text" class="input" formControlName="ownerName" placeholder="オーナー名" />
-      </label>
-      <label>初期パスワード <span class="required">*</span>
-        <input type="password" class="input" formControlName="ownerPassword" placeholder="パスワード" />
-        <div class="error" *ngIf="form.get('ownerPassword')?.invalid && form.get('ownerPassword')?.touched">パスワードは必須です</div>
+      <label>設立日 <span class="required">*</span>
+        <input type="date" class="input" formControlName="establishmentDate" />
+        <div class="error" *ngIf="form.get('establishmentDate')?.invalid && form.get('establishmentDate')?.touched">設立日は必須です</div>
       </label>
     </div>
     <div class="dialog-actions">

@@ -27,13 +27,11 @@ export class AddCompanyComponent {
     private auth: Auth
   ) {
     this.form = this.fb.group({
+      displayId: [''],
       companyName: ['', Validators.required],
       industry: [''],
       address: [''],
       contactEmail: ['', Validators.email],
-      ownerEmail: ['', [Validators.required, Validators.email]],
-      ownerName: [''],
-      ownerPassword: ['', Validators.required],
       establishmentDate: ['', Validators.required]
     });
   }
@@ -43,42 +41,15 @@ export class AddCompanyComponent {
     if (this.form.invalid) return;
     this.loading = true;
     try {
-      // 1. 会社情報を保存
-      const companyId = await this.firestoreService.addCompany({
+      // 会社情報を保存
+      await this.firestoreService.addCompany({
+        displayId: this.form.value.displayId,
         name: this.form.value.companyName,
         industry: this.form.value.industry,
         headOfficeAddress: this.form.value.address,
         establishmentDate: this.form.value.establishmentDate,
-        isActive: true,
-        companyCode: this.form.value.companyCode,
-        displayId: this.form.value.displayId
+        isActive: true
       });
-
-      // 2. ownerユーザーをFirebase Authに仮登録
-      const cred = await createUserWithEmailAndPassword(
-        this.auth,
-        this.form.value.ownerEmail,
-        this.form.value.ownerPassword
-      );
-      const ownerUid = cred.user.uid;
-
-      // 3. Firestoreのusersコレクションに仮登録
-      await this.firestoreService.addUser({
-        email: this.form.value.ownerEmail,
-        displayName: this.form.value.ownerName,
-        companyId,
-        role: 'owner',
-        uid: ownerUid,
-        isRegistered: false
-      }, ownerUid);
-
-      // 4. invitesコレクションにも追加（必要に応じて）
-      await this.firestoreService.inviteOwner(
-        this.form.value.ownerEmail,
-        companyId,
-        this.form.value.ownerPassword
-      );
-
       this.dialogRef.close(true);
     } catch (e: any) {
       this.error = e.message || '登録に失敗しました';

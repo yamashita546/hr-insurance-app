@@ -101,4 +101,25 @@ export class FirestoreService {
       updatedAt: now
     }, { merge: true });
   }
+
+  // 標準報酬月額マスタ追加・上書き（id: gradeType_insuranceType_id）
+  async addOrUpdateStandardMonthlyGradeById(id: string, grade: any) {
+    const now = Timestamp.now();
+    await setDoc(doc(this.firestore, 'standardMonthlyGrades', id), {
+      ...grade,
+      updatedAt: now
+    }, { merge: true });
+  }
+
+  // 標準報酬月額マスタ削除
+  async deleteStandardMonthlyGrade(id: string) {
+    await deleteDoc(doc(this.firestore, 'standardMonthlyGrades', id));
+  }
+
+  // 標準報酬月額マスタ一覧取得
+  getStandardMonthlyGrades(): Observable<any[]> {
+    const ref = collection(this.firestore, 'standardMonthlyGrades');
+    const q = query(ref);
+    return collectionData(q, { idField: 'id' }) as Observable<any[]>;
+  }
 }

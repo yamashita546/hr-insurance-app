@@ -1,1 +1,58 @@
-<p>standard-monthly works!</p>
+<div class="standard-monthly-container">
+  <h1>標準報酬月額マスタ管理</h1>
+  <div class="toolbar">
+    <select [(ngModel)]="selectedYear" (change)="onYearChange($event)">
+      <option value="0">全年度</option>
+      <option *ngFor="let year of years" [value]="year">{{ year }}年度</option>
+    </select>
+    <select [(ngModel)]="selectedGradeType" (change)="onGradeTypeChange($event)">
+      <option value="health">健康保険</option>
+      <option value="pension">厚生年金</option>
+    </select>
+    <select [(ngModel)]="selectedInsuranceType" (change)="onInsuranceTypeChange($event)">
+      <option value="">全て</option>
+      <option value="1">協会けんぽ</option>
+      <option value="2">それ以外</option>
+    </select>
+    <button class="add-btn" (click)="onAdd()">追加</button>
+    <button class="edit-btn" [disabled]="!selectedGrade" (click)="onEdit()">編集</button>
+    <button class="delete-btn" [disabled]="!selectedGrade" (click)="onDelete()">削除</button>
+    <button class="apply-btn" (click)="applyChanges()">変更を適用</button>
+    <button class="reset-btn" (click)="resetChanges()">変更をリセット</button>
+  </div>
+  <table class="grade-table">
+    <thead>
+      <tr>
+        
+        <th (click)="sortBy('grade')" style="cursor:pointer">等級</th>
+        <th (click)="sortBy('compensation')" style="cursor:pointer">標準報酬月額</th>
+        <th (click)="sortBy('lowerLimit')" style="cursor:pointer">下限</th>
+        <th (click)="sortBy('upperLimit')" style="cursor:pointer">上限</th>
+        <th (click)="sortBy('validFrom')" style="cursor:pointer">適用開始</th>
+        <th (click)="sortBy('validTo')" style="cursor:pointer">適用終了</th>
+        <th (click)="sortBy('updatedAt')" style="cursor:pointer">最終更新</th>
+        <th>編集</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let grade of filteredGrades" [class.selected]="grade === selectedGrade" (click)="selectGrade(grade)">
+        <td>{{ grade.grade }}</td>
+        <td>{{ grade.compensation }}</td>
+        <td>{{ grade.lowerLimit }}</td>
+        <td>{{ grade.upperLimit }}</td>   
+        <td>{{ grade.validFrom }}</td>
+        <td>{{ grade.validTo || '-' }}</td>    
+        <td>{{ grade.updatedAt | dateTimestamp:'yyyy/MM/dd HH:mm' }}</td>
+        <td><button (click)="onEdit(grade); $event.stopPropagation();">編集</button></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="csv-toolbar">
+    <button class="csv-btn" (click)="onExportCsv()">CSVひな型出力</button>
+    <label class="file-label">
+      ファイルを選択
+      <input type="file" (change)="onImportCsv($event)" accept=".csv" style="display: none;" #fileInput />
+    </label>
+    <span class="file-name">{{ fileName || '選択されていません' }}</span>
+  </div>
+</div>

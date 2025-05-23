@@ -1,0 +1,53 @@
+.add-standard-monthly-dialog {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.form-row {
+  margin-bottom: 16px;
+}
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+input, select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+input[type="number"] {
+  text-align: right;
+}
+.required {
+  color: #e53935;
+  font-size: 0.9em;
+}
+.error {
+  color: #e53935;
+  font-size: 0.9em;
+  margin-top: 2px;
+}
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+button[type="submit"] {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -1,0 +1,43 @@
+<div class="add-standard-monthly-dialog">
+  <h2>標準報酬月額マスタ追加</h2>
+  <form #form="ngForm" (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <label for="gradeType">保険種別</label>
+      <select id="gradeType" name="gradeType" [(ngModel)]="gradeType" required>
+        <option value="health">健康保険</option>
+        <option value="pension">厚生年金</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="insuranceType">協会/組合</label>
+      <select id="insuranceType" name="insuranceType" [(ngModel)]="insuranceType" required>
+        <option value="1">協会けんぽ</option>
+        <option value="2">それ以外</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="validFrom">適用開始年月</label>
+      <input id="validFrom" name="validFrom" type="month" [(ngModel)]="validFrom" required />
+    </div>
+    <div class="form-row">
+      <label for="grade">等級</label>
+      <input id="grade" name="grade" type="number" [(ngModel)]="grade" required min="1" />
+    </div>
+    <div class="form-row">
+      <label for="compensation">標準報酬月額</label>
+      <input id="compensation" name="compensation" type="number" [(ngModel)]="compensation" required min="0" />
+    </div>
+    <div class="form-row">
+      <label for="lowerLimit">下限</label>
+      <input id="lowerLimit" name="lowerLimit" type="number" [(ngModel)]="lowerLimit" required min="0" />
+    </div>
+    <div class="form-row">
+      <label for="upperLimit">上限</label>
+      <input id="upperLimit" name="upperLimit" type="number" [(ngModel)]="upperLimit" required min="0" />
+    </div>
+    <div class="dialog-actions">
+      <button type="submit" [disabled]="!form.valid">登録</button>
+      <button type="button" (click)="onCancel()">キャンセル</button>
+    </div>
+  </form>
+</div>

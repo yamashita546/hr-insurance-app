@@ -23,7 +23,7 @@ export class AddStandardMonthlyComponent {
 
   onSubmit() {
     if (!this.validFrom || !this.grade || !this.compensation || this.lowerLimit == null || this.upperLimit == null) return;
-    const id = `${this.grade}_${this.validFrom}`;
+    const id = `${this.gradeType}_${this.insuranceType}_${this.grade}_${this.validFrom}`;
     this.added.emit({
       gradeType: this.gradeType,
       insuranceType: this.insuranceType,

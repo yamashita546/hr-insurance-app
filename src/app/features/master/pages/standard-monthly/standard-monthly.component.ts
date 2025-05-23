@@ -6,6 +6,7 @@ import { INSURANCE_TYPES, InsuranceType } from '../../../../core/models/insuranc
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { MatDialog } from '@angular/material/dialog';
 import { AddStandardMonthlyComponent } from '../../dialogs/add-standard-monthly/add-standard-monthly.component';
+import { EditStandardMonthlyComponent } from '../../dialogs/edit-standard-monthly/edit-standard-monthly.component';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -31,9 +32,12 @@ export class StandardMonthlyComponent {
   sortKey: string = '';
   sortAsc: boolean = true;
 
+  originalGrades: (HealthInsuranceGrade | PensionInsuranceGrade)[] = [];
+
   constructor(private firestore: FirestoreService, private dialog: MatDialog) {
     this.firestore.getStandardMonthlyGrades().subscribe(grades => {
       this.grades = grades.map(g => ({ ...g }));
+      this.originalGrades = grades.map(g => ({ ...g }));
       // 年度リストをデータベースにある年度＋未来2年分で生成
       const currentYear = new Date().getFullYear();
       const dbYears = grades.map(g => Number(g.validFrom?.substr(0, 4))).filter(y => !!y);
@@ -107,6 +111,7 @@ export class StandardMonthlyComponent {
         // Firestoreから再取得
         this.firestore.getStandardMonthlyGrades().subscribe(grades => {
           this.grades = grades.map(g => ({ ...g }));
+          this.originalGrades = grades.map(g => ({ ...g }));
           this.applyFilter();
         });
       });
@@ -115,12 +120,52 @@ export class StandardMonthlyComponent {
       });
     }
   }
-  onEdit(grade?: any) {}
+  onEdit(grade?: any) {
+    const target = grade || this.selectedGrade;
+    if (!target) return;
+    const dialogRef = this.dialog.open(EditStandardMonthlyComponent, {
+      width: '400px',
+      height: '90vh',
+      data: { ...target }
+    });
+    const instance = dialogRef.componentInstance;
+    if (instance) {
+      instance.data = { ...target };
+      instance.saved.subscribe((updated: any) => {
+        console.log('[StandardMonthlyComponent] onEdit updated:', updated);
+        // 調査用: findIndexの各条件で一致するか確認
+        this.grades.forEach((g, i) => {
+          console.log(`[findIndex調査] index:${i} id一致:${g.id === updated.id} gradeType一致:${g.gradeType === updated.gradeType} insuranceType一致:${g.insuranceType === updated.insuranceType}`, g, updated);
+        });
+        const idx = this.grades.findIndex(g => g.id === updated.id && g.gradeType === updated.gradeType && g.insuranceType === updated.insuranceType);
+        console.log('[StandardMonthlyComponent] findIndex result idx:', idx);
+        if (idx !== -1) {
+          this.grades[idx] = { ...updated };
+          console.log('[StandardMonthlyComponent] grades after update:', this.grades);
+          this.applyFilter();
+        } else {
+          console.warn('[StandardMonthlyComponent] 編集対象が見つかりませんでした', updated);
+        }
+        dialogRef.close();
+      });
+      instance.cancelled.subscribe(() => {
+        dialogRef.close();
+      });
+    }
+  }
   async applyChanges() {
     // 差分のみ抽出
-    // 今回は全件上書き例（必要に応じて差分判定も可）
-    const promises = this.grades.map(grade => {
-      const docId = `${grade.gradeType}_${grade.insuranceType}_${grade.id}`;
+    const updatedGrades = this.grades.filter(grade => {
+      const original = this.originalGrades.find(g => g.id === grade.id && g.gradeType === grade.gradeType && g.insuranceType === grade.insuranceType);
+      return !original || Object.keys(grade).some(key => grade[key as keyof typeof grade] !== original[key as keyof typeof grade]);
+    });
+    if (updatedGrades.length === 0) {
+      alert('変更はありません');
+      return;
+    }
+    const promises = updatedGrades.map(grade => {
+      const docId = `${String(grade.gradeType).trim()}_${String(grade.insuranceType).trim()}_${String(grade.grade).trim()}_${String(grade.validFrom).trim()}`;
+      console.log('[StandardMonthlyComponent] applyChanges docId:', docId, 'grade:', grade);
       return this.firestore.addOrUpdateStandardMonthlyGradeById(docId, grade);
     });
     await Promise.all(promises);
@@ -128,6 +173,7 @@ export class StandardMonthlyComponent {
     // Firestoreから再取得してローカルを最新化
     this.firestore.getStandardMonthlyGrades().subscribe(grades => {
       this.grades = grades.map(g => ({ ...g }));
+      this.originalGrades = grades.map(g => ({ ...g }));
       this.applyFilter();
     });
     // ファイル選択inputの値とファイル名をリセット
@@ -141,6 +187,7 @@ export class StandardMonthlyComponent {
     // Firestoreから再取得してローカルをリセット
     this.firestore.getStandardMonthlyGrades().subscribe(grades => {
       this.grades = grades.map(g => ({ ...g }));
+      this.originalGrades = grades.map(g => ({ ...g }));
       this.applyFilter();
       // ファイル選択inputの値とファイル名をリセット
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
@@ -254,8 +301,8 @@ export class StandardMonthlyComponent {
         errors.push(`${i+1}行目: insuranceTypeが不正です（1/2のみ）`);
         continue;
       }
-      // idは自動生成
-      const id = `${grade}_${validFrom}`;
+      // idは一貫してgradeType_insuranceType_grade_validFrom形式で生成
+      const id = `${gradeType}_${insuranceType}_${grade}_${validFrom}`;
       data.push({
         gradeType: gradeType as GradeType,
         insuranceType,
@@ -283,5 +330,17 @@ export class StandardMonthlyComponent {
       this.grades = grades.map(g => ({ ...g }));
       this.applyFilter();
     });
+  }
+
+  isCellChanged(grade: HealthInsuranceGrade | PensionInsuranceGrade, field: keyof (HealthInsuranceGrade | PensionInsuranceGrade)): boolean {
+    const original = this.originalGrades.find(g => g.id === grade.id && g.gradeType === grade.gradeType && g.insuranceType === grade.insuranceType);
+    if (!original) return false;
+    const current = grade[field];
+    const orig = original[field];
+    if (current == null && orig == null) return false;
+    if (typeof current === 'number' && typeof orig === 'number') {
+      return current !== orig;
+    }
+    return current !== orig;
   }
 }

@@ -1,0 +1,48 @@
+<div class="edit-standard-monthly-dialog">
+  <h2>標準報酬月額マスタ編集</h2>
+  <form #form="ngForm">
+    <div class="form-row">
+      <label for="gradeType">保険種別</label>
+      <select id="gradeType" name="gradeType" [(ngModel)]="formData.gradeType" disabled>
+        <option value="health">健康保険</option>
+        <option value="pension">厚生年金</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="insuranceType">協会/組合</label>
+      <select id="insuranceType" name="insuranceType" [(ngModel)]="formData.insuranceType" disabled>
+        <option value="1">協会けんぽ</option>
+        <option value="2">それ以外</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="validFrom">適用開始年月</label>
+      <input id="validFrom" name="validFrom" type="month" [(ngModel)]="formData.validFrom" [readonly]="true" disabled />
+    </div>
+    <div class="form-row">
+      <label for="grade">等級</label>
+      <input id="grade" name="grade" type="number" [(ngModel)]="formData.grade" required min="1" disabled />
+    </div>
+    <input type="hidden" name="id" [(ngModel)]="formData.id" />
+    <div class="form-row">
+      <label for="compensation">標準報酬月額</label>
+      <input id="compensation" name="compensation" type="number" [(ngModel)]="formData.compensation" required min="0" [ngClass]="{'highlight': isChanged('compensation')}" />
+    </div>
+    <div class="form-row">
+      <label for="lowerLimit">下限</label>
+      <input id="lowerLimit" name="lowerLimit" type="number" [(ngModel)]="formData.lowerLimit" required min="0" [ngClass]="{'highlight': isChanged('lowerLimit')}" />
+    </div>
+    <div class="form-row">
+      <label for="upperLimit">上限</label>
+      <input id="upperLimit" name="upperLimit" type="number" [(ngModel)]="formData.upperLimit" required min="0" [ngClass]="{'highlight': isChanged('upperLimit')}" />
+    </div>
+    <div class="form-row">
+      <label for="validTo">適用終了年月</label>
+      <input id="validTo" name="validTo" type="month" [(ngModel)]="formData.validTo" [ngClass]="{'highlight': isChanged('validTo')}" />
+    </div>
+    <div class="dialog-actions">
+      <button type="button" (click)="onSave()">保存</button>
+      <button type="button" (click)="onCancel()">キャンセル</button>
+    </div>
+  </form>
+</div>

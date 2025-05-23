@@ -34,6 +34,8 @@ export class StandardMonthlyComponent {
 
   originalGrades: (HealthInsuranceGrade | PensionInsuranceGrade)[] = [];
 
+  dialogRef: any = null; // ダイアログ多重起動防止用
+
   constructor(private firestore: FirestoreService, private dialog: MatDialog) {
     this.firestore.getStandardMonthlyGrades().subscribe(grades => {
       this.grades = grades.map(g => ({ ...g }));
@@ -46,16 +48,33 @@ export class StandardMonthlyComponent {
       this.years = allYears;
       this.applyFilter();
     });
+
+    // ソート状態の復元
+    const savedSortKey = localStorage.getItem('standardMonthlySortKey');
+    const savedSortAsc = localStorage.getItem('standardMonthlySortAsc');
+    if (savedSortKey) this.sortKey = savedSortKey;
+    if (savedSortAsc !== null) this.sortAsc = savedSortAsc === 'true';
+
+    // 選択状態の復元
+    const savedYear = localStorage.getItem('standardMonthlySelectedYear');
+    const savedGradeType = localStorage.getItem('standardMonthlySelectedGradeType');
+    const savedInsuranceType = localStorage.getItem('standardMonthlySelectedInsuranceType');
+    if (savedYear) this.selectedYear = Number(savedYear);
+    if (savedGradeType) this.selectedGradeType = savedGradeType as GradeType;
+    if (savedInsuranceType !== null) this.selectedInsuranceType = savedInsuranceType;
   }
 
   onYearChange(event: any) {
     this.selectedYear = Number(this.selectedYear);
+    localStorage.setItem('standardMonthlySelectedYear', String(this.selectedYear));
     this.applyFilter();
   }
   onInsuranceTypeChange(event: any) {
+    localStorage.setItem('standardMonthlySelectedInsuranceType', this.selectedInsuranceType);
     this.applyFilter();
   }
   onGradeTypeChange(event: any) {
+    localStorage.setItem('standardMonthlySelectedGradeType', this.selectedGradeType);
     this.applyFilter();
   }
 
@@ -82,6 +101,9 @@ export class StandardMonthlyComponent {
       this.sortKey = key;
       this.sortAsc = true;
     }
+    // ソート状態をlocalStorageに保存
+    localStorage.setItem('standardMonthlySortKey', this.sortKey);
+    localStorage.setItem('standardMonthlySortAsc', String(this.sortAsc));
     this.filteredGrades.sort((a: any, b: any) => {
       let valA = a[key];
       let valB = b[key];
@@ -97,17 +119,19 @@ export class StandardMonthlyComponent {
   }
 
   onAdd() {
-    const dialogRef = this.dialog.open(AddStandardMonthlyComponent, {
+    if (this.dialogRef) return;
+    this.dialogRef = this.dialog.open(AddStandardMonthlyComponent, {
       width: '400px',
       height: '90vh',
       disableClose: true
     });
-    const instance = dialogRef.componentInstance;
+    const instance = this.dialogRef.componentInstance;
     if (instance) {
       instance.added.subscribe(async (newGrade: any) => {
-        const docId = `${newGrade.gradeType}_${newGrade.insuranceType}_${newGrade.id}`;
+        const docId = newGrade.id;
         await this.firestore.addOrUpdateStandardMonthlyGradeById(docId, newGrade);
-        dialogRef.close();
+        this.dialogRef.close();
+        this.dialogRef = null;
         // Firestoreから再取得
         this.firestore.getStandardMonthlyGrades().subscribe(grades => {
           this.grades = grades.map(g => ({ ...g }));
@@ -116,19 +140,22 @@ export class StandardMonthlyComponent {
         });
       });
       instance.cancelled.subscribe(() => {
-        dialogRef.close();
+        this.dialogRef.close();
+        this.dialogRef = null;
       });
     }
   }
   onEdit(grade?: any) {
+    if (this.dialogRef) return;
     const target = grade || this.selectedGrade;
     if (!target) return;
-    const dialogRef = this.dialog.open(EditStandardMonthlyComponent, {
-      width: '400px',
+    this.dialogRef = this.dialog.open(EditStandardMonthlyComponent, {
+      width: '450px',
       height: '90vh',
-      data: { ...target }
+      data: { ...target },
+      disableClose: true
     });
-    const instance = dialogRef.componentInstance;
+    const instance = this.dialogRef.componentInstance;
     if (instance) {
       instance.data = { ...target };
       instance.saved.subscribe((updated: any) => {
@@ -146,14 +173,17 @@ export class StandardMonthlyComponent {
         } else {
           console.warn('[StandardMonthlyComponent] 編集対象が見つかりませんでした', updated);
         }
-        dialogRef.close();
+        this.dialogRef.close();
+        this.dialogRef = null;
       });
       instance.cancelled.subscribe(() => {
-        dialogRef.close();
+        this.dialogRef.close();
+        this.dialogRef = null;
       });
     }
   }
   async applyChanges() {
+    if (this.dialogRef) return;
     // 差分のみ抽出
     const updatedGrades = this.grades.filter(grade => {
       const original = this.originalGrades.find(g => g.id === grade.id && g.gradeType === grade.gradeType && g.insuranceType === grade.insuranceType);
@@ -183,6 +213,7 @@ export class StandardMonthlyComponent {
   }
 
   resetChanges() {
+    if (this.dialogRef) return;
     if (!window.confirm('データは保存されていません。変更をリセットしてよろしいですか？')) return;
     // Firestoreから再取得してローカルをリセット
     this.firestore.getStandardMonthlyGrades().subscribe(grades => {
@@ -286,7 +317,8 @@ export class StandardMonthlyComponent {
       const grade = Number(cols[headers.indexOf('grade')]);
       const compensation = Number(cols[headers.indexOf('compensation')]);
       const lowerLimit = Number(cols[headers.indexOf('lowerLimit')]);
-      const upperLimit = Number(cols[headers.indexOf('upperLimit')]);
+      const upperLimitStr = cols[headers.indexOf('upperLimit')]?.trim();
+      const upperLimit = upperLimitStr === '' ? null : Number(upperLimitStr);
       const validFrom = cols[headers.indexOf('validFrom')]?.trim();
       const validTo = cols[headers.indexOf('validTo')]?.trim() || '';
       if (!gradeType || !insuranceType || !grade || !compensation || !validFrom) {
@@ -320,6 +352,7 @@ export class StandardMonthlyComponent {
   }
 
   async onDelete() {
+    if (this.dialogRef) return;
     if (!this.selectedGrade) return;
     if (!window.confirm('本当に削除しますか？')) return;
     const docId = `${this.selectedGrade.gradeType}_${this.selectedGrade.insuranceType}_${this.selectedGrade.id}`;

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { AddCompanyComponent } from '../../dialogs/add-company/add-company.component';
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { CommonModule } from '@angular/common';
@@ -13,11 +13,16 @@ import { CommonModule } from '@angular/common';
 })
 export class CompaniesComponent {
   companies: any[] = [];
+  dialogRef: MatDialogRef<any> | null = null;
   constructor(private dialog: MatDialog, private firestoreService: FirestoreService) {}
   openAddCompanyDialog() {
-    const dialogRef = this.dialog.open(AddCompanyComponent, {
+    if (this.dialogRef) return;
+    this.dialogRef = this.dialog.open(AddCompanyComponent, {
       width: '500px',
       height: '500px'
+    });
+    this.dialogRef.afterClosed().subscribe(() => {
+      this.dialogRef = null;
     });
   }
 

@@ -36,12 +36,14 @@
     </thead>
     <tbody>
       <tr *ngFor="let grade of filteredGrades" [class.selected]="grade === selectedGrade" (click)="selectGrade(grade)">
-        <td>{{ grade.grade }}</td>
-        <td>{{ grade.compensation }}</td>
-        <td>{{ grade.lowerLimit }}</td>
-        <td>{{ grade.upperLimit }}</td>   
-        <td>{{ grade.validFrom }}</td>
-        <td>{{ grade.validTo || '-' }}</td>    
+        <td [ngClass]="{'highlight': isCellChanged(grade, 'grade')}">{{ grade.grade }}</td>
+        <td [ngClass]="{'highlight': isCellChanged(grade, 'compensation')}">{{ grade.compensation | number:'1.0-0' }}</td>
+        <td [ngClass]="{'highlight': isCellChanged(grade, 'lowerLimit')}">{{ grade.lowerLimit | number:'1.0-0' }}</td>
+        <td [ngClass]="{'highlight': isCellChanged(grade, 'upperLimit')}">
+          {{ grade.upperLimit == null ? '上限なし' : (grade.upperLimit | number:'1.0-0') }}
+        </td>   
+        <td [ngClass]="{'highlight': isCellChanged(grade, 'validFrom')}">{{ grade.validFrom }}</td>
+        <td [ngClass]="{'highlight': isCellChanged(grade, 'validTo')}">{{ grade.validTo || '-' }}</td>    
         <td>{{ grade.updatedAt | dateTimestamp:'yyyy/MM/dd HH:mm' }}</td>
         <td><button (click)="onEdit(grade); $event.stopPropagation();">編集</button></td>
       </tr>

@@ -20,6 +20,7 @@ import { ManageAdminComponent } from './features/master/pages/manage-admin/manag
 import { StandardMonthlyComponent } from './features/master/pages/standard-monthly/standard-monthly.component';
 import { ManageUserComponent } from './features/auth/pages/manage-user/manage-user.component';
 import { RegisterComponent } from './features/auth/pages/register/register.component';
+import { CanDeactivateDialogGuard } from './core/guards/can-deactivate-dialog.guard';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -41,10 +42,10 @@ export const routes: Routes = [
       { path: 'notification', component: NotificationComponent },
       { path: 'dashboard', component: DashboardComponent },
       { path: 'help', component: HelpComponent },
-      { path: 'company-info', component: CompaniesComponent },
-      { path: 'insurance-rate', component: InsuranceRateComponent },
+      { path: 'company-info', component: CompaniesComponent, canDeactivate: [CanDeactivateDialogGuard] },
+      { path: 'insurance-rate', component: InsuranceRateComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'manage-admin', component: ManageAdminComponent },
-      { path: 'standard-monthly', component: StandardMonthlyComponent },
+      { path: 'standard-monthly', component: StandardMonthlyComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'manage-user', component: ManageUserComponent },
     ],
   },

@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { InsuranceRate } from '../../../../core/models/insurance-rate.model';
 import { DateTimestampPipe } from '../../../../core/pipe/date-timestamp.pipe';
 import { PREFECTURES } from '../../../../core/models/prefecture.model';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { AddInsuranceRateComponent } from '../../dialogs/add-insurance-rate/add-insurance-rate.component';
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { CommonModule } from '@angular/common';
@@ -36,6 +36,7 @@ export class InsuranceRateComponent {
   insuranceTypes = INSURANCE_TYPES;
   selectedInsuranceType: string = '';
   fileName: string = '';
+  dialogRef: MatDialogRef<any> | null = null;
 
   constructor(private dialog: MatDialog, private firestore: FirestoreService) {
     // localStorageから前回の選択値を取得
@@ -96,43 +97,53 @@ export class InsuranceRateComponent {
   }
 
   onAdd() {
-    const dialogRef = this.dialog.open(AddInsuranceRateComponent, {
+    if (this.dialogRef) return; // 多重起動防止
+    this.dialogRef = this.dialog.open(AddInsuranceRateComponent, {
       width: '400px',
       height: '400px',
       disableClose: true
     });
-    dialogRef.componentInstance.added.subscribe(() => {
-      dialogRef.close();
+    this.dialogRef.componentInstance.added.subscribe(() => {
+      this.dialogRef?.close();
+      this.dialogRef = null;
       this.firestore.getInsuranceRates().subscribe(rates => {
         this.rates = rates;
         this.applyFilter();
       });
     });
+    this.dialogRef.afterClosed().subscribe(() => {
+      this.dialogRef = null;
+    });
   }
 
   onEdit(rate?: InsuranceRate) {
+    if (this.dialogRef) return; // 多重起動防止
     if (!rate) return;
-    const dialogRef = this.dialog.open(EditInsuranceRateComponent, {
+    this.dialogRef = this.dialog.open(EditInsuranceRateComponent, {
       width: '480px',
       height: '400px',
       data: { ...rate }
     });
-    const instance = dialogRef.componentInstance;
+    const instance = this.dialogRef.componentInstance;
     if (instance) {
       instance.data = { ...rate };
       instance.saved.subscribe((updated: InsuranceRate) => {
-        // ローカルrates配列を更新
         const idx = this.rates.findIndex(r => r.id === updated.id);
         if (idx !== -1) {
           this.rates[idx] = { ...updated };
           this.applyFilter();
         }
-        dialogRef.close();
+        this.dialogRef?.close();
+        this.dialogRef = null;
       });
       instance.cancelled.subscribe(() => {
-        dialogRef.close();
+        this.dialogRef?.close();
+        this.dialogRef = null;
       });
     }
+    this.dialogRef.afterClosed().subscribe(() => {
+      this.dialogRef = null;
+    });
   }
 
   onDelete() {

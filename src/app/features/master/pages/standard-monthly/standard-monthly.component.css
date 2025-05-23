@@ -102,3 +102,9 @@
   user-select: text;
   cursor: default;
 }
+
+/* 変更箇所ハイライト用 */
+.highlight {
+  background-color: #fff3cd !important;
+  transition: background 0.3s;
+}

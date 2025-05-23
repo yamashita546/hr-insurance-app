@@ -54,6 +54,7 @@ export class InsuranceRateComponent {
   }
 
   onYearChange(event: any) {
+    this.selectedYear = Number(this.selectedYear);
     localStorage.setItem('insuranceRateSelectedYear', String(this.selectedYear));
     this.applyFilter();
   }

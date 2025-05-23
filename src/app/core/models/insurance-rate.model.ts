@@ -1,9 +1,10 @@
 // 保険料率モデル
 
 export interface InsuranceRate {
+    insuranceType: string; // 協会けんぽ又はそれ以外
     id: string; // UUIDまたは {都道府県コード}_{適用年月} 等
-    prefectureCode: string; // 例: "13"（東京都）
-    prefectureName: string; // 例: "東京都"
+    prefectureCode?: string; // 例: "13"（東京都）
+    prefectureName?: string; // 例: "東京都"
     validFrom: string; // 例: '2025-03'（適用開始年月）
     validTo?: string;  // 例: '2026-02'（適用終了年月）
     

@@ -1,5 +1,11 @@
 <form [formGroup]="form" class="edit-insurance-rate-form">
   <div class="form-group">
+    <label for="insuranceType">保険種別</label>
+    <select id="insuranceType" formControlName="insuranceType" readonly>
+      <option *ngFor="let type of insuranceTypes" [value]="type.code">{{ type.name }}</option>
+    </select>
+  </div>
+  <div class="form-group">
     <label>都道府県</label>
     <input type="text" [formControlName]="'prefectureName'" readonly />
   </div>

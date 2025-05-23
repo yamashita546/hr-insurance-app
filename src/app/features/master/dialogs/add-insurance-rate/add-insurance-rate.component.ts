@@ -4,6 +4,7 @@ import { PREFECTURES } from '../../../../core/models/prefecture.model';
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { CommonModule } from '@angular/common';
 import { MatDialogRef } from '@angular/material/dialog';
+import { INSURANCE_TYPES } from '../../../../core/models/insurance-type';
 
 @Component({
   selector: 'app-add-insurance-rate',
@@ -16,6 +17,7 @@ export class AddInsuranceRateComponent implements OnInit {
   @Output() added = new EventEmitter<void>();
 
   prefectures = PREFECTURES;
+  insuranceTypes = INSURANCE_TYPES;
   form: FormGroup;
   loading = false;
   error: string | null = null;
@@ -26,6 +28,7 @@ export class AddInsuranceRateComponent implements OnInit {
     private dialogRef: MatDialogRef<AddInsuranceRateComponent>
   ) {
     this.form = this.fb.group({
+      insuranceType: ['1', Validators.required],
       prefectureCode: ['', Validators.required],
       validFrom: ['', Validators.required],
       validTo: [''],

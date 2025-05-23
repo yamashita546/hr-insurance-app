@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { toDate } from '../../../../core/utils/date-util';
 import { Validators } from '@angular/forms';
 import { EditInsuranceRateComponent } from '../../dialogs/edit-insurance-rate/edit-insurance-rate.component';
+import { INSURANCE_TYPES } from '../../../../core/models/insurance-type';
 
 interface Prefecture {
   code: string;
@@ -32,6 +33,9 @@ export class InsuranceRateComponent {
   originalRates: InsuranceRate[] = [];
   filteredRates: InsuranceRate[] = [];
   selectedRate: InsuranceRate | null = null;
+  insuranceTypes = INSURANCE_TYPES;
+  selectedInsuranceType: string = '';
+  fileName: string = '';
 
   constructor(private dialog: MatDialog, private firestore: FirestoreService) {
     // localStorageから前回の選択値を取得
@@ -64,11 +68,16 @@ export class InsuranceRateComponent {
     this.applyFilter();
   }
 
+  onInsuranceTypeChange(event: any) {
+    this.applyFilter();
+  }
+
   applyFilter() {
     this.filteredRates = this.rates.filter(rate => {
       const yearMatch = !this.selectedYear || (rate.validFrom && rate.validFrom.substr(0, 4) === String(this.selectedYear));
       const prefMatch = !this.selectedPrefecture || (rate.prefectureCode === this.selectedPrefecture);
-      return yearMatch && prefMatch;
+      const typeMatch = !this.selectedInsuranceType || (rate.insuranceType === this.selectedInsuranceType);
+      return yearMatch && prefMatch && typeMatch;
     });
     console.log('applyFilter後のfilteredRates:', this.filteredRates);
     this.selectedRate = null;
@@ -131,8 +140,15 @@ export class InsuranceRateComponent {
   }
 
   onExportCsv() {
-    // CSVヘッダー（取り込み側が期待するカラム名）
+    // 現在のフィルタ条件を取得
+    const insuranceTypeLabel = this.selectedInsuranceType ? (this.insuranceTypes.find(t => t.code === this.selectedInsuranceType)?.name || this.selectedInsuranceType) : '全保険種別';
+    const yearLabel = this.selectedYear ? `${this.selectedYear}年度` : '全年度';
+    const prefLabel = this.selectedPrefecture ? (this.prefectures.find(p => p.code === this.selectedPrefecture)?.name || this.selectedPrefecture) : '全都道府県';
+    const msg = `現在表示されている「${insuranceTypeLabel}」「${yearLabel}」「${prefLabel}」をひな型としてCSV出力します。よろしいですか？`;
+    if (!window.confirm(msg)) return;
+    // CSVヘッダー（insuranceTypeを先頭に追加）
     const headers = [
+      'insuranceType',
       'prefectureCode',
       'prefectureName',
       'validFrom',
@@ -146,8 +162,9 @@ export class InsuranceRateComponent {
       'employeePensionInsuranceRate',
       'employeePensionShareRate'
     ];
-    // データ行
-    const rows = this.rates.map(rate => [
+    // データ行（filteredRatesを使う）
+    const rows = this.filteredRates.map(rate => [
+      rate.insuranceType || '',
       rate.prefectureCode || '',
       rate.prefectureName || '',
       rate.validFrom || '',
@@ -175,6 +192,7 @@ export class InsuranceRateComponent {
 
   onImportCsv(event: any) {
     const file = event.target.files[0];
+    this.fileName = file ? file.name : '';
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (e: any) => {
@@ -216,6 +234,12 @@ export class InsuranceRateComponent {
         errors.push(`${i+1}行目: 列数が一致しません`);
         continue;
       }
+      // insuranceType必須チェック
+      const insuranceType = cols[headers.indexOf('insuranceType')]?.trim();
+      if (!insuranceType) {
+        errors.push(`${i+1}行目: insuranceType（保険種別）が未入力です`);
+        continue;
+      }
       // 必須項目チェック
       const prefectureCode = cols[headers.indexOf('prefectureCode')]?.trim();
       const validFrom = cols[headers.indexOf('validFrom')]?.trim();
@@ -231,6 +255,7 @@ export class InsuranceRateComponent {
       }
       // ...他の項目も同様に
       data.push({
+        insuranceType,
         id: `${prefectureCode}_${validFrom}`,
         prefectureCode,
         prefectureName: this.prefectures.find(p => p.code === prefectureCode)?.name || '',
@@ -286,9 +311,27 @@ export class InsuranceRateComponent {
         this.rates = rates.map(r => ({ ...r }));
         this.originalRates = rates.map(r => ({ ...r }));
         this.applyFilter();
+        // ファイル選択inputの値とファイル名をリセット
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+        this.fileName = '';
       });
     }).catch(err => {
       alert('更新に失敗しました: ' + err);
+    });
+  }
+
+  resetChanges() {
+    if (!window.confirm('データは保存されていません。変更をリセットしてよろしいですか？')) return;
+    // Firestoreから再取得してローカルをリセット
+    this.firestore.getInsuranceRates().subscribe(rates => {
+      this.rates = rates.map(r => ({ ...r }));
+      this.originalRates = rates.map(r => ({ ...r }));
+      this.applyFilter();
+      // ファイル選択inputの値とファイル名をリセット
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+      this.fileName = '';
     });
   }
 }

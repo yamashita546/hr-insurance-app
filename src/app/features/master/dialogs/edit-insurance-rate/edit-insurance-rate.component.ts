@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { InsuranceRate } from '../../../../core/models/insurance-rate.model';
 import { CommonModule } from '@angular/common';
+import { INSURANCE_TYPES } from '../../../../core/models/insurance-type';
 
 @Component({
   selector: 'app-edit-insurance-rate',
@@ -17,12 +18,14 @@ export class EditInsuranceRateComponent implements OnInit {
 
   form!: FormGroup;
   originalData!: InsuranceRate;
+  insuranceTypes = INSURANCE_TYPES;
 
   constructor(private fb: FormBuilder) {}
 
   ngOnInit() {
     this.originalData = { ...this.data };
     this.form = this.fb.group({
+      insuranceType: [{ value: this.data.insuranceType, disabled: true }, Validators.required],
       healthInsuranceBaseRate: [this.data.healthInsuranceBaseRate, [Validators.required, Validators.min(0)]],
       healthInsuranceSpecificRate: [this.data.healthInsuranceSpecificRate, [Validators.required, Validators.min(0)]],
       healthInsuranceRate: [this.data.healthInsuranceRate, [Validators.required, Validators.min(0)]],

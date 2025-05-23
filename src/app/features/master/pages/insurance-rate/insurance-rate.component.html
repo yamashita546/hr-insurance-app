@@ -5,6 +5,10 @@
       <option value="0">全年度</option>
       <option *ngFor="let year of years" [value]="year">{{ year }}年度</option>
     </select>
+    <select [(ngModel)]="selectedInsuranceType" (change)="onInsuranceTypeChange($event)">
+      <option value="">全保険種別</option>
+      <option *ngFor="let type of insuranceTypes" [value]="type.code">{{ type.name }}</option>
+    </select>
     <select [(ngModel)]="selectedPrefecture" (change)="onPrefectureChange($event)">
       <option value="">全都道府県</option>
       <option *ngFor="let pref of prefectures" [value]="pref.code">{{ pref.name }}</option>
@@ -13,6 +17,7 @@
     <button class="edit-btn" [disabled]="!selectedRate" (click)="onEdit()">編集</button>
     <button class="delete-btn" [disabled]="!selectedRate" (click)="onDelete()">削除</button>
     <button class="apply-btn" (click)="applyChanges()">変更を適用</button>
+    <button class="reset-btn" (click)="resetChanges()">変更をリセット</button>
   </div>
   <table class="rate-table">
     <thead>
@@ -54,6 +59,10 @@
   </table>
   <div class="csv-toolbar">
     <button class="csv-btn" (click)="onExportCsv()">CSVひな型出力</button>
-    <input type="file" (change)="onImportCsv($event)" accept=".csv" />
+    <label class="file-label">
+      ファイルを選択
+      <input type="file" (change)="onImportCsv($event)" accept=".csv" style="display: none;" #fileInput />
+    </label>
+    <span class="file-name">{{ fileName || '選択されていません' }}</span>
   </div>
 </div>

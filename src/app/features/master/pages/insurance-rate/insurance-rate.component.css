@@ -111,3 +111,54 @@ button[disabled] {
   background-color: #fff3cd !important; /* 薄い黄色 */
   transition: background 0.3s;
 }
+button.reset-btn {
+  background: #fff;
+  color: #1976d2;
+  border: 1.5px solid #1976d2;
+  border-radius: 6px;
+  min-width: 110px;
+  padding: 8px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+button.reset-btn:hover {
+  background: #e3f2fd;
+  color: #1565c0;
+  border-color: #1565c0;
+}
+
+.file-label {
+  display: inline-block;
+  padding: 8px 16px;
+  font-size: 1rem;
+  border: 1.5px solid #1976d2;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.file-label:hover {
+  background: #e3f2fd;
+  color: #1565c0;
+  border-color: #1565c0;
+}
+
+.csv-toolbar input[type='file'] {
+  display: inline-block;
+  padding: 8px 16px;
+  font-size: 1rem;
+  border: 1.5px solid #1976d2;
+  border-radius: 6px;
+  background: #fff;
+  color: #1976d2;
+  cursor: pointer;
+  margin-left: 12px;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+.csv-toolbar input[type='file']:hover {
+  background: #e3f2fd;
+  color: #1565c0;
+  border-color: #1565c0;
+}

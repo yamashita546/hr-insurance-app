@@ -1,5 +1,12 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()" class="add-insurance-rate-form">
   <div class="form-group">
+    <label for="insuranceType">保険種別 <span class="required">*</span></label>
+    <select id="insuranceType" formControlName="insuranceType" required>
+      <option *ngFor="let type of insuranceTypes" [value]="type.code">{{ type.name }}</option>
+    </select>
+  </div>
+
+  <div class="form-group">
     <label for="prefectureCode">都道府県 <span class="required">*</span></label>
     <select id="prefectureCode" formControlName="prefectureCode" required>
       <option value="">選択してください</option>

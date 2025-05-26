@@ -7,16 +7,22 @@
     </table>
   </div>
   <div class="card">
-    <h2>会社情報</h2>
-    <table *ngIf="company$ | async as company">
+    <h2>会社情報
+      <span class="button-group">
+        <button class="edit-btn" (click)="openEditDialog()" *ngIf="editedCompany">編集</button>
+        <button class="apply-btn" (click)="applyEdit()" *ngIf="editedCompany && originalCompany && editedCompany !== originalCompany">編集を適用</button>
+        <button class="reset-btn" (click)="resetEdit()" *ngIf="editedCompany && originalCompany && editedCompany !== originalCompany">編集をリセット</button>
+      </span>
+    </h2>
+    <table *ngIf="editedCompany as company">
       <tr><td>企業ID</td><td>{{ company.displayId }}</td></tr>
-      <tr><td>法人番号</td><td>{{ company.corporateNumber }}</td></tr>
-      <tr><td>会社名</td><td>{{ company.name }}</td></tr>
-      <tr><td>業種</td><td>{{ company.industry }}</td></tr>
-      <tr><td>代表者</td><td>{{ company.companyOwner }}</td></tr>
+      <tr><td [class.highlight]="isChanged('corporateNumber')">法人番号</td><td [class.highlight]="isChanged('corporateNumber')">{{ company.corporateNumber }}</td></tr>
+      <tr><td [class.highlight]="isChanged('name')">会社名</td><td [class.highlight]="isChanged('name')">{{ company.name }}</td></tr>
+      <tr><td [class.highlight]="isChanged('industry')">業種</td><td [class.highlight]="isChanged('industry')">{{ company.industry }}</td></tr>
+      <tr><td [class.highlight]="isChanged('companyOwner')">代表者</td><td [class.highlight]="isChanged('companyOwner')">{{ company.companyOwner }}</td></tr>
       <tr>
-        <td>本社所在地</td>
-        <td>
+        <td [class.highlight]="isChangedDeep('headOfficeAddress')">本社所在地</td>
+        <td [class.highlight]="isChangedDeep('headOfficeAddress')">
           <ng-container *ngIf="company.headOfficeAddress as addr; else noAddress">
             {{
               (addr.postalCode ? '〒' + addr.postalCode : '') +
@@ -30,10 +36,10 @@
           <ng-template #noAddress>未登録</ng-template>
         </td>
       </tr>
-      <tr><td>設立日</td><td>{{ company.establishmentDate }}</td></tr>
+      <tr><td [class.highlight]="isChanged('establishmentDate')">設立日</td><td [class.highlight]="isChanged('establishmentDate')">{{ company.establishmentDate }}</td></tr>
       <tr><td>作成日</td><td>{{ company.createdAt?.toDate() | date:'yyyy/MM/dd' }}</td></tr>
       <tr><td>更新日</td><td>{{ company.updatedAt?.toDate() | date:'yyyy/MM/dd' }}</td></tr>
-      <tr><td>有効</td><td>{{ company.isActive ? '○' : '×' }}</td></tr>
+      <tr><td [class.highlight]="isChanged('isActive')">有効</td><td [class.highlight]="isChanged('isActive')">{{ company.isActive ? '○' : '×' }}</td></tr>
     </table>
   </div>
 </div>

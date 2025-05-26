@@ -13,6 +13,54 @@
   font-size: 1.2rem;
   margin-bottom: 1rem;
   font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+.edit-btn {
+  background: #fff3e0;
+  color: #ff9800;
+  border: 1px solid #ff9800;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.edit-btn:hover { background: #ffe0b2; }
+.apply-btn {
+  background: #43a047;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.apply-btn:hover { background: #388e3c; }
+.reset-btn {
+  background: #fff;
+  color: #1976d2;
+  border: 1.5px solid #1976d2;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+.reset-btn:hover {
+  background: #e3f2fd;
+  color: #1565c0;
+  border-color: #1565c0;
 }
 table {
   width: 100%;
@@ -30,4 +78,8 @@ tr td:first-child {
   background: #fafafa;
   font-weight: bold;
   width: 180px;
+}
+.highlight {
+  background-color: #fff3cd !important; /* 薄い黄色 */
+  transition: background 0.3s;
 }

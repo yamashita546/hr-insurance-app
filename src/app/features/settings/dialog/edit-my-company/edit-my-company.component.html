@@ -1,0 +1,55 @@
+<div class="edit-company-dialog">
+  <h2>会社情報編集</h2>
+  <form [formGroup]="form">
+    <div class="form-section">
+      <h3>企業情報</h3>
+      <label>表示・検索用ID
+        <input type="text" class="input" formControlName="displayId" readonly />
+      </label>
+      <label>法人番号
+        <input type="text" class="input" formControlName="corporateNumber" placeholder="例：1234567890123" />
+      </label>
+      <label>会社名 <span class="required">*</span>
+        <input type="text" class="input" formControlName="companyName" placeholder="例：株式会社サンプル" />
+        <div class="error" *ngIf="form.get('companyName')?.invalid && form.get('companyName')?.touched">会社名は必須です</div>
+      </label>
+      <label>業種
+        <input type="text" class="input" formControlName="industry" placeholder="例：IT、製造業など" />
+      </label>
+      <label>代表者名
+        <input type="text" class="input" formControlName="companyOwner" placeholder="例：山田太郎" />
+      </label>
+      <div formGroupName="headOfficeAddress">
+        <label>郵便番号
+          <input type="text" class="input" formControlName="postalCode" placeholder="例：100-0001" />
+        </label>
+        <label>都道府県
+          <select class="input" formControlName="prefecture">
+            <option value="">選択してください</option>
+            <option *ngFor="let pref of prefectures" [value]="pref.code">{{ pref.name }}</option>
+          </select>
+        </label>
+        <label>市区町村
+          <input type="text" class="input" formControlName="city" placeholder="例：千代田区" />
+        </label>
+        <label>町域・丁目・番地
+          <input type="text" class="input" formControlName="town" placeholder="例：千代田1丁目1-1" />
+        </label>
+        <label>建物名等
+          <input type="text" class="input" formControlName="streetAddress" placeholder="例：○○ビル3F" />
+        </label>
+        <label>国コード（任意）
+          <input type="text" class="input" formControlName="countryCode" placeholder="例：JP" />
+        </label>
+      </div>
+      <label>設立日 <span class="required">*</span>
+        <input type="date" class="input" formControlName="establishmentDate" />
+        <div class="error" *ngIf="form.get('establishmentDate')?.invalid && form.get('establishmentDate')?.touched">設立日は必須です</div>
+      </label>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="cancel-btn" (click)="onCancel()">キャンセル</button>
+      <button type="button" class="register-btn" (click)="onSave()" [disabled]="form.invalid">保存</button>
+    </div>
+  </form>
+</div>

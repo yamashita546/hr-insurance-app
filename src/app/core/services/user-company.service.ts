@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AppUser } from '../models/user.model';
 import { Company } from '../models/company.model';
-import { Firestore, doc, getDoc } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, updateDoc } from '@angular/fire/firestore';
 import { Auth, onAuthStateChanged, User as FirebaseUser } from '@angular/fire/auth';
 
 @Injectable({ providedIn: 'root' })
@@ -43,5 +43,11 @@ export class UserCompanyService {
   }
   isOwner(user: AppUser | null): boolean {
     return user?.role === 'owner';
+  }
+
+  async updateCompany(company: Company) {
+    const companyDoc = doc(this.firestore, 'companies', company.companyId);
+    await updateDoc(companyDoc, { ...company });
+    this.companySubject.next({ ...company });
   }
 } 

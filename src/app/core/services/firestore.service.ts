@@ -122,4 +122,12 @@ export class FirestoreService {
     const q = query(ref);
     return collectionData(q, { idField: 'id' }) as Observable<any[]>;
   }
+
+  async updateCompany(company: any) {
+    const now = Timestamp.now();
+    await setDoc(doc(this.firestore, 'companies', company.companyId), {
+      ...company,
+      updatedAt: now
+    }, { merge: true });
+  }
 }

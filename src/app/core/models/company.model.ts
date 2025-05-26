@@ -7,14 +7,14 @@ import { InsuranceType } from './insurance-type';
 
 // 企業モデル
 export type Company = {
-    companyId: string;
-    companyCode?: string;
-    displayId: string;
-    name: string;
-    industry?: string;
-    companyOwner?: string;
-    headOfficeAddress?: Address;
-    establishmentDate?: string;
+    companyId: string; // ※自動生成
+    corporateNumber?: string; // ※法人番号
+    displayId: string; // ※表示・検索用ID
+    name: string; // ※企業名
+    industry?: string; // ※業種（後々正確な分類に変更できたらよい）
+    companyOwner?: string; // ※代表者名
+    headOfficeAddress?: Address; // ※本社所在地
+    establishmentDate?: string; // ※設立日
     createdAt: Timestamp;
     updatedAt: Timestamp;
     isActive: boolean;
@@ -23,10 +23,10 @@ export type Company = {
 
   // 事業所モデル
   export interface Office {
-    id: string;
-    companyId: string;        // 紐付け
+    id: string;//※自動生成
+    companyId: string;        // ※紐付け
     name: string;             // "本社", "大阪営業所"など
-    isHeadOffice: boolean;    // 本社フラグ
+    isHeadOffice: boolean;    // ※本社フラグ
     address: Address;
     insuranceType: InsuranceType; //適用保険種別
     insurancePrefecture: Prefecture;  //適用保険事業所

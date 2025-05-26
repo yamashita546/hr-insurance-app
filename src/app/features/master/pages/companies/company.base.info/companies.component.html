@@ -1,42 +1,58 @@
-<div class="company-container">
+<div class="company-container scroll-x">
   <h1>企業情報管理</h1>
   <div class="company-list">
     <div class="company-item">
       <button class="add-button" (click)="openAddCompanyDialog()">追加</button>
-      <button class="edit-button">編集</button>
-      <button class="delete-button">削除</button>
+      <button class="edit-button" [disabled]="selectedCompanies.length === 0" (click)="openEditCompanyDialog()">編集</button>
+      <button class="delete-button" (click)="onToggleActiveCompanies()">削除</button>
+      <button class="apply-btn" (click)="applyChanges()">変更を適用</button>
+      <button class="reset-btn" (click)="resetChanges()">変更をリセット</button>
     </div>
   </div>
-  <table>
-    <thead>
-      <tr>
-        <th>企業ID</th>
-        <th>企業コード</th>
-        <th>会社名</th>
-        <th>業種</th>
-        <th>代表者</th>
-        <th>所在地</th>
-        <th>設立日</th>
-        <th>作成日</th>
-        <th>更新日</th>
-        <th>有効</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let company of companies">
-        <td>{{ company.displayId }}</td>
-        <td>{{ company.companyCode }}</td>
-        <td>{{ company.name }}</td>
-        <td>{{ company.industry }}</td>
-        <td>{{ company.companyOwner }}</td>
-        <td>{{ company.headOfficeAddress?.addressLine1 }}</td>
-        <td>{{ company.establishmentDate }}</td>
-        <td>{{ company.createdAt.toDate() | date:'yyyy/MM/dd' }}</td>
-        <td>{{ company.updatedAt.toDate() | date:'yyyy/MM/dd' }}</td>
-        <td>{{ company.isActive ? '○' : '×' }}</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>企業ID</th>
+          <th>法人番号</th>
+          <th>会社名</th>
+          <th>業種</th>
+          <th>代表者</th>
+          <th>本社所在地</th>
+          <th>設立日</th>
+          <th>作成日</th>
+          <th>更新日</th>
+          <th>有効</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let company of companies" [class.selected]="isSelected(company)" [class.changed]="isChanged(company)">
+          <td><input type="checkbox" [checked]="isSelected(company)" (change)="toggleSelection(company, $event)" /></td>
+          <td>{{ company.displayId }}</td>
+          <td [class.highlight]="isChangedCorporateNumber(company)">{{ company.corporateNumber }}</td>
+          <td [class.highlight]="isChangedName(company)">{{ company.name }}</td>
+          <td [class.highlight]="isChangedIndustry(company)">{{ company.industry }}</td>
+          <td [class.highlight]="isChangedCompanyOwner(company)">{{ company.companyOwner }}</td>
+          <td class="address-cell" [class.highlight]="isChangedHeadOfficeAddress(company)">
+            <div>
+              {{ company.headOfficeAddress?.postalCode ? '〒' + company.headOfficeAddress.postalCode : '' }}
+            </div>
+            <div>
+              {{ getPrefectureName(company.headOfficeAddress?.prefecture) }}{{ company.headOfficeAddress?.city || '' }}
+            </div>
+            <div>
+              {{ company.headOfficeAddress?.town || '' }}{{ company.headOfficeAddress?.streetAddress || '' }}{{ company.headOfficeAddress?.buildingName || '' }}
+            </div>
+          </td>
+          <td [class.highlight]="isChangedEstablishmentDate(company)">{{ company.establishmentDate }}</td>
+          <td>{{ company.createdAt.toDate() | date:'yyyy/MM/dd' }}</td>
+          <td>{{ company.updatedAt.toDate() | date:'yyyy/MM/dd' }}</td>
+          <td [class.highlight]="isChangedIsActive(company)">{{ company.isActive ? '○' : '×' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 

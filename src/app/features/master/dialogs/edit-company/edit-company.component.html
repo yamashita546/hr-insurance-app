@@ -1,16 +1,13 @@
-<div class="add-company-dialog">
-  <h2>企業情報登録</h2>
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+<div class="edit-company-dialog">
+  <h2>企業情報編集</h2>
+  <form [formGroup]="form">
     <div class="form-section">
       <h3>企業情報</h3>
       <label>表示・検索用ID
-        <span class="auto-id-info">登録時に自動生成されます（都道府県コード＋連番）</span>
+        <input type="text" class="input" formControlName="displayId" readonly />
       </label>
       <label>法人番号
         <input type="text" class="input" formControlName="corporateNumber" placeholder="例：1234567890123" />
-        <div class="error" *ngIf="form.get('corporateNumber')?.errors?.['corporateNumberInvalid'] && form.get('corporateNumber')?.touched">
-          法人番号は13桁の数字で入力してください
-        </div>
       </label>
       <label>会社名 <span class="required">*</span>
         <input type="text" class="input" formControlName="companyName" placeholder="例：株式会社サンプル" />
@@ -51,9 +48,8 @@
       </label>
     </div>
     <div class="dialog-actions">
-      <button type="button" class="cancel-btn" (click)="onCancel()" [disabled]="loading">キャンセル</button>
-      <button type="submit" class="register-btn" [disabled]="form.invalid || loading">{{ loading ? '登録中...' : '登録' }}</button>
+      <button type="button" class="cancel-btn" (click)="onCancel()">キャンセル</button>
+      <button type="button" class="register-btn" (click)="onSave()" [disabled]="form.invalid">保存</button>
     </div>
-    <div class="error" *ngIf="error">{{ error }}</div>
   </form>
 </div>

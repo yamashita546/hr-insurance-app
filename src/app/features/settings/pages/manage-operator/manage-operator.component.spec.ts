@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { RateFormComponent } from './rate-form.component';
+import { ManageOperatorComponent } from './manage-operator.component';
 
-describe('RateFormComponent', () => {
-  let component: RateFormComponent;
-  let fixture: ComponentFixture<RateFormComponent>;
+describe('ManageOperatorComponent', () => {
+  let component: ManageOperatorComponent;
+  let fixture: ComponentFixture<ManageOperatorComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RateFormComponent]
+      imports: [ManageOperatorComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(RateFormComponent);
+    fixture = TestBed.createComponent(ManageOperatorComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

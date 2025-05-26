@@ -3,11 +3,12 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import { AppUser } from '../../../../core/models/user.model';
 import { Company } from '../../../../core/models/company.model';
+import { Router,RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-company-setting',
   standalone: true,
-  imports: [],
+  imports: [RouterModule],
   templateUrl: './company-setting.component.html',
   styleUrl: './company-setting.component.css'
 })

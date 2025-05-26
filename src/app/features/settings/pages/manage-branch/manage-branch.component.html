@@ -1,1 +1,37 @@
-<p>manage-branch works!</p>
+<div class="branch-container scroll-x">
+  <h1>支社情報管理</h1>
+  <div class="company-info-block" *ngIf="company">
+    <div>企業ID：{{ company?.displayId }}</div>
+    <div>企業名：{{ company?.name }}</div>
+  </div>
+  <div class="branch-list">
+    <div class="branch-item">
+      <button class="add-btn" (click)="openAddBranchDialog()">追加</button>
+      <button class="edit-btn" [disabled]="selectedBranches.length === 0" (click)="openEditBranchDialog()">編集</button>
+      <button class="delete-btn" [disabled]="selectedBranches.length === 0" (click)="onDeleteBranch()">削除</button>
+      <button class="apply-btn" (click)="applyChanges()">変更を適用</button>
+      <button class="reset-btn" (click)="resetChanges()">変更をリセット</button>
+    </div>
+  </div>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>支社ID</th>
+          <th>支社名</th>
+          <th>本社フラグ</th>
+          <th>住所</th>
+          <th>適用保険種別</th>
+          <th>事業所番号</th>
+          <th>有効期間（開始）</th>
+          <th>有効期間（終了）</th>
+          <th>有効</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 支社データの行は今後実装 -->
+      </tbody>
+    </table>
+  </div>
+</div>

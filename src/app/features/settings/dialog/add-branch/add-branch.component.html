@@ -1,0 +1,71 @@
+<div class="add-branch-dialog">
+  <h2>支社情報追加</h2>
+  <form [formGroup]="form">
+    <div class="form-section">
+      <label>会社ID
+        <input type="text" class="input" [value]="companyDisplayId" readonly />
+      </label>
+      <label>支社名 <span class="required">*</span>
+        <input type="text" class="input" formControlName="name" placeholder="例：大阪営業所" />
+        <div class="error" *ngIf="form.get('name')?.invalid && form.get('name')?.touched">支社名は必須です</div>
+      </label>
+      <label>本社フラグ
+        <input type="checkbox" formControlName="isHeadOffice" /> 本社として登録
+      </label>
+      <div formGroupName="address">
+        <label>郵便番号
+          <input type="text" class="input" formControlName="postalCode" placeholder="例：100-0001" />
+        </label>
+        <label>都道府県
+          <select class="input" formControlName="prefecture">
+            <option value="">選択してください</option>
+            <option *ngFor="let pref of prefectures" [value]="pref.code">{{ pref.name }}</option>
+          </select>
+        </label>
+        <label>市区町村
+          <input type="text" class="input" formControlName="city" placeholder="例：大阪市北区" />
+        </label>
+        <label>町域・丁目・番地
+          <input type="text" class="input" formControlName="town" placeholder="例：梅田1丁目1-1" />
+        </label>
+        <label>建物名等
+          <input type="text" class="input" formControlName="streetAddress" placeholder="例：○○ビル3F" />
+        </label>
+        <label>国コード（任意）
+          <input type="text" class="input" formControlName="countryCode" placeholder="例：JP" />
+        </label>
+      </div>
+      <label>適用保険種別
+        <select class="input" formControlName="insuranceType">
+          <option value="">選択してください</option>
+          <option *ngFor="let type of insuranceTypes" [value]="type.code">{{ type.name }}</option>
+        </select>
+      </label>
+      <label>適用保険事業所
+        <select class="input" formControlName="insurancePrefecture">
+          <option value="">選択してください</option>
+          <option *ngFor="let pref of prefectures" [value]="pref.code">{{ pref.name }}</option>
+        </select>
+      </label>
+      <label>業種分類ID
+        <input type="text" class="input" formControlName="businessCategoryId" placeholder="例：A123" />
+      </label>
+      <label>事業所番号
+        <input type="text" class="input" formControlName="officeCode" placeholder="例：1234567890" />
+      </label>
+      <label>有効期間（開始）
+        <input type="date" class="input" formControlName="validFrom" />
+      </label>
+      <label>有効期間（終了）
+        <input type="date" class="input" formControlName="validTo" />
+      </label>
+      <label>有効
+        <input type="checkbox" formControlName="isActive" /> 有効
+      </label>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="cancel-btn" (click)="onCancel()">キャンセル</button>
+      <button type="button" class="register-btn" (click)="onSave()" [disabled]="form.invalid">保存</button>
+    </div>
+  </form>
+</div>

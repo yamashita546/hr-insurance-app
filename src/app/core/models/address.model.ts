@@ -3,7 +3,7 @@ import { Prefecture } from "./prefecture.model";
 
 export interface Address {
     postalCode: string;         // 郵便番号（例: "100-0001"）
-    prefecture: Prefecture;     // 都道府県コード（例: "13"）
+    prefecture: string;     // 都道府県コード（例: "13"）
     city: string;               // 市区町村（例: "千代田区"）
     town: string;               // 町域・丁目（例: "千代田1丁目"）
     streetAddress: string;      // 番地・建物名等（例: "1-1-1 ○○ビル3F"）

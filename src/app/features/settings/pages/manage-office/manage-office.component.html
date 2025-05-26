@@ -23,6 +23,9 @@
           <th>本社フラグ</th>
           <th>住所</th>
           <th>適用保険種別</th>
+          <th>適用保険事業所</th>
+          <th>業種分類ID</th>
+          <th>業種分類名</th>
           <th>事業所番号</th>
           <th>有効期間（開始）</th>
           <th>有効期間（終了）</th>
@@ -37,15 +40,18 @@
           <td>{{ office.isHeadOffice ? '○' : '' }}</td>
           <td>
             {{ office.address?.postalCode }}
-            {{ office.address?.prefecture }}
+            {{ getPrefectureName(office.address.prefecture) }}
             {{ office.address?.city }}
             {{ office.address?.town }}
             {{ office.address?.streetAddress }}
           </td>
           <td>{{ getInsuranceTypeName(office.insuranceType) }}</td>
+          <td>{{ getInsurancePrefectureName(office.insurancePrefecture) }}</td>
+          <td>{{ getIndustryClassificationId(office.industryClassification?.code || '') }}</td>
+          <td>{{ office.industryClassification?.name }}</td>
           <td>{{ office.officeCode }}</td>
-          <td>{{ office.validFrom | date:'yyyy-MM-dd' }}</td>
-          <td>{{ office.validTo | date:'yyyy-MM-dd' }}</td>
+            <td>{{ office.validFrom | date:'yyyy-MM-dd' }}</td>
+            <td>{{ office.validTo | date:'yyyy-MM-dd' }}</td>
           <td>{{ office.isActive ? '有効' : '無効' }}</td>
         </tr>
       </tbody>

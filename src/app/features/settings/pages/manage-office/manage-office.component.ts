@@ -7,6 +7,8 @@ import { AddOfficeComponent } from '../../dialog/add-office/add-office.component
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { CommonModule } from '@angular/common';
 import { INSURANCE_TYPES } from '../../../../core/models/insurance-type';
+import { INDUSTRY_CLASSIFICATIONS } from '../../../../core/models/industry-classification.model';
+import { PREFECTURES } from '../../../../core/models/prefecture.model';
 
 @Component({
   selector: 'app-manage-office',
@@ -79,8 +81,29 @@ export class ManageOfficeComponent {
     }
   }
 
+getPrefectureName(code: string): string {
+  const type = PREFECTURES.find(t => t.code === code);
+  return type ? type.name : code;
+}
+
 getInsuranceTypeName(code: string): string {
   const type = INSURANCE_TYPES.find(t => t.code === code);
   return type ? type.name : code;
 } 
+
+getIndustryClassificationName(code: string): string {
+  const type = INDUSTRY_CLASSIFICATIONS.find(t => t.code === code);
+  return type ? type.name : code;
+}
+
+getIndustryClassificationId(code: string): string {
+  const type = INDUSTRY_CLASSIFICATIONS.find(t => t.name === code);
+  return type ? type.code : code;
+}
+
+getInsurancePrefectureName(code: string): string {
+  const type = PREFECTURES.find(t => t.code === code);
+  return type ? type.name : code;
+}
+
 }

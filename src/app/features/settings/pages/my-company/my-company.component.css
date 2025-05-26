@@ -1,0 +1,33 @@
+.my-company-container {
+  max-width: 900px;
+  margin: 2rem auto;
+}
+.card {
+  background: #fff;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.card h2 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+td {
+  border: 1px solid #eee;
+  padding: 0.8rem 1rem;
+}
+tr:first-child td {
+  border-top: none;
+}
+tr td:first-child {
+  background: #fafafa;
+  font-weight: bold;
+  width: 180px;
+}

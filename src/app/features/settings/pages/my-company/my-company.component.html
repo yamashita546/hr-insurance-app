@@ -1,1 +1,39 @@
-<p>my-company works!</p>
+<div class="my-company-container">
+  <div class="card">
+    <h2>アカウント</h2>
+    <table *ngIf="user$ | async as user">
+      <tr><td>氏名</td><td>{{ user.displayName }}</td></tr>
+      <tr><td>共通ID権限</td><td>{{ user.role === 'admin' ? '管理者' : '一般ユーザ' }}</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h2>会社情報</h2>
+    <table *ngIf="company$ | async as company">
+      <tr><td>企業ID</td><td>{{ company.displayId }}</td></tr>
+      <tr><td>法人番号</td><td>{{ company.corporateNumber }}</td></tr>
+      <tr><td>会社名</td><td>{{ company.name }}</td></tr>
+      <tr><td>業種</td><td>{{ company.industry }}</td></tr>
+      <tr><td>代表者</td><td>{{ company.companyOwner }}</td></tr>
+      <tr>
+        <td>本社所在地</td>
+        <td>
+          <ng-container *ngIf="company.headOfficeAddress as addr; else noAddress">
+            {{
+              (addr.postalCode ? '〒' + addr.postalCode : '') +
+              getPrefectureName(addr.prefecture) +
+              (addr.city || '') +
+              (addr.town || '') +
+              (addr.streetAddress || '') +
+              (addr.buildingName || '')
+            }}
+          </ng-container>
+          <ng-template #noAddress>未登録</ng-template>
+        </td>
+      </tr>
+      <tr><td>設立日</td><td>{{ company.establishmentDate }}</td></tr>
+      <tr><td>作成日</td><td>{{ company.createdAt?.toDate() | date:'yyyy/MM/dd' }}</td></tr>
+      <tr><td>更新日</td><td>{{ company.updatedAt?.toDate() | date:'yyyy/MM/dd' }}</td></tr>
+      <tr><td>有効</td><td>{{ company.isActive ? '○' : '×' }}</td></tr>
+    </table>
+  </div>
+</div>

@@ -8,11 +8,12 @@ import {
   query,
   collectionData,
   addDoc,
-  deleteDoc
+  deleteDoc,
+  getDocs
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { AppUser } from '../models/user.model';
-import { Company } from '../models/company.model';
+import { Company, Office } from '../models/company.model';
 import { InsuranceRate } from '../models/insurance-rate.model';
 
 @Injectable({ providedIn: 'root' })
@@ -129,5 +130,28 @@ export class FirestoreService {
       ...company,
       updatedAt: now
     }, { merge: true });
+  }
+
+  // 支社（offices）一覧取得
+  async getOffices(companyId: string): Promise<Office[]> {
+    const officesCol = collection(this.firestore, `companies/${companyId}/offices`);
+    const snap = await getDocs(officesCol);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Office));
+  }
+
+  // 事業所（offices）追加（displayOfficeId自動生成）
+  async addOffice(companyId: string, office: Omit<Office, 'id' | 'displayOfficeId'>, companyDisplayId: string): Promise<void> {
+    const officesCol = collection(this.firestore, `companies/${companyId}/offices`);
+    const snap = await getDocs(officesCol);
+    // 既存のdisplayOfficeIdの最大値を取得
+    const maxId = snap.docs
+      .map(doc => doc.data()['displayOfficeId'])
+      .map(id => parseInt((id || '').split('-').pop() || '0', 10))
+      .reduce((max, curr) => Math.max(max, curr), 0);
+    // 新しいdisplayOfficeIdを生成
+    const newDisplayOfficeId = `${companyDisplayId}-${String(maxId + 1).padStart(2, '0')}`;
+    // Firestoreに保存
+    const docRef = await addDoc(officesCol, { ...office, displayOfficeId: newDisplayOfficeId });
+    await setDoc(docRef, { id: docRef.id }, { merge: true });
   }
 }

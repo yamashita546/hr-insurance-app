@@ -1,4 +1,4 @@
-.add-branch-dialog {
+.add-office-dialog {
   max-width: 500px;
   max-height: 80vh;
   overflow-y: auto;
@@ -8,7 +8,7 @@
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   padding: 2rem 1.5rem 1.5rem 1.5rem;
 }
-.add-branch-dialog h2 {
+.add-office-dialog h2 {
   font-size: 1.5rem;
   margin-bottom: 1.2rem;
   text-align: center;

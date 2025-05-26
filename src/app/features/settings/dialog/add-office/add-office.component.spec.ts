@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ManageBranchComponent } from './manage-branch.component';
+import { AddOfficeComponent } from './add-office.component';
 
-describe('ManageBranchComponent', () => {
-  let component: ManageBranchComponent;
-  let fixture: ComponentFixture<ManageBranchComponent>;
+describe('AddOfficeComponent', () => {
+  let component: AddOfficeComponent;
+  let fixture: ComponentFixture<AddOfficeComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ManageBranchComponent]
+      imports: [AddOfficeComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ManageBranchComponent);
+    fixture = TestBed.createComponent(AddOfficeComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

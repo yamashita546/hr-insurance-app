@@ -1,0 +1,54 @@
+<div class="office-container scroll-x">
+  <h1>事業所情報管理</h1>
+  <div class="company-info-block" *ngIf="company">
+    <div>企業ID：{{ company?.displayId }}</div>
+    <div>企業名：{{ company?.name }}</div>
+  </div>
+  <div class="office-list">
+    <div class="office-item">
+      <button class="add-btn" (click)="openAddOfficeDialog()">追加</button>
+      <button class="edit-btn" [disabled]="selectedOffices.length === 0" (click)="openEditOfficeDialog()">編集</button>
+      <button class="delete-btn" [disabled]="selectedOffices.length === 0" (click)="onDeleteOffice()">削除</button>
+      <button class="apply-btn" (click)="applyChanges()">変更を適用</button>
+      <button class="reset-btn" (click)="resetChanges()">変更をリセット</button>
+    </div>
+  </div>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>事業所ID</th>
+          <th>事業所名</th>
+          <th>本社フラグ</th>
+          <th>住所</th>
+          <th>適用保険種別</th>
+          <th>事業所番号</th>
+          <th>有効期間（開始）</th>
+          <th>有効期間（終了）</th>
+          <th>有効</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let office of offices">
+          <td><input type="checkbox" [checked]="selectedOffices.includes(office)" (change)="onSelectOffice(office, $event)" /></td>
+          <td>{{ office.displayOfficeId }}</td>
+          <td>{{ office.name }}</td>
+          <td>{{ office.isHeadOffice ? '○' : '' }}</td>
+          <td>
+            {{ office.address?.postalCode }}
+            {{ office.address?.prefecture }}
+            {{ office.address?.city }}
+            {{ office.address?.town }}
+            {{ office.address?.streetAddress }}
+          </td>
+          <td>{{ getInsuranceTypeName(office.insuranceType) }}</td>
+          <td>{{ office.officeCode }}</td>
+          <td>{{ office.validFrom | date:'yyyy-MM-dd' }}</td>
+          <td>{{ office.validTo | date:'yyyy-MM-dd' }}</td>
+          <td>{{ office.isActive ? '有効' : '無効' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

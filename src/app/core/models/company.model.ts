@@ -1,5 +1,3 @@
-
-
 import { Timestamp } from '@angular/fire/firestore';
 import { Prefecture } from './prefecture.model';
 import { Address } from './address.model';
@@ -24,11 +22,12 @@ export type Company = {
   // 事業所モデル
   export interface Office {
     id: string;//※自動生成
+    displayOfficeId: string; // 表示用事業所ID（例: 13-0001-01）
     companyId: string;        // ※紐付け
     name: string;             // "本社", "大阪営業所"など
     isHeadOffice: boolean;    // ※本社フラグ
     address: Address;
-    insuranceType: InsuranceType; //適用保険種別
+    insuranceType: string; // コード値で保存
     insurancePrefecture: Prefecture;  //適用保険事業所
     businessCategoryId?: string; // 労災保険用の業種分類
     officeCode?: string;      // 社会保険・労災などの事業所番号

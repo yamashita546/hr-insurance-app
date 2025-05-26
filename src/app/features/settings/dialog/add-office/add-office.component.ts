@@ -8,13 +8,13 @@ import { InsuranceType, INSURANCE_TYPES } from '../../../../core/models/insuranc
 import { Company } from '../../../../core/models/company.model';
 
 @Component({
-  selector: 'app-add-branch',
+  selector: 'app-add-office',
   standalone: true,
   imports: [ReactiveFormsModule, CommonModule],
-  templateUrl: './add-branch.component.html',
-  styleUrl: './add-branch.component.css'
+  templateUrl: './add-office.component.html',
+  styleUrl: './add-office.component.css'
 })
-export class AddBranchComponent implements OnInit {
+export class AddOfficeComponent implements OnInit {
   @Output() saved = new EventEmitter<Office>();
   @Output() cancelled = new EventEmitter<void>();
 

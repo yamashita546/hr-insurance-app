@@ -23,7 +23,7 @@ import { RegisterComponent } from './features/auth/pages/register/register.compo
 import { CanDeactivateDialogGuard } from './core/guards/can-deactivate-dialog.guard';
 import { ManageCompaniesComponent } from './features/master/pages/companies/manage-companies/manage-companies.component';
 import { CompanyOwnerComponent } from './features/master/pages/companies/company-owner/company-owner.component';
-import { ManageBranchComponent } from './features/settings/pages/manage-branch/manage-branch.component';
+import { ManageOfficeComponent } from './features/settings/pages/manage-office/manage-office.component';
 import { ManageOperatorComponent } from './features/settings/pages/manage-operator/manage-operator.component';
 import { MyCompanyComponent } from './features/settings/pages/my-company/my-company.component';
 
@@ -54,7 +54,7 @@ export const routes: Routes = [
       { path: 'manage-admin', component: ManageAdminComponent },
       { path: 'standard-monthly', component: StandardMonthlyComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'manage-user', component: ManageUserComponent },
-      { path: 'manage-branch', component: ManageBranchComponent },
+      { path: 'manage-office', component: ManageOfficeComponent },
       { path: 'manage-operator', component: ManageOperatorComponent },
       { path: 'my-company', component: MyCompanyComponent },
     ],

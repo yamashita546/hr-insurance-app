@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
 import { INSURANCE_TYPES } from '../../../../core/models/insurance-type';
 import { INDUSTRY_CLASSIFICATIONS } from '../../../../core/models/industry-classification.model';
 import { PREFECTURES } from '../../../../core/models/prefecture.model';
+import { EditOfficeComponent } from '../../dialog/edit-office/edit-office.component';
 
 @Component({
   selector: 'app-manage-office',
@@ -50,8 +51,23 @@ export class ManageOfficeComponent {
   }
 
   openEditOfficeDialog() {
-    // TODO: ダイアログを開いて編集処理
-    alert('編集ダイアログを開く（今後実装）');
+    if (this.selectedOffices.length !== 1) {
+      alert('編集は1件のみ選択してください');
+      return;
+    }
+    const targetOffice = this.selectedOffices[0];
+    const dialogRef = this.dialog.open(EditOfficeComponent, {
+      data: { ...targetOffice }
+    });
+    dialogRef.componentInstance.saved?.subscribe((updated: Office) => {
+      // 編集内容をリストに反映
+      const idx = this.offices.findIndex(o => o.id === updated.id);
+      if (idx !== -1) {
+        this.offices[idx] = { ...updated };
+      }
+      dialogRef.close();
+    });
+    dialogRef.componentInstance.cancelled?.subscribe(() => dialogRef.close());
   }
 
   onDeleteOffice() {

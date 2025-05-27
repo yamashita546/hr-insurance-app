@@ -1,0 +1,65 @@
+<div class="edit-office-dialog">
+  <h2>事業所情報編集</h2>
+  <form>
+    <div class="form-section">
+      <label>事業所名
+        <input type="text" class="input" [(ngModel)]="office.name" name="name" />
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" [(ngModel)]="office.isHeadOffice" name="isHeadOffice" />
+        <span>本社フラグ（本社として登録）</span>
+      </label>
+      <div>
+        <label>郵便番号
+          <input type="text" class="input" [(ngModel)]="office.address.postalCode" name="postalCode" />
+        </label>
+        <label>都道府県
+          <select class="input" [(ngModel)]="office.address.prefecture" name="prefecture">
+            <option value="">選択してください</option>
+            <option *ngFor="let pref of prefectures" [value]="pref.code">{{ pref.name }}</option>
+          </select>
+        </label>
+        <label>市区町村
+          <input type="text" class="input" [(ngModel)]="office.address.city" name="city" />
+        </label>
+        <label>町域・丁目・番地
+          <input type="text" class="input" [(ngModel)]="office.address.town" name="town" />
+        </label>
+        <label>建物名等
+          <input type="text" class="input" [(ngModel)]="office.address.streetAddress" name="streetAddress" />
+        </label>
+        <label>国コード（任意）
+          <input type="text" class="input" [(ngModel)]="office.address.countryCode" name="countryCode" />
+        </label>
+      </div>
+      <label>適用保険種別
+        <select class="input" [(ngModel)]="office.insuranceType" name="insuranceType">
+          <option value="">選択してください</option>
+          <option *ngFor="let type of insuranceTypes" [value]="type.code">{{ type.name }}</option>
+        </select>
+      </label>
+      <label>適用保険事業所
+        <select class="input" [(ngModel)]="office.insurancePrefecture" name="insurancePrefecture">
+          <option value="">選択してください</option>
+          <option *ngFor="let pref of prefectures" [value]="pref.code">{{ pref.name }}</option>
+        </select>
+      </label>
+      <label>業種分類ID
+        <input type="text" class="input" [(ngModel)]="office.businessCategoryId" name="businessCategoryId" />
+      </label>
+      <label>事業所番号
+        <input type="text" class="input" [(ngModel)]="office.officeCode" name="officeCode" />
+      </label>
+      <label>有効期間（開始）
+        <input type="date" class="input" [(ngModel)]="office.validFrom" name="validFrom" />
+      </label>
+      <label>有効期間（終了）
+        <input type="date" class="input" [(ngModel)]="office.validTo" name="validTo" />
+      </label>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="cancel-btn" (click)="onCancel()">キャンセル</button>
+      <button type="button" class="register-btn" (click)="onSave()">保存</button>
+    </div>
+  </form>
+</div>

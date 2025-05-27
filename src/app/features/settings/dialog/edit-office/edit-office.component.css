@@ -1,0 +1,78 @@
+.edit-office-dialog {
+  max-width: 500px;
+  width: 95vw;
+  max-height: 80vh;
+  padding: 24px 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  overflow-y: auto;
+}
+.edit-office-dialog h2 {
+  font-size: 1.3rem;
+  color: #1976d2;
+  margin-bottom: 18px;
+  text-align: center;
+}
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+label {
+  font-weight: bold;
+  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.input, select {
+  padding: 7px 10px;
+  border: 1px solid #bdbdbd;
+  border-radius: 5px;
+  font-size: 1rem;
+  margin-top: 2px;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 18px;
+}
+.cancel-btn {
+  background: #fff3e0;
+  color: #ff9800;
+  border: 1px solid #ff9800;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.cancel-btn:hover { background: #ffe0b2; }
+.register-btn {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.register-btn:hover { background: #1565c0; }
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #1976d2;
+}

@@ -26,6 +26,8 @@ import { CompanyOwnerComponent } from './features/master/pages/companies/company
 import { ManageOfficeComponent } from './features/settings/pages/manage-office/manage-office.component';
 import { ManageOperatorComponent } from './features/settings/pages/manage-operator/manage-operator.component';
 import { MyCompanyComponent } from './features/settings/pages/my-company/my-company.component';
+import { EmployeeDetailComponent } from './features/employees/pages/employee-detail/employee-detail.component';
+import { EmployeeFormComponent } from './features/employees/components/employee-form/employee-form.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -57,6 +59,8 @@ export const routes: Routes = [
       { path: 'manage-office', component: ManageOfficeComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'manage-operator', component: ManageOperatorComponent },
       { path: 'my-company', component: MyCompanyComponent },
+      { path: 'employee-detail', component: EmployeeDetailComponent },
+      { path: 'employee-form', component: EmployeeFormComponent },
     ],
   },
 ];

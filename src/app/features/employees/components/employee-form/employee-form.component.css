@@ -1,0 +1,134 @@
+.employee-form {
+  max-width: 800px;
+  margin: 32px auto;
+  padding: 32px 28px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  font-size: 1rem;
+}
+
+.employee-form h2 {
+  color: #1976d2;
+  font-size: 1.3rem;
+  margin-top: 32px;
+  margin-bottom: 16px;
+  border-left: 5px solid #1976d2;
+  padding-left: 10px;
+}
+
+.form-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 24px;
+  margin-bottom: 18px;
+}
+
+.form-section label {
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  flex: 1 1 220px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-section input,
+.form-section select,
+.form-section textarea {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1.5px solid #b0bec5;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #f8fafc;
+  transition: border 0.2s;
+}
+
+.form-section input:focus,
+.form-section select:focus,
+.form-section textarea:focus {
+  border-color: #1976d2;
+  outline: none;
+  background: #fff;
+}
+
+.form-section input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  margin-top: 0;
+  accent-color: #1976d2;
+}
+
+.form-section textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+.form-actions {
+  text-align: right;
+  margin-top: 32px;
+}
+
+.form-actions button[type="submit"] {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 32px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.form-actions button[type="submit"]:hover:not(:disabled) {
+  background: #1565c0;
+}
+
+.form-actions button[type="submit"]:disabled {
+  background: #b0bec5;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+.form-block {
+  margin-bottom: 36px;
+}
+
+.form-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 24px;
+}
+
+.form-grid-1col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+@media (max-width: 700px) {
+  .employee-form {
+    padding: 16px 4vw;
+  }
+  .form-section {
+    flex-direction: column;
+    gap: 12px 0;
+  }
+  .form-section label {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+  .form-grid-2col {
+    grid-template-columns: 1fr;
+    gap: 14px 0;
+  }
+}

@@ -1,1 +1,35 @@
-<p>employee-list works!</p>
+<div class="employee-container scroll-x">
+  <div class="company-info-block" *ngIf="company">
+    <div>企業ID：{{ company?.displayCompanyId }}</div>
+    <div>企業名：{{ company?.name }}</div>
+  </div>
+  <h1>従業員情報一覧</h1>
+  <div class="employee-actions">
+    <button class="add-btn" routerLink="/employee-form">従業員を追加</button>
+  </div>
+  <div class="employee-list">
+    <table>
+      <thead>
+        <tr>
+          <th>従業員ID</th>
+          <th>姓</th>
+          <th>名</th>
+          <th>事業所名</th>
+          <th>部署</th>
+          
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let employee of employees">
+          <td>{{ employee.employeeId }}</td>
+          <td>{{ employee.lastName }}</td>
+          <td>{{ employee.firstName }}</td>
+          <td>{{ employee.officeName }}</td>
+          <td>{{ employee.department }}</td>
+          <td><button class="detail-btn" (click)="showDetail(employee)">詳細</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

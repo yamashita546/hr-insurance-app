@@ -1,11 +1,15 @@
 .employee-form {
-  max-width: 900px;
+  width: 90%;
+  max-width: none;
   margin: 32px auto;
   padding: 32px 28px;
   background: #fff;
   border-radius: 14px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.10);
   font-size: 1rem;
+  overflow: visible;
+  height: auto;
+  max-height: none;
 }
 
 .employee-form h2 {
@@ -23,7 +27,9 @@
   gap: 18px;
   margin-top: 18px;
   margin-bottom: 18px;
-  margin-right: 18px;
+  overflow: visible;
+  /* height: auto; */
+  /* max-height: none; */
 }
 
 .form-row {
@@ -156,6 +162,9 @@
 
 .mat-tab-body-content {
   padding-top: 28px;
+  overflow: visible;
+  height: auto;
+  max-height: none;
 }
 
 .insurance-grid .form-row {
@@ -171,4 +180,13 @@
   align-items: center;
   min-width: 0;
   gap: 8px;
+}
+
+.dependent-block {
+  border: 1.5px solid #b0bec5;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 18px 18px 10px 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }

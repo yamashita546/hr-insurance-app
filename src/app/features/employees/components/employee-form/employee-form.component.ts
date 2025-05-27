@@ -12,6 +12,8 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTabsModule } from '@angular/material/tabs';
 import { Subscription } from 'rxjs';
+import { ForeignWorker } from '../../../../core/models/foreign.workers';
+import { EXTRAORDINARY_LEAVE_TYPES } from '../../../../core/models/extraordinary.leave';
 
 @Component({
   selector: 'app-employee-form',
@@ -25,6 +27,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   employeeTypes = EMPLOYEE_TYPES;
   workStyleTypes = WORK_STYLE_TYPES;
   genderTypes = GENDER_TYPES;
+  extraordinaryLeaveTypes = EXTRAORDINARY_LEAVE_TYPES;
 
   selectedTabIndex = 0;
   tabCount = 6; // タブ数
@@ -33,6 +36,14 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
 
   get dependents(): FormArray {
     return this.form.get('dependents') as FormArray;
+  }
+
+  get foreignWorker(): FormGroup {
+    return this.form.get('foreignWorker') as FormGroup;
+  }
+
+  get extraordinaryLeave(): FormGroup {
+    return this.form.get('extraordinaryLeave') as FormGroup;
   }
 
   constructor(private fb: FormBuilder, private firestore: Firestore) {}
@@ -74,10 +85,47 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       isEmploymentInsuranceApplicable: [false],
       isCareInsuranceApplicable: [false],
       emergencyContactName: [''],
+      emergencyContactRelationship: [''],
       emergencyContactPhone: [''],
+      emergencyContactIsActive: [true],
       hasDependents: [false],
       remarks: [''],
-      dependents: this.fb.array([])
+      dependents: this.fb.array([]),
+      isForeignWorker: [false],
+      foreignWorker: this.fb.group({
+        romanName: [''],
+        nationality: [''],
+        residenceStatus: [''],
+        residenceStatusType: [''],
+        residenceCardNumber: [''],
+        residenceCardExpiry: [''],
+        residenceStatusHistory: [''],
+        passportNumber: [''],
+        passportExpiry: [''],
+        hasResidenceCardCopy: [false],
+        hasSpecialExemption: [false],
+        exemptionReason: [''],
+        employmentStartDate: [''],
+        employmentEndDate: [''],
+        hasSpecificActivity: [false],
+        returnPlannedDate: [''],
+        remarks: [''],
+        
+      }),
+      isExtraordinaryLeave: [false],
+      extraordinaryLeave: this.fb.group({
+        leaveTypeCode: [''],
+        leaveStartDate: [''],
+        leaveEndDate: [''],
+        returnPlanDate: [''],
+        leaveReason: [''],
+        isHealthInsuranceExempted: [false],
+        isPensionExempted: [false],
+        isEmploymentInsuranceExempted: [false],
+        isCareInsuranceExempted: [false],
+        isChildcareLeave: [false],
+        isNursingCareLeave: [false],
+      }),
     });
 
     // 介護保険適用の自動判定
@@ -101,6 +149,16 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
         this.form.get('isCareInsuranceApplicable')!.setValue(isCare, { emitEvent: false });
       }
     });
+
+    // 扶養家族ありの場合は1人分デフォルトで追加
+    this.form.get('hasDependents')!.valueChanges.subscribe(val => {
+      const arr = this.dependents;
+      if (val && arr.length === 0) {
+        this.addDependent();
+      } else if (!val && arr.length > 0) {
+        while (arr.length) arr.removeAt(0);
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -109,8 +167,25 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
 
   addDependent() {
     this.dependents.push(this.fb.group({
-      name: ['', Validators.required],
-      relation: ['', Validators.required]
+      lastName: ['', Validators.required],
+      firstName: ['', Validators.required],
+      lastNameKana: [''],
+      firstNameKana: [''],
+      relationship: ['', Validators.required],
+      relationshipCode: [''],
+      birthday: ['', Validators.required],
+      myNumber: [''],
+      isSpouse: [false],
+      isChild: [false],
+      isDisabled: [false],
+      isStudent: [false],
+      isLivingTogether: [false],
+      income: [''],
+      certificationDate: [''],
+      certificationType: [''],
+      lossDate: [''],
+      remarks: [''],
+      isActive: [true]
     }));
   }
 

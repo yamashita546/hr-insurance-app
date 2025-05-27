@@ -58,7 +58,6 @@ export type Dependent = {
   lastNameKana?: string;
   firstNameKana?: string;
   relationship: string; // 続柄
-  relationshipCode?: string; // 続柄コード
   birthday: Date;
   myNumber?: string;
   isSpouse?: boolean; // 配偶者かどうか
@@ -72,6 +71,16 @@ export type Dependent = {
   lossDate?: Date; // 資格喪失日
   remarks?: string; // 備考
 
+  isActive: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export type EmergencyContact = {
+  employeeId: string;
+  name: string;
+  relationship: string;
+  phone: string;
   isActive: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;

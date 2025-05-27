@@ -27,7 +27,7 @@
           <td>{{ employee.firstName }}</td>
           <td>{{ employee.officeName }}</td>
           <td>{{ employee.department }}</td>
-          <td><button class="detail-btn" (click)="showDetail(employee)">詳細</button></td>
+          <td><button class="detail-btn" [routerLink]="['/employee-detail', employee.id]">詳細</button></td>
         </tr>
       </tbody>
     </table>

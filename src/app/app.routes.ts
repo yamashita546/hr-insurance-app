@@ -61,6 +61,7 @@ export const routes: Routes = [
       { path: 'my-company', component: MyCompanyComponent },
       { path: 'employee-detail', component: EmployeeDetailComponent },
       { path: 'employee-form', component: EmployeeFormComponent },
+      { path: 'employee-detail/:id', component: EmployeeDetailComponent },
     ],
   },
 ];

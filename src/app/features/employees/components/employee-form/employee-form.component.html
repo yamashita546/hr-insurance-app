@@ -72,7 +72,10 @@
         <div class="form-row">
           <div class="form-item">
             <label>事業所名</label>
-            <input formControlName="officeName" />
+            <select formControlName="officeName">
+              <option value="">選択してください</option>
+              <option *ngFor="let office of offices" [value]="office.name">{{ office.name }}</option>
+            </select>
           </div>
         </div>
         <div class="form-row">

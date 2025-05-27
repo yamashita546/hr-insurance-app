@@ -15,9 +15,9 @@ import { Subscription } from 'rxjs';
 import { ForeignWorker } from '../../../../core/models/foreign.workers';
 import { EXTRAORDINARY_LEAVE_TYPES } from '../../../../core/models/extraordinary.leave';
 import { RouterModule, Router } from '@angular/router';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
-import { Company } from '../../../../core/models/company.model';
+import { Company, Office } from '../../../../core/models/company.model';
 
 @Component({
   selector: 'app-employee-form',
@@ -47,7 +47,9 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   validationErrors: string[] = [];
 
   companyId = '';
+  companyDisplayId = '';
   companyName = '';
+  offices: Office[] = [];
 
   get dependents(): FormArray {
     return this.form.get('dependents') as FormArray;
@@ -197,8 +199,12 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     });
 
     this.userCompanyService.company$.subscribe((company: Company | null) => {
-      this.companyId = company?.displayId || '';
+      this.companyId = company?.companyId || '';
+      this.companyDisplayId = company?.displayId || '';
       this.companyName = company?.name || '';
+      if (company?.companyId) {
+        this.loadOffices(company.companyId);
+      }
     });
   }
 
@@ -241,7 +247,11 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       this.validationErrors = this.getFormValidationErrors(this.form);
       return;
     }
-    const employee = this.form.value;
+    // companyIdを従業員データに追加
+    const employee = {
+      ...this.form.value,
+      companyId: this.companyId
+    };
     try {
       // Firestoreへ保存
       const employeesCollection = collection(this.firestore, 'employees');
@@ -316,5 +326,11 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   onTabChange(index: number) {
     this.selectedTabIndex = index;
     localStorage.setItem(EmployeeFormComponent.TAB_STORAGE_KEY, index.toString());
+  }
+
+  async loadOffices(companyId: string) {
+    const officesCol = collection(this.firestore, `companies/${companyId}/offices`);
+    const snap = await getDocs(officesCol);
+    this.offices = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Office));
   }
 }

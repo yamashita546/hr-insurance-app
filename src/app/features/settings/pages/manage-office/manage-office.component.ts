@@ -23,6 +23,7 @@ export class ManageOfficeComponent {
   selectedOffices: Office[] = [];
   company: Company | null = null;
   dialogRef: MatDialogRef<any> | null = null;
+  originalOffices: Office[] = [];
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -38,6 +39,7 @@ export class ManageOfficeComponent {
   async fetchOffices() {
     if (!this.company) return;
     this.offices = await this.firestoreService.getOffices(this.company.companyId);
+    this.originalOffices = this.offices.map(o => ({ ...o }));
   }
 
   openAddOfficeDialog() {
@@ -102,6 +104,7 @@ export class ManageOfficeComponent {
     if (!this.company) return;
     await this.firestoreService.updateAllOffices(this.company.companyId, this.offices);
     alert('変更をFirestoreに保存しました');
+    await this.fetchOffices();
   }
 
   resetChanges() {
@@ -120,35 +123,41 @@ export class ManageOfficeComponent {
     }
   }
 
-getPrefectureName(code: string): string {
-  const type = PREFECTURES.find(t => t.code === code);
-  return type ? type.name : code;
-}
-
-getInsuranceTypeName(code: string): string {
-  const type = INSURANCE_TYPES.find(t => t.code === code);
-  return type ? type.name : code;
-} 
-
-getIndustryClassificationName(codeOrObj: string | { code?: string }): string {
-  let code = '';
-  if (typeof codeOrObj === 'string') {
-    code = codeOrObj;
-  } else if (codeOrObj && typeof codeOrObj === 'object' && 'code' in codeOrObj) {
-    code = codeOrObj.code || '';
+  isCellChanged(office: Office, field: string): boolean {
+    const orig = this.originalOffices.find(o => o.id === office.id);
+    if (!orig) return true; // 新規追加
+    const get = (obj: any, path: string) => path.split('.').reduce((o, k) => o?.[k], obj);
+    return get(office, field) !== get(orig, field);
   }
-  const type = INDUSTRY_CLASSIFICATIONS.find(t => t.code === code);
-  return type ? type.name : code;
-}
 
-getIndustryClassificationId(code: string): string {
-  const type = INDUSTRY_CLASSIFICATIONS.find(t => t.name === code);
-  return type ? type.code : code;
-}
+  getPrefectureName(code: string): string {
+    const type = PREFECTURES.find(t => t.code === code);
+    return type ? type.name : code;
+  }
 
-getInsurancePrefectureName(code: string): string {
-  const type = PREFECTURES.find(t => t.code === code);
-  return type ? type.name : code;
-}
+  getInsuranceTypeName(code: string): string {
+    const type = INSURANCE_TYPES.find(t => t.code === code);
+    return type ? type.name : code;
+  }
 
+  getIndustryClassificationName(codeOrObj: string | { code?: string }): string {
+    let code = '';
+    if (typeof codeOrObj === 'string') {
+      code = codeOrObj;
+    } else if (codeOrObj && typeof codeOrObj === 'object' && 'code' in codeOrObj) {
+      code = codeOrObj.code || '';
+    }
+    const type = INDUSTRY_CLASSIFICATIONS.find(t => t.code === code);
+    return type ? type.name : code;
+  }
+
+  getIndustryClassificationId(code: string): string {
+    const type = INDUSTRY_CLASSIFICATIONS.find(t => t.name === code);
+    return type ? type.code : code;
+  }
+
+  getInsurancePrefectureName(code: string): string {
+    const type = PREFECTURES.find(t => t.code === code);
+    return type ? type.name : code;
+  }
 }

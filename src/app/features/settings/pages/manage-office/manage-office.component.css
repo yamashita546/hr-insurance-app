@@ -121,3 +121,7 @@ tr.selected {
 tr:hover {
   background: #f5faff;
 }
+.highlight {
+  background-color: #fff3cd !important;
+  transition: background 0.3s;
+}

@@ -35,24 +35,24 @@
       <tbody>
         <tr *ngFor="let office of offices">
           <td><input type="checkbox" [checked]="selectedOffices.includes(office)" (change)="onSelectOffice(office, $event)" /></td>
-          <td>{{ office.displayOfficeId }}</td>
-          <td>{{ office.name }}</td>
-          <td>{{ office.isHeadOffice ? '○' : '' }}</td>
-          <td>
+          <td [ngClass]="{ 'highlight': isCellChanged(office, 'displayOfficeId') }">{{ office.displayOfficeId }}</td>
+          <td [ngClass]="{ 'highlight': isCellChanged(office, 'name') }">{{ office.name }}</td>
+          <td [ngClass]="{ 'highlight': isCellChanged(office, 'isHeadOffice') }">{{ office.isHeadOffice ? '○' : '' }}</td>
+          <td [ngClass]="{ 'highlight': isCellChanged(office, 'address.postalCode') || isCellChanged(office, 'address.prefecture') || isCellChanged(office, 'address.city') || isCellChanged(office, 'address.town') || isCellChanged(office, 'address.streetAddress') }">
             {{ office.address?.postalCode }}
             {{ getPrefectureName(office.address.prefecture) }}
             {{ office.address?.city }}
             {{ office.address?.town }}
             {{ office.address?.streetAddress }}
           </td>
-          <td>{{ getInsuranceTypeName(office.insuranceType) }}</td>
-          <td>{{ getInsurancePrefectureName(office.insurancePrefecture) }}</td>
-          <td>{{ office.industryClassification }}</td>
-          <td>{{ getIndustryClassificationName(office.industryClassification || '') }}</td>
-          <td>{{ office.officeCode }}</td>
-            <td>{{ office.validFrom | date:'yyyy-MM-dd' }}</td>
-            <td>{{ office.validTo | date:'yyyy-MM-dd' }}</td>
-          <td>{{ office.isActive ? '有効' : '無効' }}</td>
+          <td [ngClass]="{ 'highlight': isCellChanged(office, 'insuranceType') }">{{ getInsuranceTypeName(office.insuranceType) }}</td>
+          <td [ngClass]="{ 'highlight': isCellChanged(office, 'insurancePrefecture') }">{{ getInsurancePrefectureName(office.insurancePrefecture) }}</td>
+          <td [ngClass]="{ 'highlight': isCellChanged(office, 'industryClassification') }">{{ office.industryClassification }}</td>
+          <td [ngClass]="{ 'highlight': isCellChanged(office, 'industryClassification') }">{{ getIndustryClassificationName(office.industryClassification || '') }}</td>
+          <td [ngClass]="{ 'highlight': isCellChanged(office, 'officeCode') }">{{ office.officeCode }}</td>
+          <td [ngClass]="{ 'highlight': isCellChanged(office, 'validFrom') }">{{ office.validFrom | date:'yyyy-MM-dd' }}</td>
+          <td [ngClass]="{ 'highlight': isCellChanged(office, 'validTo') }">{{ office.validTo | date:'yyyy-MM-dd' }}</td>
+          <td [ngClass]="{ 'highlight': isCellChanged(office, 'isActive') }">{{ office.isActive ? '有効' : '無効' }}</td>
         </tr>
       </tbody>
     </table>

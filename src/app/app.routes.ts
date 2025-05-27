@@ -54,7 +54,7 @@ export const routes: Routes = [
       { path: 'manage-admin', component: ManageAdminComponent },
       { path: 'standard-monthly', component: StandardMonthlyComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'manage-user', component: ManageUserComponent },
-      { path: 'manage-office', component: ManageOfficeComponent },
+      { path: 'manage-office', component: ManageOfficeComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'manage-operator', component: ManageOperatorComponent },
       { path: 'my-company', component: MyCompanyComponent },
     ],

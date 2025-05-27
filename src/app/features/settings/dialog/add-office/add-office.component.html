@@ -47,8 +47,11 @@
           <option *ngFor="let pref of prefectures" [value]="pref.code">{{ pref.name }}</option>
         </select>
       </label>
-      <label>業種分類ID
-        <input type="text" class="input" formControlName="businessCategoryId" placeholder="例：A123" />
+      <label>業種分類
+        <select class="input" formControlName="industryClassification">
+          <option value="">選択してください</option>
+          <option *ngFor="let c of industryClassifications" [value]="c.code">{{ c.code }}：{{ c.name }}</option>
+        </select>
       </label>
       <label>事業所番号
         <input type="text" class="input" formControlName="officeCode" placeholder="例：1234567890" />

@@ -6,6 +6,9 @@ import { Office } from '../../../../core/models/company.model';
 import { PREFECTURES } from '../../../../core/models/prefecture.model';
 import { InsuranceType, INSURANCE_TYPES } from '../../../../core/models/insurance-type';
 import { Company } from '../../../../core/models/company.model';
+import { INDUSTRY_CLASSIFICATIONS } from '../../../../core/models/industry-classification.model';
+import { MatDialogRef } from '@angular/material/dialog';
+
 
 @Component({
   selector: 'app-add-office',
@@ -18,12 +21,15 @@ export class AddOfficeComponent implements OnInit {
   @Output() saved = new EventEmitter<Office>();
   @Output() cancelled = new EventEmitter<void>();
 
+  public dialogRef?: MatDialogRef<AddOfficeComponent>;
   form!: FormGroup;
   prefectures = PREFECTURES;
   insuranceTypes = INSURANCE_TYPES;
   companyId: string = '';
   companyDisplayId: string = '';
   companyHeadOfficeAddress: any = null;
+  industryClassifications = INDUSTRY_CLASSIFICATIONS;
+  office: any = {};
 
   constructor(private fb: FormBuilder, private userCompanyService: UserCompanyService) {}
 
@@ -47,7 +53,7 @@ export class AddOfficeComponent implements OnInit {
         }),
         insuranceType: [''],
         insurancePrefecture: [''],
-        businessCategoryId: [''],
+        industryClassification: [''],
         officeCode: [''],
         validFrom: [''],
         validTo: [''],
@@ -66,6 +72,11 @@ export class AddOfficeComponent implements OnInit {
         this.form.get('insurancePrefecture')?.setValue(prefCode);
       });
     });
+
+    // 必要に応じてofficeの初期化や型変換処理を追加
+    if (typeof this.office.industryClassification === 'object' && this.office.industryClassification?.code) {
+      this.office.industryClassification = this.office.industryClassification.code;
+    }
   }
 
   onSave() {

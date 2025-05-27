@@ -47,8 +47,8 @@
           </td>
           <td>{{ getInsuranceTypeName(office.insuranceType) }}</td>
           <td>{{ getInsurancePrefectureName(office.insurancePrefecture) }}</td>
-          <td>{{ getIndustryClassificationId(office.industryClassification?.code || '') }}</td>
-          <td>{{ office.industryClassification?.name }}</td>
+          <td>{{ office.industryClassification }}</td>
+          <td>{{ getIndustryClassificationName(office.industryClassification || '') }}</td>
           <td>{{ office.officeCode }}</td>
             <td>{{ office.validFrom | date:'yyyy-MM-dd' }}</td>
             <td>{{ office.validTo | date:'yyyy-MM-dd' }}</td>

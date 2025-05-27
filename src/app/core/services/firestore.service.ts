@@ -154,4 +154,14 @@ export class FirestoreService {
     const docRef = await addDoc(officesCol, { ...office, displayOfficeId: newDisplayOfficeId });
     await setDoc(docRef, { id: docRef.id }, { merge: true });
   }
+
+  // 事業所（offices）一括上書き
+  async updateAllOffices(companyId: string, offices: Office[]): Promise<void> {
+    const officesCol = collection(this.firestore, `companies/${companyId}/offices`);
+    for (const office of offices) {
+      // officesプロパティなど不要なものを除外
+      const { offices, ...officeData } = office as any;
+      await setDoc(doc(officesCol, office.id), officeData, { merge: true });
+    }
+  }
 }

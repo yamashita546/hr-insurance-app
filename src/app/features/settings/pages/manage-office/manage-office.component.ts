@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { Office } from '../../../../core/models/company.model';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { Company } from '../../../../core/models/company.model';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { AddOfficeComponent } from '../../dialog/add-office/add-office.component';
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { CommonModule } from '@angular/common';
@@ -22,6 +22,7 @@ export class ManageOfficeComponent {
   offices: Office[] = [];
   selectedOffices: Office[] = [];
   company: Company | null = null;
+  dialogRef: MatDialogRef<any> | null = null;
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -40,14 +41,24 @@ export class ManageOfficeComponent {
   }
 
   openAddOfficeDialog() {
-    const dialogRef = this.dialog.open(AddOfficeComponent, { width: '500px' });
-    dialogRef.componentInstance.saved.subscribe(async (office: Office) => {
+    if (this.dialogRef) return;
+    this.dialogRef = this.dialog.open(AddOfficeComponent, { width: '500px', data: { offices: this.offices } });
+    this.dialogRef.componentInstance.saved.subscribe(async (office: Office) => {
       if (!this.company) return;
       await this.firestoreService.addOffice(this.company.companyId, office, this.company.displayId);
-      dialogRef.close();
+      this.dialogRef?.close();
+      this.dialogRef = null;
       await this.fetchOffices();
+      this.selectedOffices = [];
     });
-    dialogRef.componentInstance.cancelled.subscribe(() => dialogRef.close());
+    this.dialogRef.componentInstance.cancelled.subscribe(() => {
+      this.dialogRef?.close();
+      this.dialogRef = null;
+      this.selectedOffices = [];
+    });
+    this.dialogRef.afterClosed().subscribe(() => {
+      this.dialogRef = null;
+    });
   }
 
   openEditOfficeDialog() {
@@ -55,19 +66,29 @@ export class ManageOfficeComponent {
       alert('編集は1件のみ選択してください');
       return;
     }
+    if (this.dialogRef) return;
     const targetOffice = this.selectedOffices[0];
-    const dialogRef = this.dialog.open(EditOfficeComponent, {
-      data: { ...targetOffice }
+    this.dialogRef = this.dialog.open(EditOfficeComponent, {
+      data: { ...targetOffice, offices: this.offices }
     });
-    dialogRef.componentInstance.saved?.subscribe((updated: Office) => {
-      // 編集内容をリストに反映
+    this.dialogRef.componentInstance.dialogRef = this.dialogRef;
+    this.dialogRef.componentInstance.saved?.subscribe((updated: Office) => {
       const idx = this.offices.findIndex(o => o.id === updated.id);
       if (idx !== -1) {
         this.offices[idx] = { ...updated };
       }
-      dialogRef.close();
+      this.dialogRef?.close();
+      this.dialogRef = null;
+      this.selectedOffices = [];
     });
-    dialogRef.componentInstance.cancelled?.subscribe(() => dialogRef.close());
+    this.dialogRef.componentInstance.cancelled?.subscribe(() => {
+      this.dialogRef?.close();
+      this.dialogRef = null;
+      this.selectedOffices = [];
+    });
+    this.dialogRef.afterClosed().subscribe(() => {
+      this.dialogRef = null;
+    });
   }
 
   onDeleteOffice() {
@@ -77,8 +98,10 @@ export class ManageOfficeComponent {
     this.selectedOffices = [];
   }
 
-  applyChanges() {
-    alert('変更を適用しました（今後Firestore連携）');
+  async applyChanges() {
+    if (!this.company) return;
+    await this.firestoreService.updateAllOffices(this.company.companyId, this.offices);
+    alert('変更をFirestoreに保存しました');
   }
 
   resetChanges() {
@@ -107,7 +130,13 @@ getInsuranceTypeName(code: string): string {
   return type ? type.name : code;
 } 
 
-getIndustryClassificationName(code: string): string {
+getIndustryClassificationName(codeOrObj: string | { code?: string }): string {
+  let code = '';
+  if (typeof codeOrObj === 'string') {
+    code = codeOrObj;
+  } else if (codeOrObj && typeof codeOrObj === 'object' && 'code' in codeOrObj) {
+    code = codeOrObj.code || '';
+  }
   const type = INDUSTRY_CLASSIFICATIONS.find(t => t.code === code);
   return type ? type.name : code;
 }

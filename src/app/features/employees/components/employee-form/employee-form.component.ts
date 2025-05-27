@@ -154,6 +154,8 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     const savedForm = localStorage.getItem(EmployeeFormComponent.FORM_STORAGE_KEY);
     if (savedForm) {
       this.form.patchValue(JSON.parse(savedForm));
+    } else {
+      this.form.reset(); // localStorageがなければフォームをリセット
     }
     // localStorageからタブインデックスを復元
     const savedTab = localStorage.getItem(EmployeeFormComponent.TAB_STORAGE_KEY);
@@ -209,6 +211,9 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    // 画面離脱時は必ずlocalStorageを削除
+    localStorage.removeItem(EmployeeFormComponent.FORM_STORAGE_KEY);
+    localStorage.removeItem(EmployeeFormComponent.TAB_STORAGE_KEY);
     this.autoCareInsuranceSub?.unsubscribe();
   }
 
@@ -332,5 +337,12 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     const officesCol = collection(this.firestore, `companies/${companyId}/offices`);
     const snap = await getDocs(officesCol);
     this.offices = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Office));
+  }
+
+  canDeactivate(): boolean {
+    if (this.form.dirty) {
+      return window.confirm('入力内容が保存されていません。ページを離れますか？');
+    }
+    return true;
   }
 }

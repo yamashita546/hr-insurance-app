@@ -178,4 +178,12 @@ export class FirestoreService {
     });
     return employeeId;
   }
+
+  async updateEmployee(employeeId: string, employee: Partial<Employee>) {
+    const now = Timestamp.now();
+    await setDoc(doc(this.firestore, 'employees', employeeId), {
+      ...employee,
+      updatedAt: now
+    }, { merge: true });
+  }
 }

@@ -2,7 +2,7 @@
   一覧へ戻る
 </button>
 <div style="margin-bottom: 16px;">
-  <div>企業ID：{{ companyId }}</div>
+  <div>企業ID：{{ companyDisplayId }}</div>
   <div>企業名：{{ companyName }}</div>
 </div>
 <h2 style="margin-top: 0; margin-bottom: 24px; text-align: center;">従業員追加</h2>
@@ -61,6 +61,50 @@
             <input formControlName="myNumber" maxlength="12" />
           </div>
         </div>
+        <!-- ここから連絡先情報を統合 -->
+        <div class="form-row">
+          <div class="form-item">
+            <label>Email</label>
+            <input formControlName="email" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-item">
+            <label>電話番号</label>
+            <input formControlName="phoneNumber" />
+          </div>
+        </div>
+        <div class="form-row" formGroupName="address">
+          <div class="form-item">
+            <label>郵便番号</label>
+            <input formControlName="postalCode" />
+          </div>
+        </div>
+        <div class="form-row" formGroupName="address">
+          <div class="form-item">
+            <label>都道府県</label>
+            <input formControlName="prefecture" />
+          </div>
+        </div>
+        <div class="form-row" formGroupName="address">
+          <div class="form-item">
+            <label>市区町村</label>
+            <input formControlName="city" />
+          </div>
+        </div>
+        <div class="form-row" formGroupName="address">
+          <div class="form-item">
+            <label>町域・番地</label>
+            <input formControlName="town" />
+          </div>
+        </div>
+        <div class="form-row" formGroupName="address">
+          <div class="form-item">
+            <label>建物名</label>
+            <input formControlName="streetAddress" />
+          </div>
+        </div>
+        <!-- ここまで -->
       </div>
       <div class="form-actions">
         <button mat-raised-button color="primary" type="button" (click)="goToNextTab()">次へ</button>
@@ -124,57 +168,6 @@
           <div class="form-item">
             <label>退職理由</label>
             <input formControlName="resignationReason" />
-          </div>
-        </div>
-      </div>
-      <div class="form-actions">
-        <button mat-button type="button" (click)="goToPrevTab()">前へ</button>
-        <button mat-raised-button color="primary" type="button" (click)="goToNextTab()">次へ</button>
-      </div>
-    </mat-tab>
-    <!-- 連絡先 -->
-    <mat-tab label="連絡先">
-      <div class="form-grid">
-        <div class="form-row">
-          <div class="form-item">
-            <label>Email</label>
-            <input formControlName="email" />
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-item">
-            <label>電話番号</label>
-            <input formControlName="phoneNumber" />
-          </div>
-        </div>
-        <div class="form-row" formGroupName="address">
-          <div class="form-item">
-            <label>郵便番号</label>
-            <input formControlName="postalCode" />
-          </div>
-        </div>
-        <div class="form-row" formGroupName="address">
-          <div class="form-item">
-            <label>都道府県</label>
-            <input formControlName="prefecture" />
-          </div>
-        </div>
-        <div class="form-row" formGroupName="address">
-          <div class="form-item">
-            <label>市区町村</label>
-            <input formControlName="city" />
-          </div>
-        </div>
-        <div class="form-row" formGroupName="address">
-          <div class="form-item">
-            <label>町域・番地</label>
-            <input formControlName="town" />
-          </div>
-        </div>
-        <div class="form-row" formGroupName="address">
-          <div class="form-item">
-            <label>建物名</label>
-            <input formControlName="streetAddress" />
           </div>
         </div>
       </div>

@@ -59,9 +59,9 @@ export const routes: Routes = [
       { path: 'manage-office', component: ManageOfficeComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'manage-operator', component: ManageOperatorComponent },
       { path: 'my-company', component: MyCompanyComponent },
-      { path: 'employee-detail', component: EmployeeDetailComponent },
-      { path: 'employee-form', component: EmployeeFormComponent },
-      { path: 'employee-detail/:id', component: EmployeeDetailComponent },
+      { path: 'employee-detail', component: EmployeeDetailComponent, canDeactivate: [CanDeactivateDialogGuard] },
+      { path: 'employee-form', component: EmployeeFormComponent, canDeactivate: [CanDeactivateDialogGuard] },
+      { path: 'employee-detail/:id', component: EmployeeDetailComponent, canDeactivate: [CanDeactivateDialogGuard] },
     ],
   },
 ];

@@ -1,18 +1,25 @@
 import { Component } from '@angular/core';
 import { Router ,RouterModule} from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { UserCompanyService } from '../../../../core/services/user-company.service';
+import { Company } from '../../../../core/models/company.model';
 
 @Component({
   selector: 'app-employee-list',
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, CommonModule],
   templateUrl: './employee-list.component.html',
   styleUrl: './employee-list.component.css'
 })
 export class EmployeeListComponent {
-  company = {
-    displayCompanyId: '13-0001',
-    name: 'システム管理会社'
-  };
+  company: Company | null = null;
+
+  constructor(private userCompanyService: UserCompanyService) {
+    this.userCompanyService.company$.subscribe((company: Company | null) => {
+      this.company = company;
+    });
+  }
+
   employees = [
     { employeeId: 'E001', officeName: '大阪営業所', department: '営業部', lastName: '山田', firstName: '太郎' },
     { employeeId: 'E002', officeName: '東京本社', department: '総務部', lastName: '佐藤', firstName: '花子' },

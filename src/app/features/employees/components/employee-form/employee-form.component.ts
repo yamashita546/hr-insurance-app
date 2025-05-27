@@ -14,11 +14,18 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { Subscription } from 'rxjs';
 import { ForeignWorker } from '../../../../core/models/foreign.workers';
 import { EXTRAORDINARY_LEAVE_TYPES } from '../../../../core/models/extraordinary.leave';
+import { RouterModule, Router } from '@angular/router';
+import { collection, addDoc } from 'firebase/firestore';
+import { UserCompanyService } from '../../../../core/services/user-company.service';
+import { Company } from '../../../../core/models/company.model';
 
 @Component({
   selector: 'app-employee-form',
   standalone: true,
-  imports: [MatExpansionModule, ReactiveFormsModule, CommonModule, MatInputModule, MatSelectModule, MatDatepickerModule, MatNativeDateModule, MatButtonModule, MatTabsModule],
+  imports: [MatExpansionModule, ReactiveFormsModule, CommonModule,
+            MatInputModule, MatSelectModule, MatDatepickerModule, 
+            MatNativeDateModule, MatButtonModule, MatTabsModule, RouterModule
+  ],
   templateUrl: './employee-form.component.html',
   styleUrl: './employee-form.component.css'
 })
@@ -34,6 +41,14 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
 
   private autoCareInsuranceSub?: Subscription;
 
+  static readonly FORM_STORAGE_KEY = 'employeeFormData';
+  static readonly TAB_STORAGE_KEY = 'employeeFormTabIndex';
+
+  validationErrors: string[] = [];
+
+  companyId = '';
+  companyName = '';
+
   get dependents(): FormArray {
     return this.form.get('dependents') as FormArray;
   }
@@ -46,7 +61,12 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     return this.form.get('extraordinaryLeave') as FormGroup;
   }
 
-  constructor(private fb: FormBuilder, private firestore: Firestore) {}
+  constructor(
+    private fb: FormBuilder,
+    private firestore: Firestore,
+    private router: Router,
+    private userCompanyService: UserCompanyService
+  ) {}
 
   ngOnInit() {
     this.form = this.fb.group({
@@ -128,6 +148,22 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       }),
     });
 
+    // localStorageからフォーム内容を復元
+    const savedForm = localStorage.getItem(EmployeeFormComponent.FORM_STORAGE_KEY);
+    if (savedForm) {
+      this.form.patchValue(JSON.parse(savedForm));
+    }
+    // localStorageからタブインデックスを復元
+    const savedTab = localStorage.getItem(EmployeeFormComponent.TAB_STORAGE_KEY);
+    if (savedTab) {
+      this.selectedTabIndex = +savedTab;
+    }
+
+    // フォーム変更時にlocalStorageへ保存
+    this.form.valueChanges.subscribe(val => {
+      localStorage.setItem(EmployeeFormComponent.FORM_STORAGE_KEY, JSON.stringify(val));
+    });
+
     // 介護保険適用の自動判定
     this.autoCareInsuranceSub = this.form.valueChanges.subscribe(val => {
       const health = val.isHealthInsuranceApplicable;
@@ -158,6 +194,11 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       } else if (!val && arr.length > 0) {
         while (arr.length) arr.removeAt(0);
       }
+    });
+
+    this.userCompanyService.company$.subscribe((company: Company | null) => {
+      this.companyId = company?.displayId || '';
+      this.companyName = company?.name || '';
     });
   }
 
@@ -193,14 +234,71 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     this.dependents.removeAt(i);
   }
 
-  onSubmit() {
+  async onSubmit() {
+    this.validationErrors = [];
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.validationErrors = this.getFormValidationErrors(this.form);
       return;
     }
     const employee = this.form.value;
-    // Firestore登録処理をここに実装予定
-    alert('登録データ: ' + JSON.stringify(employee, null, 2));
+    try {
+      // Firestoreへ保存
+      const employeesCollection = collection(this.firestore, 'employees');
+      await addDoc(employeesCollection, employee);
+      // 保存完了時にlocalStorageをクリア
+      localStorage.removeItem(EmployeeFormComponent.FORM_STORAGE_KEY);
+      localStorage.removeItem(EmployeeFormComponent.TAB_STORAGE_KEY);
+      // 一覧画面へ遷移
+      this.router.navigate(['/employee']);
+    } catch (error) {
+      alert('保存に失敗しました: ' + error);
+    }
+  }
+
+  getFormValidationErrors(formGroup: FormGroup, parentKey: string = ''): string[] {
+    const errors: string[] = [];
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      const label = this.getLabelForControl(key);
+      if (control instanceof FormGroup) {
+        errors.push(...this.getFormValidationErrors(control, label));
+      } else if (control instanceof FormArray) {
+        (control.controls as FormGroup[]).forEach((group, idx) => {
+          errors.push(...this.getFormValidationErrors(group, `${label}（${idx + 1}人目）`));
+        });
+      } else if (control && control.invalid) {
+        Object.keys(control.errors || {}).forEach(errorKey => {
+          errors.push(`${parentKey ? parentKey + ' - ' : ''}${label}：${this.getErrorMessage(errorKey, control.errors![errorKey])}`);
+        });
+      }
+    });
+    return errors;
+  }
+
+  getLabelForControl(key: string): string {
+    const labels: { [key: string]: string } = {
+      employeeId: '従業員ID',
+      lastName: '姓',
+      firstName: '名',
+      myNumber: 'マイナンバー',
+      lastNameKana: '姓（カナ）',
+      firstNameKana: '名（カナ）',
+      gender: '性別',
+      birthday: '生年月日',
+      // 必要に応じて追加
+    };
+    return labels[key] || key;
+  }
+
+  getErrorMessage(errorKey: string, errorValue: any): string {
+    switch (errorKey) {
+      case 'required': return '必須項目です';
+      case 'pattern': return '形式が正しくありません';
+      case 'minlength': return `最小文字数は${errorValue.requiredLength}です`;
+      case 'maxlength': return `最大文字数は${errorValue.requiredLength}です`;
+      default: return '入力内容に誤りがあります';
+    }
   }
 
   goToNextTab() {
@@ -213,5 +311,10 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     if (this.selectedTabIndex > 0) {
       this.selectedTabIndex--;
     }
+  }
+
+  onTabChange(index: number) {
+    this.selectedTabIndex = index;
+    localStorage.setItem(EmployeeFormComponent.TAB_STORAGE_KEY, index.toString());
   }
 }

@@ -15,6 +15,7 @@ import { Observable } from 'rxjs';
 import { AppUser } from '../models/user.model';
 import { Company, Office } from '../models/company.model';
 import { InsuranceRate } from '../models/insurance-rate.model';
+import { Employee } from '../models/employee.model';
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreService {
@@ -163,5 +164,18 @@ export class FirestoreService {
       const { offices, ...officeData } = office as any;
       await setDoc(doc(officesCol, office.id), officeData, { merge: true });
     }
+  }
+
+  async addEmployee(employee: Omit<Employee, 'employeeId' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    const employeeId = doc(collection(this.firestore, 'employees')).id;
+    const now = Timestamp.now();
+    await setDoc(doc(this.firestore, 'employees', employeeId), {
+      ...employee,
+      employeeId,
+      createdAt: now,
+      updatedAt: now,
+      isActive: true
+    });
+    return employeeId;
   }
 }

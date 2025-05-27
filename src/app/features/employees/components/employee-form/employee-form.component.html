@@ -1,5 +1,18 @@
+<button mat-stroked-button color="primary" routerLink="/employee" style="margin-bottom: 16px;">
+  一覧へ戻る
+</button>
+<div style="margin-bottom: 16px;">
+  <div>企業ID：{{ companyId }}</div>
+  <div>企業名：{{ companyName }}</div>
+</div>
+<h2 style="margin-top: 0; margin-bottom: 24px; text-align: center;">従業員追加</h2>
+<div *ngIf="validationErrors.length > 0" class="validation-errors" style="color: red; margin-bottom: 16px;">
+  <ul>
+    <li *ngFor="let err of validationErrors">{{ err }}</li>
+  </ul>
+</div>
 <form [formGroup]="form" (ngSubmit)="onSubmit()" class="employee-form">
-  <mat-tab-group [(selectedIndex)]="selectedTabIndex">
+  <mat-tab-group [(selectedIndex)]="selectedTabIndex" (selectedIndexChange)="onTabChange($event)">
     <!-- 基本情報 -->
     <mat-tab label="基本情報">
       <div class="form-grid">

@@ -20,11 +20,9 @@ export type Employee = {
     firstNameKana?: string;
     gender?: string;
     birthday: Date;
-    hireDate: Date; // 雇用日
-    resignationDate?: Date; // 退職日
-    resignationReason?: string; // 退職理由
     contractStartDate?: Date; // 雇用契約開始日
     contractEndDate?: Date;   // 雇用契約終了日
+    resignationReason?: string; // 退職理由
     workStyle?: string; // 勤務形態（フルタイム、パート等）
     myNumber?: string;
     myNumberCollected?: boolean; // マイナンバー収集済みか

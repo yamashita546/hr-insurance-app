@@ -9,7 +9,8 @@ import {
   collectionData,
   addDoc,
   deleteDoc,
-  getDocs
+  getDocs,
+  where
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { AppUser } from '../models/user.model';
@@ -185,5 +186,12 @@ export class FirestoreService {
       ...employee,
       updatedAt: now
     }, { merge: true });
+  }
+
+  async getEmployeesByCompanyId(companyId: string): Promise<Employee[]> {
+    const employeesCol = collection(this.firestore, 'employees');
+    const q = query(employeesCol, where('companyId', '==', companyId));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ ...(doc.data() as Employee)}));
   }
 }

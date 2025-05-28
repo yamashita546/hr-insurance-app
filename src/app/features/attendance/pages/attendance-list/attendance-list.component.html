@@ -1,1 +1,136 @@
-<p>attendance-list works!</p>
+<div class="attendance-container scroll-x">
+  <div class="company-info-block" *ngIf="company">
+    <div>企業ID：{{ company?.displayId }}</div>
+    <div>企業名：{{ company?.name }}</div>
+  </div>
+  <h1>勤怠情報管理</h1>
+  <div class="attendance-actions">
+    <div class="csv-toolbar">
+      <button class="add-btn" (click)="onAddAttendance()">勤怠情報を追加</button>
+      <button class="csv-btn" (click)="onExportCsv()">CSVひな型出力</button>
+      <label class="file-label">
+        ファイルを選択
+        <input type="file" (change)="onImportCsv($event)" accept=".csv" style="display: none;" #fileInput />
+      </label>
+      <span class="file-name">{{ fileName || '選択されていません' }}</span>
+    </div>
+  </div>
+  <div class="sort-toolbar">
+    <label>年度
+      <select [(ngModel)]="selectedYear" (change)="onSortChange()">
+        <option value="">すべて</option>
+        <option *ngFor="let y of yearList" [value]="y">{{ y }}</option>
+      </select>
+    </label>
+    <label>月
+      <select [(ngModel)]="selectedMonth" (change)="onSortChange()">
+        <option value="">すべて</option>
+        <option *ngFor="let m of monthList" [value]="m">{{ m }}</option>
+      </select>
+    </label>
+    <label>事業所
+      <select [(ngModel)]="selectedOfficeId" (change)="onSortChange()">
+        <option value="">すべて</option>
+        <option *ngFor="let o of offices" [value]="o.id">{{ o.name }}</option>
+      </select>
+    </label>
+  </div>
+  <div class="attendance-list">
+    <table>
+      <thead>
+        <tr>
+          <th>年度</th>
+          <th>月</th>
+          <th>事業所</th>
+          <th>ID</th>
+          <th>氏名</th>
+          <th>所定労働日数</th>
+          <th>勤務日数</th>
+          <th>所定労働時間数</th>
+          <th>実際の労働時間</th>
+          <th>欠勤日数</th>
+          <th>無給休暇日数</th>
+          <th>有給取得日数</th>
+          <th>育児休業開始日</th>
+          <th>育児休業終了日</th>
+          <th>介護休業開始日</th>
+          <th>介護休業終了日</th>
+          <th>傷病休業開始日</th>
+          <th>傷病休業終了日</th>
+          <th>月全体で無給休業中</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let attendance of attendances">
+          <td>{{ attendance.year || '未入力' }}</td>
+          <td>{{ attendance.month || '未入力' }}</td>
+          <td>{{ attendance.officeName || '未入力' }}</td>
+          <td>{{ attendance.employeeId || '未入力' }}</td>
+          <td>{{ attendance.employeeName || '未入力' }}</td>
+          <td>{{ attendance.scheduledWorkDays }}</td>
+          <td>{{ attendance.actualWorkDays }}</td>
+          <td>{{ attendance.scheduledWorkHours }}</td>
+          <td>{{ attendance.actualWorkHours }}</td>
+          <td>{{ attendance.absentDays }}</td>
+          <td>{{ attendance.leaveWithoutPayDays }}</td>
+          <td>{{ attendance.paidLeaveDays }}</td>
+          <td>{{ attendance.childCareLeaveStartDate | date:'yyyy-MM-dd' }}</td>
+          <td>{{ attendance.childCareLeaveEndDate | date:'yyyy-MM-dd' }}</td>
+          <td>{{ attendance.familyCareLeaveStartDate | date:'yyyy-MM-dd' }}</td>
+          <td>{{ attendance.familyCareLeaveEndDate | date:'yyyy-MM-dd' }}</td>
+          <td>{{ attendance.injuryOrSicknessLeaveStartDate | date:'yyyy-MM-dd' }}</td>
+          <td>{{ attendance.injuryOrSicknessLeaveEndDate | date:'yyyy-MM-dd' }}</td>
+          <td>{{ attendance.isOnFullLeaveThisMonth ? '○' : '' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div *ngIf="pendingImportData.length > 0">
+    <h3>インポート予定データ</h3>
+    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px;">
+      <button (click)="confirmImport()" [disabled]="importErrors.length > 0">保存</button>
+      <button (click)="cancelImport()" class="cancel-btn">キャンセル</button>
+    </div>
+    <div style="max-width:100%;overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th *ngFor="let key of pendingImportData[0] | keyvalue">{{ key.key }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of pendingImportData">
+            <td *ngFor="let key of row | keyvalue">{{ key.value }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div *ngIf="importErrors.length > 0" style="color:red;">
+    <h3>エラー一覧</h3>
+    <ul>
+      <li *ngFor="let err of importErrors">{{ err }}</li>
+    </ul>
+  </div>
+  <div *ngIf="showCsvDialog" class="csv-dialog-backdrop">
+    <div class="csv-dialog">
+      <h3>CSVひな型出力：年度・月を選択</h3>
+      <label>年度
+        <select [(ngModel)]="csvYear">
+          <option *ngFor="let y of yearList" [value]="y">{{ y }}</option>
+        </select>
+      </label>
+      <label>月
+        <select [(ngModel)]="csvMonth">
+          <option *ngFor="let m of monthList" [value]="m">{{ m }}</option>
+        </select>
+      </label>
+      <div class="csv-dialog-actions">
+        <button (click)="onCsvDialogExport()">OK</button>
+        <button (click)="onCsvDialogCancel()">キャンセル</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+

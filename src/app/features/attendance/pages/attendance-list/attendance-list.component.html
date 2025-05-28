@@ -95,12 +95,12 @@
       <table>
         <thead>
           <tr>
-            <th *ngFor="let key of pendingImportData[0] | keyvalue">{{ key.key }}</th>
+            <th *ngFor="let key of ATTENDANCE_COLUMN_ORDER_DISPLAY">{{ ATTENDANCE_COLUMN_LABELS[key] }}</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let row of pendingImportData">
-            <td *ngFor="let key of row | keyvalue">{{ key.value }}</td>
+            <td *ngFor="let key of ATTENDANCE_COLUMN_ORDER_DISPLAY">{{ row[key] }}</td>
           </tr>
         </tbody>
       </table>

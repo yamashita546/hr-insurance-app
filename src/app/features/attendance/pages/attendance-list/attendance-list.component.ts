@@ -7,6 +7,7 @@ import { collection, query, where, getDocs, addDoc } from '@angular/fire/firesto
 import { Firestore } from '@angular/fire/firestore';
 import { Attendance } from '../../../../core/models/attendance.model';
 import { FirestoreService } from '../../../../core/services/firestore.service';
+import { ATTENDANCE_COLUMN_LABELS, ATTENDANCE_COLUMN_ORDER } from '../../../../core/models/attendance.model';
 
 @Component({
   selector: 'app-attendance-list',
@@ -207,4 +208,9 @@ export class AttendanceListComponent {
     this.importErrors = [];
     this.fileName = '';
   }
+
+  // テンプレートで使うためにエクスポート
+  ATTENDANCE_COLUMN_LABELS = ATTENDANCE_COLUMN_LABELS;
+  ATTENDANCE_COLUMN_ORDER = ATTENDANCE_COLUMN_ORDER;
+  ATTENDANCE_COLUMN_ORDER_DISPLAY = ATTENDANCE_COLUMN_ORDER.filter(col => col !== 'companyId');
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { FirestoreService } from '../../../../core/services/firestore.service';
@@ -6,16 +6,17 @@ import { UserCompanyService } from '../../../../core/services/user-company.servi
 import { Employee } from '../../../../core/models/employee.model';
 import { Attendance, ATTENDANCE_COLUMN_ORDER, ATTENDANCE_COLUMN_LABELS } from '../../../../core/models/attendance.model';
 import { Office } from '../../../../core/models/company.model';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subscription } from 'rxjs';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-attendance-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './attendance-form.component.html',
   styleUrl: './attendance-form.component.css'
 })
-export class AttendanceFormComponent implements OnInit {
+export class AttendanceFormComponent implements OnInit, OnDestroy {
   @Output() formSaved = new EventEmitter<void>();
   @Output() formCancel = new EventEmitter<void>();
 
@@ -26,6 +27,7 @@ export class AttendanceFormComponent implements OnInit {
   companyId: string = '';
   ATTENDANCE_COLUMN_ORDER = ATTENDANCE_COLUMN_ORDER;
   ATTENDANCE_COLUMN_LABELS = ATTENDANCE_COLUMN_LABELS;
+  private companySub?: Subscription;
 
   constructor(
     private fb: FormBuilder,
@@ -35,22 +37,27 @@ export class AttendanceFormComponent implements OnInit {
     this.initForm();
   }
 
-  async ngOnInit() {
-    const company = await firstValueFrom(this.userCompanyService.company$);
-    console.log('取得したcompany:', company);
-    if (company) {
-      this.companyId = company.companyId;
-      this.offices = await this.firestoreService.getOffices(company.companyId);
-      console.log('取得したoffices:', this.offices);
-      this.employees = await this.firestoreService.getEmployeesByCompanyId(company.companyId);
-      console.log('取得したemployees:', this.employees);
-      this.offices.forEach(office => {
-        this.filteredEmployees[office.id] = this.employees.filter(
-          emp => emp.officeId === office.id
-        );
-      });
-      console.log('filteredEmployees:', this.filteredEmployees);
-    }
+  ngOnInit() {
+    this.companySub = this.userCompanyService.company$.subscribe(async company => {
+      if (company && company.companyId) {
+        this.companyId = company.companyId;
+        this.offices = await this.firestoreService.getOffices(company.companyId);
+        this.employees = await this.firestoreService.getEmployeesByCompanyId(company.companyId);
+        this.filteredEmployees = {};
+        this.offices.forEach(office => {
+          this.filteredEmployees[office.id] = this.employees.filter(
+            emp => emp.officeId === office.id
+          );
+        });
+        if (this.attendances.length === 0) {
+          for (let i = 0; i < 3; i++) this.addRow();
+        }
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.companySub?.unsubscribe();
   }
 
   private initForm() {
@@ -126,8 +133,8 @@ export class AttendanceFormComponent implements OnInit {
   onEmployeeNameChange(index: number) {
     const group = this.attendances.at(index);
     const employeeName = group.get('employeeName')?.value;
-    const employee = this.employees.find(emp => this.getEmployeeFullName(emp) === employeeName);
-    
+    const employee = this.employees.find(emp => (emp.lastName + emp.firstName) === employeeName);
+
     if (employee) {
       const office = this.offices.find(o => o.id === employee.officeId);
       group.patchValue({

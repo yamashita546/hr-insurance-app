@@ -1,6 +1,10 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <table>
-    <thead>
+
+<h1>勤怠情報入力</h1>
+
+<div class="attendance-form-container">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <table>
+      <thead>
       <tr>
         <th>年度</th>
         <th>月</th>
@@ -21,7 +25,7 @@
         <th>傷病休暇開始日</th>
         <th>傷病休暇終了日</th>
         <th>当月全休</th>
-        <th>操作</th>
+        <th>行削除</th>
       </tr>
     </thead>
     <tbody>
@@ -51,8 +55,8 @@
         <td>
           <select formControlName="employeeName" (change)="onEmployeeNameChange(i)" required>
             <option value="">選択してください</option>
-            <option *ngFor="let emp of getOfficeEmployees(group.get('officeId')?.value)" [value]="emp.name">
-              {{emp.name}}
+            <option *ngFor="let emp of getOfficeEmployees(group.get('officeId')?.value)" [value]="emp.lastName + emp.firstName">
+              {{ emp.lastName + emp.firstName }}
             </option>
           </select>
         </td>
@@ -79,4 +83,6 @@
   <button type="button" (click)="addRow()">入力枠を追加</button>
   <button type="submit" [disabled]="form.invalid">保存</button>
   <button type="button" (click)="onCancel()">キャンセル</button>
+  <button type="button" routerLink="/attendance" style="margin-left: 1em;">一覧に戻る</button>
 </form>
+</div>

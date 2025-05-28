@@ -4,10 +4,12 @@ import { StandardMonthlyComponent } from '../../features/master/pages/standard-m
 import { CompaniesComponent } from '../../features/master/pages/companies/company.base.info/companies.component';
 import { EmployeeFormComponent } from '../../features/employees/components/employee-form/employee-form.component';
 import { EmployeeDetailComponent } from '../../features/employees/pages/employee-detail/employee-detail.component';
+import { AttendanceFormComponent } from '../../features/attendance/components/attendance-form/attendance-form.component';
+
 
 // 型を拡張
 // eslint-disable-next-line @typescript-eslint/no-type-alias
-type DialogComponent = StandardMonthlyComponent | CompaniesComponent | EmployeeFormComponent | EmployeeDetailComponent;
+type DialogComponent = StandardMonthlyComponent | CompaniesComponent | EmployeeFormComponent | EmployeeDetailComponent | AttendanceFormComponent;
 
 @Injectable({ providedIn: 'root' })
 export class CanDeactivateDialogGuard implements CanDeactivate<DialogComponent> {

@@ -42,7 +42,7 @@ export const routes: Routes = [
       { path: 'insurance-calc', component: InsuranceListComponent },
       { path: 'employee', component: EmployeeListComponent },
       { path: 'payroll', component: SalaryListComponent },
-      { path: 'attendance', component: AttendanceListComponent },
+      { path: 'attendance', component: AttendanceListComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'csv-export', component: CsvExportComponent },
       { path: 'history', component: HistoryListComponent },
       { path: 'master', component: MasterMainComponent },
@@ -64,6 +64,7 @@ export const routes: Routes = [
       { path: 'employee-form', component: EmployeeFormComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'employee-detail/:id', component: EmployeeDetailComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'attendance-form', component: AttendanceFormComponent, canDeactivate: [CanDeactivateDialogGuard] },
+      
     ],
   },
 ];

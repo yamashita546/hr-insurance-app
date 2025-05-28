@@ -42,7 +42,7 @@ export const ATTENDANCE_COLUMN_LABELS: { [key: string]: string } = {
   familyCareLeaveEndDate: '介護休業終了日',
   injuryOrSicknessLeaveStartDate: '傷病休業開始日',
   injuryOrSicknessLeaveEndDate: '傷病休業終了日',
-  isOnFullLeaveThisMonth: '月全体で無給休業中',
+  isOnFullLeaveThisMonth: '全休',
   companyId: '会社ID'
 };
 

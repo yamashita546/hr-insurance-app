@@ -3,7 +3,7 @@ import { Router ,RouterModule} from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { Company } from '../../../../core/models/company.model';
-import { collection, query, where, getDocs, addDoc } from '@angular/fire/firestore';
+import { collection, query, where, getDocs, addDoc, doc, setDoc } from '@angular/fire/firestore';
 import { Firestore } from '@angular/fire/firestore';
 
 @Component({
@@ -50,6 +50,19 @@ export class EmployeeListComponent {
   }
 
   onExportCsv() {
+    const result = window.prompt(
+      'CSV出力方法を選択してください：\n1: ひな型だけ\n2: 現在のデータを含む\nキャンセル: ダイアログを閉じる',
+      '1'
+    );
+    if (result === '1') {
+      this.exportCsv(false);
+    } else if (result === '2') {
+      this.exportCsv(true);
+    }
+    // キャンセルやその他の入力は何もしない
+  }
+
+  exportCsv(includeData: boolean) {
     const dependentFields = [
       'lastName', 'firstName', 'lastNameKana', 'firstNameKana',
       'relationship', 'relationshipCode', 'birthday', 'myNumber',
@@ -61,7 +74,9 @@ export class EmployeeListComponent {
       'employeeId', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana', 'gender', 'birthday', 'myNumber',
       'email', 'phoneNumber',
       'address.postalCode', 'address.prefecture', 'address.city', 'address.town', 'address.streetAddress',
-      'officeName', 'department', 'position', 'employeeType', 'workStyle', 'contractStartDate', 'contractEndDate', 'resignationReason',
+      'officeName',
+      'displayOfficeId',
+      'department', 'position', 'employeeType', 'workStyle', 'contractStartDate', 'contractEndDate', 'resignationReason',
       'healthInsuranceNumber', 'pensionNumber', 'employmentInsuranceNumber',
       'isHealthInsuranceApplicable', 'isPensionApplicable', 'isEmploymentInsuranceApplicable', 'isCareInsuranceApplicable',
       'emergencyContactName', 'emergencyContactRelationship', 'emergencyContactPhone', 'emergencyContactIsActive',
@@ -78,11 +93,39 @@ export class EmployeeListComponent {
       'extraordinaryLeave.isHealthInsuranceExempted', 'extraordinaryLeave.isPensionExempted', 'extraordinaryLeave.isEmploymentInsuranceExempted',
       'extraordinaryLeave.isCareInsuranceExempted', 'extraordinaryLeave.isChildcareLeave', 'extraordinaryLeave.isNursingCareLeave'
     ];
-    const sampleRow = [
-      this.company?.companyId || '',
-      ...Array(headers.length - 1).fill('')
-    ];
-    const csv = [headers.join(','), sampleRow.join(',')].join('\r\n');
+
+    let rows: string[] = [];
+    if (includeData && this.employees.length > 0) {
+      // 既存データをCSV行に変換
+      for (const emp of this.employees) {
+        const row = headers.map(h => {
+          // ネスト対応
+          if (h.includes('.')) {
+            const [parent, child] = h.split('.');
+            return emp[parent]?.[child] ?? '';
+          } else if (h.startsWith('dependents[')) {
+            // dependents[0].lastName など
+            const match = h.match(/dependents\\[(\\d+)\\]\\.(.+)/);
+            if (match) {
+              const idx = +match[1];
+              const key = match[2];
+              return emp.dependents?.[idx]?.[key] ?? '';
+            }
+          }
+          return emp[h] ?? '';
+        });
+        rows.push(row.join(','));
+      }
+    } else {
+      // 空のひな型
+      const sampleRow = [
+        this.company?.companyId || '',
+        ...Array(headers.length - 1).fill('')
+      ];
+      rows.push(sampleRow.join(','));
+    }
+
+    const csv = [headers.join(','), ...rows].join('\r\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -146,8 +189,39 @@ export class EmployeeListComponent {
       alert('エラーがあります。修正してください。');
       return;
     }
+    // 1. 事前に全オフィスを取得
+    const officesCol = collection(this.firestore, `companies/${this.company?.companyId}/offices`);
+    const officesSnap = await getDocs(officesCol);
+    const displayOfficeIdToId: { [displayOfficeId: string]: string } = {};
+    officesSnap.forEach(docSnap => {
+      const data = docSnap.data();
+      displayOfficeIdToId[data['displayOfficeId']] = docSnap.id;
+    });
+
+    // 2. 既存従業員をemployeeIdでマッピング
+    const employeeIdToDocId: { [employeeId: string]: string } = {};
+    this.employees.forEach(emp => {
+      if (emp.employeeId) employeeIdToDocId[emp.employeeId] = emp.id;
+    });
+
+    // 3. 各従業員データにofficeIdを付与して保存
     for (const emp of this.pendingImportData) {
-      await addDoc(collection(this.firestore, 'employees'), emp);
+      const officeId = displayOfficeIdToId[emp.displayOfficeId];
+      if (officeId) {
+        emp.officeId = officeId;
+      } else {
+        emp.officeId = '';
+        console.warn(`displayOfficeId「${emp.displayOfficeId}」に一致する事業所がありません`);
+      }
+
+      if (employeeIdToDocId[emp.employeeId]) {
+        // 既存 → update（setDoc with merge: true）
+        const docRef = doc(this.firestore, 'employees', employeeIdToDocId[emp.employeeId]);
+        await setDoc(docRef, emp, { merge: true });
+      } else {
+        // 新規 → addDoc
+        await addDoc(collection(this.firestore, 'employees'), emp);
+      }
     }
     alert('インポートが完了しました');
     this.pendingImportData = [];

@@ -8,11 +8,13 @@ import { Firestore } from '@angular/fire/firestore';
 import { Attendance } from '../../../../core/models/attendance.model';
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { ATTENDANCE_COLUMN_LABELS, ATTENDANCE_COLUMN_ORDER } from '../../../../core/models/attendance.model';
+import { AttendanceFormComponent } from '../../components/attendance-form/attendance-form.component';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-attendance-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AttendanceFormComponent, RouterModule],
   templateUrl: './attendance-list.component.html',
   styleUrl: './attendance-list.component.css',
   providers: [DatePipe]
@@ -35,6 +37,7 @@ export class AttendanceListComponent {
   csvYear: string = '';
   csvMonth: string = '';
   employees: any[] = [];
+  showFormDialog: boolean = false;
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -95,7 +98,7 @@ export class AttendanceListComponent {
   }
 
   onAddAttendance() {
-    alert('勤怠情報追加ダイアログを開く想定です');
+    this.showFormDialog = true;
   }
 
   async onExportCsv() {
@@ -207,6 +210,17 @@ export class AttendanceListComponent {
     this.pendingImportData = [];
     this.importErrors = [];
     this.fileName = '';
+  }
+
+  onFormSaved() {
+    this.showFormDialog = false;
+    if (this.company?.companyId) {
+      this.loadAttendances(this.company.companyId);
+    }
+  }
+
+  onFormCancel() {
+    this.showFormDialog = false;
   }
 
   // テンプレートで使うためにエクスポート

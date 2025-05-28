@@ -49,7 +49,9 @@ export type Employee = {
     createdAt: Timestamp;
     updatedAt: Timestamp;
     deletedAt?: Timestamp;
-  };
+
+    name: string;  // 氏名を追加
+};
 
 export type Dependent = {
   employeeId: string; // 紐付け用

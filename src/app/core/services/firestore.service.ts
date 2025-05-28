@@ -17,6 +17,7 @@ import { AppUser } from '../models/user.model';
 import { Company, Office } from '../models/company.model';
 import { InsuranceRate } from '../models/insurance-rate.model';
 import { Employee } from '../models/employee.model';
+import { Attendance } from '../models/attendance.model';
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreService {
@@ -193,5 +194,15 @@ export class FirestoreService {
     const q = query(employeesCol, where('companyId', '==', companyId));
     const snap = await getDocs(q);
     return snap.docs.map(doc => ({ ...(doc.data() as Employee)}));
+  }
+
+  async addAttendance(attendance: Omit<Attendance, 'createdAt' | 'updatedAt'>) {
+    const attendancesCol = collection(this.firestore, 'attendances');
+    const now = Timestamp.now();
+    await addDoc(attendancesCol, {
+      ...attendance,
+      createdAt: now,
+      updatedAt: now
+    });
   }
 }

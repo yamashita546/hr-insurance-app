@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import { CommonModule } from '@angular/common';
@@ -10,7 +10,7 @@ import { EXTRAORDINARY_LEAVE_TYPES } from '../../../../core/models/extraordinary
 import { Office } from '../../../../core/models/company.model';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subscription } from 'rxjs';
 import { PREFECTURES } from '../../../../core/models/prefecture.model';
 
 @Component({
@@ -20,7 +20,7 @@ import { PREFECTURES } from '../../../../core/models/prefecture.model';
   templateUrl: './employee-detail.component.html',
   styleUrl: './employee-detail.component.css'
 })
-export class EmployeeDetailComponent implements OnInit {
+export class EmployeeDetailComponent implements OnInit, OnDestroy {
   employee: any = null;
   editEmployee: any = null;
   isEditMode = false;
@@ -32,6 +32,7 @@ export class EmployeeDetailComponent implements OnInit {
   private docId: string = '';
   companyId = '';
   prefectures = PREFECTURES;
+  private companySub?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -47,16 +48,50 @@ export class EmployeeDetailComponent implements OnInit {
       const docRef = doc(this.firestore, 'employees', id);
       const snap = await getDoc(docRef);
       this.employee = snap.data();
+      console.log('取得したemployee:', this.employee);
+      if (this.employee) {
+        // addressオブジェクトがなければ再構築
+        if (!this.employee.address) {
+          this.employee.address = {
+            postalCode: this.employee['address.postalCode'] || '',
+            prefecture: this.employee['address.prefecture'] || '',
+            city: this.employee['address.city'] || '',
+            town: this.employee['address.town'] || '',
+            streetAddress: this.employee['address.streetAddress'] || '',
+            buildingName: this.employee['address.buildingName'] || ''
+          };
+          console.log('再構築したemployee.address:', this.employee.address);
+        }
+        if (this.employee.address) {
+          console.log('employee.address:', this.employee.address);
+          // 各フィールドも個別に出力
+          console.log('address.postalCode:', this.employee.address.postalCode);
+          console.log('address.prefecture:', this.employee.address.prefecture);
+          console.log('address.city:', this.employee.address.city);
+          console.log('address.town:', this.employee.address.town);
+          console.log('address.streetAddress:', this.employee.address.streetAddress);
+          console.log('address.buildingName:', this.employee.address.buildingName);
+        } else {
+          console.log('employee.addressが存在しません');
+        }
+      }
     }
-    // 企業ID取得
-    const company = await firstValueFrom(this.userCompanyService.company$);
-    this.companyId = company?.companyId || '';
-    console.log('companyId:', this.companyId);
-    // 企業IDで事業所をサブコレクションから取得
-    const officesCol = collection(this.firestore, `companies/${this.companyId}/offices`);
-    const officesSnap = await getDocs(officesCol);
-    this.offices = officesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Office));
-    console.log('offices:', this.offices);
+
+    // company$をsubscribeして、値が取得できたら処理を進める
+    this.companySub = this.userCompanyService.company$.subscribe(async company => {
+      if (company && company.companyId) {
+        this.companyId = company.companyId;
+        console.log('companyId:', this.companyId);
+        const officesCol = collection(this.firestore, `companies/${this.companyId}/offices`);
+        const officesSnap = await getDocs(officesCol);
+        this.offices = officesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Office));
+        console.log('offices:', this.offices);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.companySub?.unsubscribe();
   }
 
   startEdit() {

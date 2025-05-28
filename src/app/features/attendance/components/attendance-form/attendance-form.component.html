@@ -1,1 +1,82 @@
-<p>attendance-form works!</p>
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <table>
+    <thead>
+      <tr>
+        <th>年度</th>
+        <th>月</th>
+        <th>事業所</th>
+        <th>ID</th>
+        <th>氏名</th>
+        <th>所定労働日数</th>
+        <th>実労働日数</th>
+        <th>所定労働時間</th>
+        <th>実労働時間</th>
+        <th>欠勤日数</th>
+        <th>無給休日数</th>
+        <th>有給休日数</th>
+        <th>子育て休暇開始日</th>
+        <th>子育て休暇終了日</th>
+        <th>家族介護休暇開始日</th>
+        <th>家族介護休暇終了日</th>
+        <th>傷病休暇開始日</th>
+        <th>傷病休暇終了日</th>
+        <th>当月全休</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let group of attendances.controls; let i = index" [formGroup]="group">
+        <td>
+          <input formControlName="year" type="number" style="width: 5em;" required />
+        </td>
+        <td>
+          <input formControlName="month" type="number" min="1" max="12" style="width: 3em;" required />
+        </td>
+        <td>
+          <select formControlName="officeId" (change)="onOfficeChange(i)" required>
+            <option value="">選択してください</option>
+            <option *ngFor="let office of offices" [value]="office.id">
+              {{office.name}}
+            </option>
+          </select>
+        </td>
+        <td>
+          <select formControlName="employeeId" (change)="onEmployeeChange(i)" required>
+            <option value="">選択してください</option>
+            <option *ngFor="let emp of getOfficeEmployees(group.get('officeId')?.value)" [value]="emp.employeeId">
+              {{emp.employeeId}}
+            </option>
+          </select>
+        </td>
+        <td>
+          <select formControlName="employeeName" (change)="onEmployeeNameChange(i)" required>
+            <option value="">選択してください</option>
+            <option *ngFor="let emp of getOfficeEmployees(group.get('officeId')?.value)" [value]="emp.name">
+              {{emp.name}}
+            </option>
+          </select>
+        </td>
+        <td><input formControlName="scheduledWorkDays" type="number" /></td>
+        <td><input formControlName="actualWorkDays" type="number" /></td>
+        <td><input formControlName="scheduledWorkHours" type="number" /></td>
+        <td><input formControlName="actualWorkHours" type="number" /></td>
+        <td><input formControlName="absentDays" type="number" /></td>
+        <td><input formControlName="leaveWithoutPayDays" type="number" /></td>
+        <td><input formControlName="paidLeaveDays" type="number" /></td>
+        <td><input formControlName="childCareLeaveStartDate" type="date" /></td>
+        <td><input formControlName="childCareLeaveEndDate" type="date" /></td>
+        <td><input formControlName="familyCareLeaveStartDate" type="date" /></td>
+        <td><input formControlName="familyCareLeaveEndDate" type="date" /></td>
+        <td><input formControlName="injuryOrSicknessLeaveStartDate" type="date" /></td>
+        <td><input formControlName="injuryOrSicknessLeaveEndDate" type="date" /></td>
+        <td><input formControlName="isOnFullLeaveThisMonth" type="checkbox" /></td>
+        <td>
+          <button type="button" (click)="removeRow(i)" *ngIf="attendances.length > 1">削除</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <button type="button" (click)="addRow()">入力枠を追加</button>
+  <button type="submit" [disabled]="form.invalid">保存</button>
+  <button type="button" (click)="onCancel()">キャンセル</button>
+</form>

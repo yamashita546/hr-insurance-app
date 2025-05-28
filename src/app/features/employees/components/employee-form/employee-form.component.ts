@@ -75,11 +75,12 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       employeeId: ['', Validators.required],
       lastName: ['', Validators.required],
       firstName: ['', Validators.required],
-      myNumber: ['', [Validators.required, Validators.pattern(/^\d{12}$/)]],
+      myNumber: ['', [Validators.required, Validators.pattern(/^[0-9]{12}$/)]],
       lastNameKana: [''],
       firstNameKana: [''],
       gender: [''],
       birthday: ['', Validators.required],
+      officeId: [''],
       officeName: [''],
       department: [''],
       position: [''],
@@ -132,7 +133,6 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
         hasSpecificActivity: [false],
         returnPlannedDate: [''],
         remarks: [''],
-        
       }),
       isExtraordinaryLeave: [false],
       extraordinaryLeave: this.fb.group({
@@ -200,6 +200,12 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       }
     });
 
+    // 事業所名選択時にofficeIdもセット
+    this.form.get('officeName')!.valueChanges.subscribe(name => {
+      const office = this.offices.find(o => o.name === name);
+      this.form.get('officeId')!.setValue(office ? office.id : '', { emitEvent: false });
+    });
+
     this.userCompanyService.company$.subscribe((company: Company | null) => {
       this.companyId = company?.companyId || '';
       this.companyDisplayId = company?.displayId || '';
@@ -252,10 +258,11 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       this.validationErrors = this.getFormValidationErrors(this.form);
       return;
     }
-    // companyIdを従業員データに追加
+    // companyIdとofficeIdを従業員データに追加
     const employee = {
       ...this.form.value,
-      companyId: this.companyId
+      companyId: this.companyId,
+      officeId: this.form.get('officeId')!.value
     };
     try {
       // Firestoreへ保存

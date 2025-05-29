@@ -133,6 +133,7 @@ export class SalaryFormComponent implements OnInit {
     const totalAllowance = otherAllowances.reduce((sum, a) => sum + (a.otherAllowance || 0), 0);
     const totalSalary = (Number(this.salaryForm.basicSalary) || 0) + (Number(this.salaryForm.overtimeSalary) || 0) + totalAllowance;
     const salary = {
+      companyId: this.companyId,
       employeeId: this.selectedEmployeeObj.employeeId,
       targetYearMonth: `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`,
       basicSalary: Number(this.salaryForm.basicSalary) || 0,
@@ -148,6 +149,7 @@ export class SalaryFormComponent implements OnInit {
       for (const bonus of this.bonusForms) {
         if (!bonus.bonusType) continue;
         const bonusData = {
+          companyId: this.companyId,
           employeeId: this.selectedEmployeeObj.employeeId,
           targetYearMonth: `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`,
           bonusName: bonus.bonusType === 'その他賞与' ? bonus.bonusName : '',

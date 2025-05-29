@@ -228,4 +228,20 @@ export class FirestoreService {
       updatedAt: now
     });
   }
+
+  // 会社IDでsalaries一覧取得
+  async getSalariesByCompanyId(companyId: string): Promise<any[]> {
+    const salariesCol = collection(this.firestore, 'salaries');
+    const q = query(salariesCol, where('companyId', '==', companyId));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ ...(doc.data() as any) }));
+  }
+
+  // 会社IDでbonuses一覧取得
+  async getBonusesByCompanyId(companyId: string): Promise<any[]> {
+    const bonusesCol = collection(this.firestore, 'bonuses');
+    const q = query(bonusesCol, where('companyId', '==', companyId));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ ...(doc.data() as any) }));
+  }
 }

@@ -1,15 +1,19 @@
 <!-- 給与・賞与登録画面 -->
 
 <div class="salary-registration-container">
+  <div style="margin-bottom: 12px;">
+    <div>企業ID：{{ companyDisplayId }}</div>
+    <div>企業名：{{ companyName }}</div>
+  </div>
   <h2>給与・賞与登録</h2>
   <div class="filter-bar">
-    <select [(ngModel)]="selectedYear">
+    <select [(ngModel)]="selectedYear" (change)="onYearChange()">
       <option *ngFor="let year of years" [value]="year">{{ year }}年度</option>
     </select>
-    <select [(ngModel)]="selectedMonth">
+    <select [(ngModel)]="selectedMonth" (change)="onMonthChange()">
       <option *ngFor="let month of months" [value]="month">{{ month }}月</option>
     </select>
-    <select [(ngModel)]="selectedBranch">
+    <select [(ngModel)]="selectedBranch" (change)="onBranchChange()">
       <option value="">全支社</option>
       <option *ngFor="let branch of branches" [value]="branch">{{ branch }}</option>
     </select>
@@ -26,8 +30,8 @@
           <th>基本給</th>
           <th>残業代</th>
           <th>その他手当</th>
-          <th>総支給額</th>
           <th>賞与</th>
+          <th>総支給額</th>
           <th>登録状態</th>
           <th>編集</th>
         </tr>
@@ -39,8 +43,8 @@
           <td>{{ employee.baseSalary | currency:'JPY':'symbol' }}</td>
           <td>{{ employee.overtime | currency:'JPY':'symbol' }}</td>
           <td>{{ employee.allowance | currency:'JPY':'symbol' }}</td>
-          <td>{{ employee.totalSalary | currency:'JPY':'symbol' }}</td>
           <td>{{ employee.bonus | currency:'JPY':'symbol' }}</td>
+          <td>{{ employee.totalSalary | currency:'JPY':'symbol' }}</td>
           <td>{{ employee.status }}</td>
           <td>
             <button (click)="onRegisterSalary(employee)">編集</button>

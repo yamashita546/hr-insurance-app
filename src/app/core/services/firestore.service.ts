@@ -244,4 +244,26 @@ export class FirestoreService {
     const snap = await getDocs(q);
     return snap.docs.map(doc => ({ ...(doc.data() as any) }));
   }
+
+  // 給与（salary）更新（employeeId, targetYearMonthで検索して上書き）
+  async updateSalary(companyId: string, employeeId: string, targetYearMonth: string, salary: Omit<Salary, 'createdAt' | 'updatedAt'>) {
+    const salariesCol = collection(this.firestore, 'salaries');
+    const q = query(salariesCol, where('companyId', '==', companyId), where('employeeId', '==', employeeId), where('targetYearMonth', '==', targetYearMonth));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const docRef = doc(this.firestore, 'salaries', snap.docs[0].id);
+      await setDoc(docRef, { ...salary, updatedAt: Timestamp.now() }, { merge: true });
+    }
+  }
+
+  // 賞与（bonus）更新（employeeId, targetYearMonthで検索して上書き）
+  async updateBonus(companyId: string, employeeId: string, targetYearMonth: string, bonus: Omit<import('../models/salary.model').Bonus, 'createdAt' | 'updatedAt'>) {
+    const bonusesCol = collection(this.firestore, 'bonuses');
+    const q = query(bonusesCol, where('companyId', '==', companyId), where('employeeId', '==', employeeId), where('targetYearMonth', '==', targetYearMonth));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const docRef = doc(this.firestore, 'bonuses', snap.docs[0].id);
+      await setDoc(docRef, { ...bonus, updatedAt: Timestamp.now() }, { merge: true });
+    }
+  }
 }

@@ -1,5 +1,11 @@
 <div *ngIf="isLoading" class="loading">データ取得中...</div>
 <div *ngIf="!isLoading">
+  <!-- CSV操作ボタン -->
+  <div class="csv-action-bar">
+    <button type="button" (click)="onShowCsvImportTypeDialog()">CSVから追加</button>
+    <button type="button" (click)="onDownloadCsvTemplate()">CSVひな型を出力</button>
+    <input type="file" accept=".csv" (change)="onCsvUpload($event)" style="display:none" #csvInput>
+  </div>
   <!-- 給与・賞与登録フォーム -->
   <div class="salary-form-container">
     <h2>給与情報入力フォーム</h2>
@@ -114,6 +120,86 @@
       <button (click)="onSave()">保存</button>
       <button (click)="onClear()">クリア</button>
       <button (click)="onShowHistory()">履歴を見る</button>
+    </div>
+  </div>
+
+  <div *ngIf="showCsvImportTypeDialog" class="csv-dialog-backdrop">
+    <div class="csv-dialog">
+      <h3>CSVインポート：入力種別を選択</h3>
+      <label>入力種別
+        <select [(ngModel)]="csvTemplateType">
+          <option value="salary">給与</option>
+          <option value="bonus">賞与</option>
+        </select>
+      </label>
+      <div class="csv-dialog-actions">
+        <button (click)="onCsvImportTypeDialogOk(csvInput)">OK</button>
+        <button (click)="onCsvImportTypeDialogCancel()">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showCsvDialog" class="csv-dialog-backdrop">
+    <div class="csv-dialog">
+      <h3>CSVひな型出力：対象年・月・支社を選択</h3>
+      <label>出力種別
+        <select [(ngModel)]="csvTemplateType">
+          <option value="salary">給与</option>
+          <option value="bonus">賞与</option>
+        </select>
+      </label>
+      <label>対象年
+        <select [(ngModel)]="csvYear">
+          <option *ngFor="let y of years" [value]="y">{{ y }}年</option>
+        </select>
+      </label>
+      <label>対象月
+        <select [(ngModel)]="csvMonth">
+          <option *ngFor="let m of months" [value]="m">{{ m }}月</option>
+        </select>
+      </label>
+      <label>支社
+        <select [(ngModel)]="csvOfficeId">
+          <option value="">全支社</option>
+          <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
+        </select>
+      </label>
+      <div class="csv-dialog-actions">
+        <button (click)="onCsvDialogExport()">OK</button>
+        <button (click)="onCsvDialogCancel()">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showCsvImportPreview" class="csv-import-preview-backdrop">
+    <div class="csv-import-preview-dialog">
+      <h3>CSVインポートプレビュー</h3>
+      <div *ngIf="csvImportErrors.length > 0" style="color:red;">
+        <h4>エラー一覧</h4>
+        <ul>
+          <li *ngFor="let err of csvImportErrors">{{ err }}</li>
+        </ul>
+      </div>
+      <div *ngIf="csvImportData.length > 0">
+        <div style="max-width:100%;overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th *ngFor="let key of csvImportData[0] | keyvalue">{{ key.key }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of csvImportData">
+                <td *ngFor="let key of row | keyvalue">{{ key.value }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="csv-import-preview-actions">
+        <button (click)="onConfirmCsvImport()" [disabled]="csvImportErrors.length > 0">保存</button>
+        <button (click)="onCancelCsvImport()">キャンセル</button>
+      </div>
     </div>
   </div>
 </div>

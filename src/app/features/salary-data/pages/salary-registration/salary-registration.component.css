@@ -79,3 +79,60 @@
 .employee-salary-table tr:hover {
   background: #f5faff;
 }
+.edit-modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.edit-modal-dialog {
+  background: #fff;
+  padding: 2rem 2.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+  min-width: 340px;
+  max-width: 95vw;
+}
+.edit-form-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.edit-form-row label {
+  min-width: 90px;
+  color: #1976d2;
+  font-weight: 500;
+}
+.edit-form-row input,
+.edit-form-row select {
+  flex: 1 1 0;
+  padding: 6px 10px;
+  border: 1px solid #bdbdbd;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #f8fafc;
+}
+.edit-form-actions, .edit-type-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+.edit-form-actions button, .edit-type-actions button {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.edit-form-actions button:hover, .edit-type-actions button:hover {
+  background: #1565c0;
+}

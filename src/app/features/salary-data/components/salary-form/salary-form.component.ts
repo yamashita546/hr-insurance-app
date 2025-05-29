@@ -43,6 +43,8 @@ export class SalaryFormComponent implements OnInit {
   showCsvImportPreview = false;
   csvTemplateType: 'salary' | 'bonus' = 'salary';
   showCsvImportTypeDialog = false;
+  editMode: 'salary' | 'bonus' | null = null;
+  editTarget: any = null;
 
   get bonusTotal() {
     return this.bonusForms.reduce((sum, b) => sum + (Number(b.bonus) || 0), 0);
@@ -343,7 +345,7 @@ export class SalaryFormComponent implements OnInit {
         console.log('import salary:', salary);
         const isOverwrite = overwriteRows.some(orow => orow.employeeId === row.employeeId && orow.targetYear === row.targetYear && orow.targetMonth === row.targetMonth);
         if (isOverwrite) {
-          await this.firestoreService.updateSalary(salary.companyId, salary.employeeId, salary.targetYearMonth, salary);
+          await this.firestoreService.updateSalary(salary.companyId!, salary.employeeId, salary.targetYearMonth, salary);
         } else {
           await this.firestoreService.addSalary(salary);
         }
@@ -363,7 +365,7 @@ export class SalaryFormComponent implements OnInit {
         console.log('import bonus:', bonusData);
         const isOverwrite = overwriteRows.some(orow => orow.employeeId === row.employeeId && orow.targetYear === row.targetYear && orow.targetMonth === row.targetMonth);
         if (isOverwrite) {
-          await this.firestoreService.updateBonus(bonusData.companyId, bonusData.employeeId, bonusData.targetYearMonth, bonusData);
+          await this.firestoreService.updateBonus(bonusData.companyId!, bonusData.employeeId, bonusData.targetYearMonth, bonusData);
         } else {
           await this.firestoreService.addBonus(bonusData);
         }
@@ -472,6 +474,115 @@ export class SalaryFormComponent implements OnInit {
 
   onCsvImportTypeDialogCancel() {
     this.showCsvImportTypeDialog = false;
+  }
+
+  async onRegisterSalary(employee: any) {
+    // 給与編集モード
+    this.editMode = 'salary';
+    this.editTarget = employee;
+    // 対象年月・従業員IDで既存データ取得
+    const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+    const salaries = await this.firestoreService.getSalariesByCompanyId(this.companyId!);
+    const salary = salaries.find(s => s.employeeId === employee.employeeId && s.targetYearMonth === ym);
+    if (salary) {
+      this.selectedEmployeeId = employee.employeeId;
+      this.selectedEmployeeObj = this.employees.find(e => e.employeeId === employee.employeeId) || null;
+      this.salaryForm = {
+        basicSalary: salary.basicSalary,
+        overtimeSalary: salary.overtimeSalary,
+        commuteAllowance: salary.commuteAllowance ?? (salary.otherAllowances?.find((a: any) => a.otherAllowanceName === '通勤手当')?.otherAllowance || 0),
+        positionAllowance: salary.positionAllowance ?? (salary.otherAllowances?.find((a: any) => a.otherAllowanceName === '役職手当')?.otherAllowance || 0),
+        otherAllowance: salary.otherAllowance ?? (salary.otherAllowances?.find((a: any) => a.otherAllowanceName === 'その他手当')?.otherAllowance || 0),
+        remarks: salary.remarks || ''
+      };
+      this.calculateTotalSalary();
+    }
+  }
+
+  async onEditBonus(employee: any) {
+    // 賞与編集モード
+    this.editMode = 'bonus';
+    this.editTarget = employee;
+    const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+    const bonuses = await this.firestoreService.getBonusesByCompanyId(this.companyId!);
+    const bonusList = bonuses.filter(b => b.employeeId === employee.employeeId && b.targetYearMonth === ym);
+    if (bonusList.length > 0) {
+      this.selectedEmployeeId = employee.employeeId;
+      this.selectedEmployeeObj = this.employees.find(e => e.employeeId === employee.employeeId) || null;
+      this.bonusForms = bonusList.map(b => ({
+        bonusType: b.bonusType,
+        bonusName: b.bonusName,
+        bonus: b.bonus,
+      }));
+      this.bonusRemark = bonusList[0].remarks || '';
+    }
+  }
+
+  async onEditSave() {
+    const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+    if (this.editMode === 'salary' && this.selectedEmployeeObj) {
+      const otherAllowances = [];
+      if (this.salaryForm.commuteAllowance) {
+        otherAllowances.push({
+          otherAllowanceName: '通勤手当',
+          otherAllowance: Number(this.salaryForm.commuteAllowance) || 0
+        });
+      }
+      if (this.salaryForm.positionAllowance) {
+        otherAllowances.push({
+          otherAllowanceName: '役職手当',
+          otherAllowance: Number(this.salaryForm.positionAllowance) || 0
+        });
+      }
+      if (this.salaryForm.otherAllowance) {
+        otherAllowances.push({
+          otherAllowanceName: 'その他手当',
+          otherAllowance: Number(this.salaryForm.otherAllowance) || 0
+        });
+      }
+      const totalAllowance = otherAllowances.reduce((sum, a) => sum + (a.otherAllowance || 0), 0);
+      const totalSalary = (Number(this.salaryForm.basicSalary) || 0) + (Number(this.salaryForm.overtimeSalary) || 0) + totalAllowance;
+      const salary = {
+        companyId: this.companyId,
+        employeeId: this.selectedEmployeeObj.employeeId,
+        targetYearMonth: ym,
+        basicSalary: Number(this.salaryForm.basicSalary) || 0,
+        overtimeSalary: Number(this.salaryForm.overtimeSalary) || 0,
+        otherAllowances: otherAllowances,
+        totalAllowance,
+        totalSalary,
+        remarks: this.salaryForm.remarks || '',
+      };
+      await this.firestoreService.updateSalary(salary.companyId!, salary.employeeId, salary.targetYearMonth, salary);
+      alert('給与情報を更新しました');
+      this.editMode = null;
+      this.editTarget = null;
+      this.onClear();
+    } else if (this.editMode === 'bonus' && this.selectedEmployeeObj) {
+      for (const bonus of this.bonusForms) {
+        const bonusData = {
+          companyId: this.companyId,
+          employeeId: this.selectedEmployeeObj.employeeId,
+          targetYearMonth: ym,
+          bonusType: bonus.bonusType,
+          bonusName: bonus.bonusType === 'その他賞与' ? bonus.bonusName : '',
+          bonus: Number(bonus.bonus) || 0,
+          bonusTotal: this.bonusTotal,
+          remarks: this.bonusRemark || '',
+        };
+        await this.firestoreService.updateBonus(bonusData.companyId!, bonusData.employeeId, bonusData.targetYearMonth, bonusData);
+      }
+      alert('賞与情報を更新しました');
+      this.editMode = null;
+      this.editTarget = null;
+      this.onClear();
+    }
+  }
+
+  onEditCancel() {
+    this.editMode = null;
+    this.editTarget = null;
+    this.onClear();
   }
 }
 

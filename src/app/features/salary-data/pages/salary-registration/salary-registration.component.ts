@@ -32,6 +32,15 @@ export class SalaryRegistrationComponent {
   allSalaries: any[] = [];
   allBonuses: any[] = [];
 
+  editMode: 'salary' | 'bonus' | null = null;
+  editTarget: any = null;
+  editSalaryForm: any = {};
+  editBonusForms: any[] = [{}];
+  editBonusRemark: string = '';
+
+  showEditTypeDialog: boolean = false;
+  private editEmployee: any = null;
+
   get filteredEmployees() {
     let result = this.employees;
     if (this.selectedBranch) {
@@ -108,8 +117,129 @@ export class SalaryRegistrationComponent {
       this.sortAsc = true;
     }
   }
-  onRegisterSalary(employee: any) {
-    // 登録・編集ボタン押下時の処理があればここに
+
+  async onRegisterSalary(employee: any) {
+    console.log('onRegisterSalary called', employee);
+    // 編集種別ダイアログを表示
+    this.editEmployee = employee;
+    this.showEditTypeDialog = true;
+  }
+
+  async onEditTypeSelect(type: 'salary' | 'bonus') {
+    console.log('onEditTypeSelect called', type, this.editEmployee);
+    this.showEditTypeDialog = false;
+    if (type === 'salary') {
+      await this.openSalaryEdit(this.editEmployee);
+    } else if (type === 'bonus') {
+      await this.onEditBonus(this.editEmployee);
+    }
+  }
+
+  async openSalaryEdit(employee: any) {
+    console.log('openSalaryEdit called', employee);
+    this.editMode = 'salary';
+    this.editTarget = employee;
+    const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+    const salaries = await this.firestoreService.getSalariesByCompanyId(this.companyId);
+    const salary = salaries.find(s => s.employeeId === employee.employeeId && s.targetYearMonth === ym);
+    if (salary) {
+      this.editSalaryForm = {
+        basicSalary: salary.basicSalary,
+        overtimeSalary: salary.overtimeSalary,
+        commuteAllowance: salary.commuteAllowance ?? (salary.otherAllowances?.find((a: any) => a.otherAllowanceName === '通勤手当')?.otherAllowance || 0),
+        positionAllowance: salary.positionAllowance ?? (salary.otherAllowances?.find((a: any) => a.otherAllowanceName === '役職手当')?.otherAllowance || 0),
+        otherAllowance: salary.otherAllowance ?? (salary.otherAllowances?.find((a: any) => a.otherAllowanceName === 'その他手当')?.otherAllowance || 0),
+        remarks: salary.remarks || ''
+      };
+    }
+  }
+
+  async onEditBonus(employee: any) {
+    console.log('onEditBonus called', employee);
+    this.editMode = 'bonus';
+    this.editTarget = employee;
+    const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+    const bonuses = await this.firestoreService.getBonusesByCompanyId(this.companyId);
+    const bonusList = bonuses.filter(b => b.employeeId === employee.employeeId && b.targetYearMonth === ym);
+    if (bonusList.length > 0) {
+      this.editBonusForms = bonusList.map(b => ({
+        bonusType: b.bonusType,
+        bonusName: b.bonusType === 'その他賞与' ? b.bonusName : '',
+        bonus: b.bonus,
+      }));
+      this.editBonusRemark = bonusList[0].remarks || '';
+    }
+  }
+
+  async onEditSave() {
+    const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+    if (this.editMode === 'salary' && this.editTarget) {
+      const otherAllowances = [];
+      if (this.editSalaryForm.commuteAllowance) {
+        otherAllowances.push({
+          otherAllowanceName: '通勤手当',
+          otherAllowance: Number(this.editSalaryForm.commuteAllowance) || 0
+        });
+      }
+      if (this.editSalaryForm.positionAllowance) {
+        otherAllowances.push({
+          otherAllowanceName: '役職手当',
+          otherAllowance: Number(this.editSalaryForm.positionAllowance) || 0
+        });
+      }
+      if (this.editSalaryForm.otherAllowance) {
+        otherAllowances.push({
+          otherAllowanceName: 'その他手当',
+          otherAllowance: Number(this.editSalaryForm.otherAllowance) || 0
+        });
+      }
+      const totalAllowance = otherAllowances.reduce((sum, a) => sum + (a.otherAllowance || 0), 0);
+      const totalSalary = (Number(this.editSalaryForm.basicSalary) || 0) + (Number(this.editSalaryForm.overtimeSalary) || 0) + totalAllowance;
+      const salary = {
+        companyId: this.companyId,
+        employeeId: this.editTarget.employeeId,
+        targetYearMonth: ym,
+        basicSalary: Number(this.editSalaryForm.basicSalary) || 0,
+        overtimeSalary: Number(this.editSalaryForm.overtimeSalary) || 0,
+        otherAllowances: otherAllowances,
+        totalAllowance,
+        totalSalary,
+        remarks: this.editSalaryForm.remarks || '',
+      };
+      await this.firestoreService.updateSalary(salary.companyId, salary.employeeId, salary.targetYearMonth, salary);
+      alert('給与情報を更新しました');
+      this.editMode = null;
+      this.editTarget = null;
+      this.editSalaryForm = {};
+      await this.loadData();
+    } else if (this.editMode === 'bonus' && this.editTarget) {
+      for (const bonus of this.editBonusForms) {
+        const bonusData = {
+          companyId: this.companyId,
+          employeeId: this.editTarget.employeeId,
+          targetYearMonth: ym,
+          bonusType: bonus.bonusType,
+          bonusName: bonus.bonusType === 'その他賞与' ? bonus.bonusName : '',
+          bonus: Number(bonus.bonus) || 0,
+          bonusTotal: Number(bonus.bonus) || 0,
+          remarks: this.editBonusRemark || '',
+        };
+        await this.firestoreService.updateBonus(bonusData.companyId, bonusData.employeeId, bonusData.targetYearMonth, bonusData);
+      }
+      alert('賞与情報を更新しました');
+      this.editMode = null;
+      this.editTarget = null;
+      this.editBonusForms = [{}];
+      await this.loadData();
+    }
+  }
+
+  onEditCancel() {
+    this.editMode = null;
+    this.editTarget = null;
+    this.editSalaryForm = {};
+    this.editBonusForms = [{}];
+    this.editBonusRemark = '';
   }
 
   async ngOnInit() {

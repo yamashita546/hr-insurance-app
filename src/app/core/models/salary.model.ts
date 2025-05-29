@@ -14,25 +14,26 @@ export interface Salary {
     updatedAt: Date;
   }
 
-//賞与モデル
-export interface Bonus {
-    employeeId: string;
-    targetYearMonth: string;
-    bonusName?: string; // 賞与名
-    bonusType?: string; // 賞与種類
-    bonus: number;
-    remarks?: string; // 備考
-    createdAt: Date;
-    updatedAt: Date;
-}
 
-// 手当モデル
+  // 手当モデル
 export interface Allowance {
     employeeId: string;
     targetYearMonth: string;
     allowanceName: string; // 手当名
     allowanceType: string; // 手当種類
     allowance: number;
+    remarks?: string; // 備考
+    createdAt: Date;
+    updatedAt: Date;
+}
+//賞与モデル
+export interface Bonus {
+    employeeId: string;
+    targetYearMonth: string;
+    bonusName?: string; // 賞与名
+    bonusType: string; // 賞与種類
+    bonus: number;
+    bonusTotal: number;
     remarks?: string; // 備考
     createdAt: Date;
     updatedAt: Date;
@@ -44,5 +45,6 @@ export enum BonusType {
     MidYearBonus = '半年賞与',
     QuarterlyBonus = '四半期賞与',
     MonthlyBonus = '月次賞与',
+    OtherBonus = 'その他賞与',
 }
 

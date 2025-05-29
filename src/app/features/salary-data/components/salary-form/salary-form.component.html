@@ -74,8 +74,40 @@
     </div>
 
     <div *ngIf="activeTab === 'bonus'" class="bonus-input-area">
-      <!-- 賞与情報入力欄（後で実装） -->
-      <p>賞与情報入力欄（後日実装）</p>
+      <div class="bonus-input-grid">
+        <div class="bonus-block" *ngFor="let bonus of bonusForms; let i = index">
+          <div class="bonus-block-row">
+            <label>賞与種類 <span style="color:red">*</span></label>
+            <select [(ngModel)]="bonus.bonusType" required>
+              <option value="">選択してください</option>
+              <option value="年間賞与">年間賞与</option>
+              <option value="半年賞与">半年賞与</option>
+              <option value="四半期賞与">四半期賞与</option>
+              <option value="月次賞与">月次賞与</option>
+              <option value="その他賞与">その他賞与</option>
+            </select>
+          </div>
+          <div class="bonus-block-row" *ngIf="bonus.bonusType === 'その他賞与'">
+            <label>賞与名 <span style="color:red">*</span></label>
+            <input type="text" [(ngModel)]="bonus.bonusName" placeholder="例：特別賞与" required>
+          </div>
+          <div class="bonus-block-row">
+            <label>賞与金額</label>
+            <span>¥ <input type="number" [(ngModel)]="bonus.bonus"></span>
+          </div>
+          <div class="bonus-block-row" style="text-align:right;">
+            <button type="button" (click)="removeBonusRow(i)" *ngIf="bonusForms.length > 1">削除</button>
+          </div>
+        </div>
+      </div>
+      <button type="button" (click)="addBonusRow()">入力欄を追加</button>
+      <div class="bonus-input-row">
+        <label>備考</label>
+        <input type="text" [(ngModel)]="bonusRemark" placeholder="備考があれば入力">
+      </div>
+      <div class="salary-total-row" style="margin-top:12px; color:#1976d2; background:#f0f7ff; text-align:left;">
+        合計賞与額：¥{{ bonusTotal | number }}
+      </div>
     </div>
 
     <div class="form-action-bar">

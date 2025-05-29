@@ -217,4 +217,15 @@ export class FirestoreService {
       updatedAt: now
     });
   }
+
+  // 賞与（bonus）保存
+  async addBonus(bonus: Omit<import('../models/salary.model').Bonus, 'createdAt' | 'updatedAt'>) {
+    const bonusesCol = collection(this.firestore, 'bonuses');
+    const now = Timestamp.now();
+    await addDoc(bonusesCol, {
+      ...bonus,
+      createdAt: now,
+      updatedAt: now
+    });
+  }
 }

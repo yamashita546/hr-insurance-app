@@ -29,8 +29,14 @@ export class SalaryFormComponent implements OnInit {
   selectedMonth: number;
   activeTab: 'salary' | 'bonus' = 'salary';
   salaryForm: any = {};
+  bonusForms: any[] = [{}];
   totalSalary: number = 0;
   isLoading = true;
+  bonusRemark: string = '';
+
+  get bonusTotal() {
+    return this.bonusForms.reduce((sum, b) => sum + (Number(b.bonus) || 0), 0);
+  }
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -95,6 +101,14 @@ export class SalaryFormComponent implements OnInit {
     this.totalSalary = basic + overtime + commute + position + other;
   }
 
+  addBonusRow() {
+    this.bonusForms.push({});
+  }
+
+  removeBonusRow(i: number) {
+    if (this.bonusForms.length > 1) this.bonusForms.splice(i, 1);
+  }
+
   async onSave() {
     if (!this.selectedEmployeeObj) return;
     const otherAllowances = [];
@@ -129,12 +143,29 @@ export class SalaryFormComponent implements OnInit {
       remarks: this.salaryForm.remarks || '',
     };
     await this.firestoreService.addSalary(salary);
-    alert('保存しました');
-    this.onClear();
+
+    if (this.activeTab === 'bonus' && this.selectedEmployeeObj) {
+      for (const bonus of this.bonusForms) {
+        if (!bonus.bonusType) continue;
+        const bonusData = {
+          employeeId: this.selectedEmployeeObj.employeeId,
+          targetYearMonth: `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`,
+          bonusName: bonus.bonusType === 'その他賞与' ? bonus.bonusName : '',
+          bonusType: bonus.bonusType,
+          bonus: Number(bonus.bonus) || 0,
+          bonusTotal: this.bonusTotal,
+          remarks: this.bonusRemark || '',
+        };
+        await this.firestoreService.addBonus(bonusData);
+      }
+      alert('保存しました');
+      this.onClear();
+    }
   }
 
   onClear() {
     this.salaryForm = {};
+    this.bonusForms = [{}];
     this.totalSalary = 0;
   }
 

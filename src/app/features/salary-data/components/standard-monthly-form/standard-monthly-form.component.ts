@@ -6,6 +6,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 
 
 @Component({
@@ -53,14 +54,17 @@ export class StandardMonthlyFormComponent implements OnInit {
         this.employees = await this.firestoreService.getEmployeesByCompanyId(this.companyId);
         this.salaries = await this.firestoreService.getSalariesByCompanyId(this.companyId);
         console.log('取得した給与データ:', this.salaries);
-        const grades = await this.firestoreService.getStandardMonthlyGrades().toPromise();
+        const grades = await firstValueFrom(this.firestoreService.getStandardMonthlyGrades());
+        console.log('Firestoreから取得したgrades:', grades);
         this.standardMonthlyGrades = grades || [];
+        console.log('this.standardMonthlyGradesセット直後:', this.standardMonthlyGrades);
       });
   }
 
   // 決定ボタン押下時
   async onDecision() {
     console.log('onDecision時のthis.salaries:', this.salaries);
+    console.log('onDecision時のthis.standardMonthlyGrades:', this.standardMonthlyGrades);
     // 1. 抽出条件で従業員を絞り込み
     let filteredEmployees = this.employees;
     if (this.selectedOfficeId) {
@@ -84,9 +88,35 @@ export class StandardMonthlyFormComponent implements OnInit {
       });
       const salaryTotal = salaryList.reduce((sum: number, s: any) => sum + (s.totalSalary || 0), 0);
       const salaryAvg = salaryList.length > 0 ? Math.round(salaryTotal / salaryList.length) : 0;
-      // 等級・標準報酬月額の自動判定（現状はダミー）
-      const judgedGrade = emp.grade || '';
-      const judgedMonthly = salaryAvg;
+
+      // 従業員のofficeからinsuranceTypeを取得
+      const office = this.offices.find((o: any) => o.id === emp.officeId);
+      const insuranceType = office && office.insuranceType ? office.insuranceType : '1';
+
+      // 適用開始年月で有効な等級マスタを抽出（insuranceTypeも考慮）
+      const applyYm = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
+      const validGrades = this.standardMonthlyGrades.filter((grade: any) => {
+        return grade.gradeType === 'health' &&
+          grade.insuranceType === insuranceType &&
+          grade.validFrom <= applyYm &&
+          (!grade.validTo || grade.validTo >= applyYm);
+      });
+      // salaryAvgが範囲内の等級を検索
+      const matchedGrade = validGrades.find((grade: any) => {
+        // upperLimitがnullや空文字の場合は上限なし
+        if (grade.upperLimit == null || grade.upperLimit === '') {
+          return grade.lowerLimit <= salaryAvg;
+        }
+        return grade.lowerLimit <= salaryAvg && salaryAvg < grade.upperLimit;
+      });
+      // デバッグ用ログ
+      console.log('従業員:', emp.lastName + ' ' + emp.firstName, 'salaryAvg:', salaryAvg, 'applyYm:', applyYm, 'insuranceType:', insuranceType);
+      console.log('validGrades:', validGrades);
+      console.log('matchedGrade:', matchedGrade);
+
+      const judgedGrade = matchedGrade ? matchedGrade.grade : '';
+      const judgedMonthly = matchedGrade ? matchedGrade.compensation : 0;
+
       return {
         employeeName: emp.lastName + ' ' + emp.firstName,
         currentGrade: emp.grade || '',

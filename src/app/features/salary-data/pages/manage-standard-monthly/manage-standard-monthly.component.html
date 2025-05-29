@@ -1,1 +1,38 @@
-<p>manage-standard-monthly works!</p>
+<div class="standard-monthly-container">
+  <h2>標準報酬月額管理</h2>
+  <div class="standard-monthly-table-wrapper">
+    <table class="standard-monthly-table">
+      <thead>
+        <tr>
+          <th>従業員名</th>
+          <th>現在の等級</th>
+          <th>現在の報酬月額</th>
+          <th>適用開始日</th>
+          <th>次回等級（予定）</th>
+          <th>新報酬月額</th>
+          <th>適用開始予定</th>
+          <th>ステータス</th>
+          <th>随時改定</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of standardMonthlyList">
+          <td>{{ row.name }}</td>
+          <td>{{ row.currentGrade }}</td>
+          <td>{{ row.currentMonthly | currency:'JPY':'symbol' }}</td>
+          <td>{{ row.currentStartDate }}</td>
+          <td>{{ row.nextGrade }}</td>
+          <td>{{ row.nextMonthly | currency:'JPY':'symbol' }}</td>
+          <td>{{ row.nextStartDate }}</td>
+          <td>
+            <span *ngIf="row.status === 'change'">変更予定あり <span style="color:#fbc02d;">🟡</span></span>
+            <span *ngIf="row.status === 'nochange'">変更なし <span style="color:#43a047;">🟢</span></span>
+          </td>
+          <td>
+            <button (click)="onRevision(row)">随時改定</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,52 @@
+.standard-monthly-container {
+  width: 70vw;
+  min-width: 900px;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+}
+.standard-monthly-container h2 {
+  font-size: 1.7rem;
+  color: #1976d2;
+  margin-bottom: 28px;
+  text-align: center;
+}
+.standard-monthly-table-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+.standard-monthly-table {
+  min-width: 1200px;
+  width: 100%;
+  border-collapse: collapse;
+  background: #fafbfc;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  margin-bottom: 18px;
+}
+.standard-monthly-table th, .standard-monthly-table td {
+  padding: 14px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 1rem;
+}
+.standard-monthly-table th {
+  color: #1976d2;
+  font-weight: bold;
+  background: #f0f7ff;
+  cursor: pointer;
+}
+.standard-monthly-table tr:last-child td {
+  border-bottom: none;
+}
+.standard-monthly-table tr.selected {
+  background: #e3f2fd;
+}
+.standard-monthly-table tr:hover {
+  background: #f5faff;
+}

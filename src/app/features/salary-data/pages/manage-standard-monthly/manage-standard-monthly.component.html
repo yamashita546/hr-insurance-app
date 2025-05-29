@@ -1,5 +1,15 @@
 <div class="standard-monthly-container">
-  <h2>標準報酬月額管理</h2>
+  
+  <div class="company-info-block" *ngIf="companyDisplayId && companyName">
+    <div>企業ID：{{ companyDisplayId }}</div>
+    <div>企業名：{{ companyName }}</div>
+    <h2>標準報酬月額管理</h2>
+  </div>
+  
+  <div class="standard-monthly-actions">
+    <button class="add-standard-monthly-btn" routerLink="/standard-monthly-form">標準報酬月額を追加</button>
+  </div>
+
   <div class="standard-monthly-table-wrapper">
     <table class="standard-monthly-table">
       <thead>

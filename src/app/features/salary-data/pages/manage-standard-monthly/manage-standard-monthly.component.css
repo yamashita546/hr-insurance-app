@@ -50,3 +50,23 @@
 .standard-monthly-table tr:hover {
   background: #f5faff;
 }
+.standard-monthly-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+.add-standard-monthly-btn {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 28px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+}
+.add-standard-monthly-btn:hover {
+  background: #1565c0;
+}

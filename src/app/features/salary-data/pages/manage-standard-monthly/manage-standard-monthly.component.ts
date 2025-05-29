@@ -1,14 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { UserCompanyService } from '../../../../core/services/user-company.service';
+import { filter } from 'rxjs/operators';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-manage-standard-monthly',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './manage-standard-monthly.component.html',
   styleUrl: './manage-standard-monthly.component.css'
 })
-export class ManageStandardMonthlyComponent {
+export class ManageStandardMonthlyComponent implements OnInit {
+  companyId: string = '';
+  companyDisplayId: string = '';
+  companyName: string = '';
+
   standardMonthlyList = [
     {
       name: '山田 太郎',
@@ -31,6 +38,18 @@ export class ManageStandardMonthlyComponent {
       status: 'nochange',
     },
   ];
+
+  constructor(private userCompanyService: UserCompanyService) {}
+
+  ngOnInit() {
+    this.userCompanyService.company$
+      .pipe(filter(company => !!company && !!company.companyId))
+      .subscribe(company => {
+        this.companyId = company!.companyId;
+        this.companyDisplayId = company!.displayId;
+        this.companyName = company!.name;
+      });
+  }
 
   onRevision(row: any) {
     alert(`「${row.name}」の随時改定ボタンがクリックされました。`);

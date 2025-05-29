@@ -15,6 +15,7 @@
     </select>
     <input type="text" [(ngModel)]="searchKeyword" placeholder="従業員検索">
     <button (click)="onSearch()">🔍</button>
+    <button routerLink="/salary-form">給与・賞与登録</button>
   </div>
   <div class="employee-salary-table-wrapper">
     <table class="employee-salary-table">
@@ -28,6 +29,7 @@
           <th>総支給額</th>
           <th>賞与</th>
           <th>登録状態</th>
+          <th>編集</th>
         </tr>
       </thead>
       <tbody>
@@ -40,6 +42,9 @@
           <td>{{ employee.totalSalary | currency:'JPY':'symbol' }}</td>
           <td>{{ employee.bonus | currency:'JPY':'symbol' }}</td>
           <td>{{ employee.status }}</td>
+          <td>
+            <button (click)="onRegisterSalary(employee)">編集</button>
+          </td>
         </tr>
       </tbody>
     </table>

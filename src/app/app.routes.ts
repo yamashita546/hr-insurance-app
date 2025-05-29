@@ -31,6 +31,7 @@ import { EmployeeFormComponent } from './features/employees/components/employee-
 import { AttendanceFormComponent } from './features/attendance/components/attendance-form/attendance-form.component';
 import { SalaryRegistrationComponent } from './features/salary-data/pages/salary-registration/salary-registration.component';
 import { ManageStandardMonthlyComponent } from './features/salary-data/pages/manage-standard-monthly/manage-standard-monthly.component';
+import { SalaryFormComponent } from './features/salary-data/components/salary-form/salary-form.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -68,6 +69,7 @@ export const routes: Routes = [
       { path: 'attendance-form', component: AttendanceFormComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'salary-registration', component: SalaryRegistrationComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'manage-standard-monthly', component: ManageStandardMonthlyComponent, canDeactivate: [CanDeactivateDialogGuard] },
+      { path: 'salary-form', component: SalaryFormComponent, canDeactivate: [CanDeactivateDialogGuard] },
     ],
   },
 ];

@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-salary-registration',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './salary-registration.component.html',
   styleUrl: './salary-registration.component.css'
 })
@@ -68,5 +69,8 @@ export class SalaryRegistrationComponent {
       this.sortKey = key;
       this.sortAsc = true;
     }
+  }
+  onRegisterSalary(employee: any) {
+    // 登録・編集ボタン押下時の処理があればここに
   }
 }

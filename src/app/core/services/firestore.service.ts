@@ -18,6 +18,7 @@ import { Company, Office } from '../models/company.model';
 import { InsuranceRate } from '../models/insurance-rate.model';
 import { Employee } from '../models/employee.model';
 import { Attendance } from '../models/attendance.model';
+import { Salary } from '../models/salary.model';
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreService {
@@ -201,6 +202,17 @@ export class FirestoreService {
     const now = Timestamp.now();
     await addDoc(attendancesCol, {
       ...attendance,
+      createdAt: now,
+      updatedAt: now
+    });
+  }
+
+  // 給与（salary）保存
+  async addSalary(salary: Omit<Salary, 'createdAt' | 'updatedAt'>) {
+    const salariesCol = collection(this.firestore, 'salaries');
+    const now = Timestamp.now();
+    await addDoc(salariesCol, {
+      ...salary,
       createdAt: now,
       updatedAt: now
     });

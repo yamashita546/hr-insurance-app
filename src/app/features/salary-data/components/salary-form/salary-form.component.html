@@ -1,1 +1,87 @@
-<p>salary-form works!</p>
+<div *ngIf="isLoading" class="loading">データ取得中...</div>
+<div *ngIf="!isLoading">
+  <!-- 給与・賞与登録フォーム -->
+  <div class="salary-form-container">
+    <h2>給与情報入力フォーム</h2>
+    <div class="tab-bar">
+      <button [class.active]="activeTab === 'salary'" (click)="activeTab = 'salary'">給与情報</button>
+      <button [class.active]="activeTab === 'bonus'" (click)="activeTab = 'bonus'">賞与情報</button>
+    </div>
+
+    <div class="employee-select-area">
+      <div class="row-group">
+        <label>対象年：
+          <select [(ngModel)]="selectedYear">
+            <option *ngFor="let y of years" [value]="y">{{ y }}年</option>
+          </select>
+        </label>
+        <label>対象月：
+          <select [(ngModel)]="selectedMonth">
+            <option *ngFor="let m of months" [value]="m">{{ m }}月</option>
+          </select>
+        </label>
+      </div>
+      <div class="row-group">
+        <label>支社：
+          <select [(ngModel)]="selectedOfficeId" (change)="onOfficeChange()">
+            <option value="">全支社</option>
+            <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
+          </select>
+        </label>
+      </div>
+      <div class="row-group">
+        <label>従業員ID：
+          <select [(ngModel)]="selectedEmployeeId" (change)="onEmployeeChange()">
+            <option value="">選択してください</option>
+            <option *ngFor="let emp of filteredEmployees" [value]="emp.employeeId">{{ emp.employeeId }}</option>
+          </select>
+        </label>
+        <label>氏名：
+          <select [(ngModel)]="selectedEmployeeId" (change)="onEmployeeChange()">
+            <option value="">選択してください</option>
+            <option *ngFor="let emp of filteredEmployees" [value]="emp.employeeId">{{ emp.lastName + emp.firstName }}</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div *ngIf="activeTab === 'salary'" class="salary-input-area">
+      <div class="salary-input-grid">
+        <div class="salary-input-row">
+          <label>基本給</label>
+          <span>¥ <input type="number" [(ngModel)]="salaryForm.basicSalary" (ngModelChange)="calculateTotalSalary()"></span>
+        </div>
+        <div class="salary-input-row">
+          <label>時間外手当</label>
+          <span>¥ <input type="number" [(ngModel)]="salaryForm.overtimeSalary" (ngModelChange)="calculateTotalSalary()"></span>
+        </div>
+        <div class="salary-input-row">
+          <label>通勤手当</label>
+          <span>¥ <input type="number" [(ngModel)]="salaryForm.commuteAllowance" (ngModelChange)="calculateTotalSalary()"></span>
+        </div>
+        <div class="salary-input-row">
+          <label>役職手当</label>
+          <span>¥ <input type="number" [(ngModel)]="salaryForm.positionAllowance" (ngModelChange)="calculateTotalSalary()"></span>
+        </div>
+        <div class="salary-input-row">
+          <label>その他手当</label>
+          <span>¥ <input type="number" [(ngModel)]="salaryForm.otherAllowance" (ngModelChange)="calculateTotalSalary()"></span>
+        </div>
+      </div>
+      <div class="salary-total-row">
+        総支給額（自動計算）：¥{{ totalSalary | number }}
+      </div>
+    </div>
+
+    <div *ngIf="activeTab === 'bonus'" class="bonus-input-area">
+      <!-- 賞与情報入力欄（後で実装） -->
+      <p>賞与情報入力欄（後日実装）</p>
+    </div>
+
+    <div class="form-action-bar">
+      <button (click)="onSave()">保存</button>
+      <button (click)="onClear()">クリア</button>
+      <button (click)="onShowHistory()">履歴を見る</button>
+    </div>
+  </div>
+</div>

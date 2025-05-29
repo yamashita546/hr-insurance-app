@@ -1,0 +1,110 @@
+.standard-monthly-form-container {
+  max-width: 900px;
+  margin: 32px auto;
+  padding: 32px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.company-info-block {
+  margin-bottom: 24px;
+  font-size: 1.1em;
+  color: #333;
+}
+
+form {
+  width: 100%;
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+label {
+  min-width: 90px;
+  font-weight: bold;
+  color: #444;
+}
+
+select, span, input[type="text"], input[type="number"] {
+  min-width: 100px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: #f9f9f9;
+  font-size: 1em;
+}
+
+span {
+  border: none;
+  background: transparent;
+  color: #222;
+}
+
+.form-actions {
+  text-align: right;
+  margin-top: 24px;
+}
+
+button {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 28px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover {
+  background: #1565c0;
+}
+
+.result-table-block {
+  margin-top: 40px;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fafbfc;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.result-table th, .result-table td {
+  border: 1px solid #e0e0e0;
+  padding: 10px 8px;
+  text-align: center;
+}
+.result-table th {
+  background: #e3f2fd;
+  color: #1976d2;
+  font-weight: bold;
+}
+.result-table td input {
+  width: 80px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  border: 1px solid #bdbdbd;
+  background: #fff;
+  font-size: 1em;
+}
+.result-table td button {
+  padding: 4px 12px;
+  font-size: 0.95em;
+  border-radius: 4px;
+  background: #43a047;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.result-table td button:hover {
+  background: #388e3c;
+}

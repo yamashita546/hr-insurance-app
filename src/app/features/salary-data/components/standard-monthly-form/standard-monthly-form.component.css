@@ -1,5 +1,5 @@
 .standard-monthly-form-container {
-  max-width: 900px;
+  max-width: 1100px;
   margin: 32px auto;
   padding: 32px;
   background: #fff;
@@ -67,20 +67,26 @@ button:hover {
 
 .result-table-block {
   margin-top: 40px;
+  overflow-x: auto;
 }
 
 .result-table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
   background: #fafbfc;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  table-layout: auto;
 }
 .result-table th, .result-table td {
   border: 1px solid #e0e0e0;
   padding: 10px 8px;
   text-align: center;
+  /* overflow: hidden; */
+  /* text-overflow: ellipsis; */
+  white-space: normal;
 }
 .result-table th {
   background: #e3f2fd;
@@ -108,3 +114,16 @@ button:hover {
 .result-table td button:hover {
   background: #388e3c;
 }
+
+/* テーブルカラム幅調整 */
+.result-table th:nth-child(1), .result-table td:nth-child(1) { min-width: 110px; max-width: 140px; }
+.result-table th:nth-child(2), .result-table td:nth-child(2) { min-width: 60px; max-width: 70px; }
+.result-table th:nth-child(3), .result-table td:nth-child(3) { min-width: 80px; max-width: 100px; }
+.result-table th:nth-child(4), .result-table td:nth-child(4) { min-width: 110px; max-width: 130px; }
+.result-table th:nth-child(5), .result-table td:nth-child(5) { min-width: 70px; max-width: 90px; }
+.result-table th:nth-child(6), .result-table td:nth-child(6),
+.result-table th:nth-child(8), .result-table td:nth-child(8) { min-width: 70px; max-width: 80px; }
+.result-table th:nth-child(7), .result-table td:nth-child(7),
+.result-table th:nth-child(9), .result-table td:nth-child(9) { min-width: 100px; max-width: 120px; }
+.result-table th:nth-child(10), .result-table td:nth-child(10) { min-width: 90px; max-width: 110px; }
+.result-table th:nth-child(11), .result-table td:nth-child(11) { min-width: 60px; max-width: 70px; }

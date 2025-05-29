@@ -57,10 +57,12 @@
           <th>従業員名</th>
           <th>現等級</th>
           <th>現月額</th>
-          <th>対象期間給与合計</th>
+          <th>対象期間<br>給与合計</th>
           <th>平均</th>
-          <th>自動判定等級</th>
-          <th>新月額</th>
+          <th>健康保険<br>等級</th>
+          <th>健康保険<br>新月額</th>
+          <th>厚生年金<br>等級</th>
+          <th>厚生年金<br>新月額</th>
           <th>適用開始日</th>
           <th>修正</th>
         </tr>
@@ -77,6 +79,12 @@
           </td>
           <td>
             <input [(ngModel)]="row.judgedMonthly" name="judgedMonthly{{i}}" style="width: 100px;">
+          </td>
+          <td>
+            <input [(ngModel)]="row.pensionJudgedGrade" name="pensionJudgedGrade{{i}}" style="width: 60px;">
+          </td>
+          <td>
+            <input [(ngModel)]="row.pensionJudgedMonthly" name="pensionJudgedMonthly{{i}}" style="width: 100px;">
           </td>
           <td>{{ startYear }}年{{ startMonth }}月</td>
           <td>

@@ -93,29 +93,47 @@ export class StandardMonthlyFormComponent implements OnInit {
       const office = this.offices.find((o: any) => o.id === emp.officeId);
       const insuranceType = office && office.insuranceType ? office.insuranceType : '1';
 
-      // 適用開始年月で有効な等級マスタを抽出（insuranceTypeも考慮）
+      // 適用開始年月で有効な健康保険等級マスタを抽出
       const applyYm = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
-      const validGrades = this.standardMonthlyGrades.filter((grade: any) => {
+      const healthGrades = this.standardMonthlyGrades.filter((grade: any) => {
         return grade.gradeType === 'health' &&
           grade.insuranceType === insuranceType &&
           grade.validFrom <= applyYm &&
           (!grade.validTo || grade.validTo >= applyYm);
       });
-      // salaryAvgが範囲内の等級を検索
-      const matchedGrade = validGrades.find((grade: any) => {
-        // upperLimitがnullや空文字の場合は上限なし
+      // 健康保険: salaryAvgが範囲内の等級を検索
+      const matchedHealthGrade = healthGrades.find((grade: any) => {
         if (grade.upperLimit == null || grade.upperLimit === '') {
           return grade.lowerLimit <= salaryAvg;
         }
         return grade.lowerLimit <= salaryAvg && salaryAvg < grade.upperLimit;
       });
+      const judgedGrade = matchedHealthGrade ? matchedHealthGrade.grade : '';
+      const judgedMonthly = matchedHealthGrade ? matchedHealthGrade.compensation : 0;
+
+      // 適用開始年月で有効な厚生年金等級マスタを抽出
+      const pensionGrades = this.standardMonthlyGrades.filter((grade: any) => {
+        return grade.gradeType === 'pension' &&
+          grade.insuranceType === insuranceType &&
+          grade.validFrom <= applyYm &&
+          (!grade.validTo || grade.validTo >= applyYm);
+      });
+      // 厚生年金: salaryAvgが範囲内の等級を検索
+      const matchedPensionGrade = pensionGrades.find((grade: any) => {
+        if (grade.upperLimit == null || grade.upperLimit === '') {
+          return grade.lowerLimit <= salaryAvg;
+        }
+        return grade.lowerLimit <= salaryAvg && salaryAvg < grade.upperLimit;
+      });
+      const pensionJudgedGrade = matchedPensionGrade ? matchedPensionGrade.grade : '';
+      const pensionJudgedMonthly = matchedPensionGrade ? matchedPensionGrade.compensation : 0;
+
       // デバッグ用ログ
       console.log('従業員:', emp.lastName + ' ' + emp.firstName, 'salaryAvg:', salaryAvg, 'applyYm:', applyYm, 'insuranceType:', insuranceType);
-      console.log('validGrades:', validGrades);
-      console.log('matchedGrade:', matchedGrade);
-
-      const judgedGrade = matchedGrade ? matchedGrade.grade : '';
-      const judgedMonthly = matchedGrade ? matchedGrade.compensation : 0;
+      console.log('healthGrades:', healthGrades);
+      console.log('matchedHealthGrade:', matchedHealthGrade);
+      console.log('pensionGrades:', pensionGrades);
+      console.log('matchedPensionGrade:', matchedPensionGrade);
 
       return {
         employeeName: emp.lastName + ' ' + emp.firstName,
@@ -124,7 +142,9 @@ export class StandardMonthlyFormComponent implements OnInit {
         salaryTotal,
         salaryAvg,
         judgedGrade,
-        judgedMonthly
+        judgedMonthly,
+        pensionJudgedGrade,
+        pensionJudgedMonthly
       };
     });
   }

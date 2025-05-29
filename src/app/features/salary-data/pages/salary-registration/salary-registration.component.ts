@@ -240,6 +240,7 @@ export class SalaryRegistrationComponent {
     this.editSalaryForm = {};
     this.editBonusForms = [{}];
     this.editBonusRemark = '';
+    this.showEditTypeDialog = false;
   }
 
   async ngOnInit() {

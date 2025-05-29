@@ -1,0 +1,48 @@
+
+// 基本給与モデル
+export interface Salary {
+    employeeId: string;
+    targetYearMonth: string;
+    basicSalary: number; // 基本給
+    overtimeSalary: number; // 残業手当
+    otherAllowanceName?: string; // その他手当名
+    otherAllowance?: number; // その他手当
+    totalAllowance: number; // 総手当
+    totalSalary: number; // 総支給額
+    remarks?: string; // 備考
+    createdAt: Date;
+    updatedAt: Date;
+  }
+
+//賞与モデル
+export interface Bonus {
+    employeeId: string;
+    targetYearMonth: string;
+    bonusName?: string; // 賞与名
+    bonusType?: string; // 賞与種類
+    bonus: number;
+    remarks?: string; // 備考
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+// 手当モデル
+export interface Allowance {
+    employeeId: string;
+    targetYearMonth: string;
+    allowanceName: string; // 手当名
+    allowanceType: string; // 手当種類
+    allowance: number;
+    remarks?: string; // 備考
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+// 賞与タイプ
+export enum BonusType {
+    AnnualBonus = '年間賞与',
+    MidYearBonus = '半年賞与',
+    QuarterlyBonus = '四半期賞与',
+    MonthlyBonus = '月次賞与',
+}
+

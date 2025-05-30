@@ -14,6 +14,7 @@
     <table class="standard-monthly-table">
       <thead>
         <tr>
+          <th>支社</th>
           <th>従業員名</th>
           <th>現在の等級</th>
           <th>現在の報酬月額</th>
@@ -27,16 +28,31 @@
       </thead>
       <tbody>
         <tr *ngFor="let row of standardMonthlyList">
-          <td>{{ row.name }}</td>
-          <td>{{ row.currentGrade }}</td>
-          <td>{{ row.currentMonthly | currency:'JPY':'symbol' }}</td>
-          <td>{{ row.currentStartDate }}</td>
-          <td>{{ row.nextGrade }}</td>
-          <td>{{ row.nextMonthly | currency:'JPY':'symbol' }}</td>
-          <td>{{ row.nextStartDate }}</td>
+          <td>{{ getOfficeName(row.officeId) }}</td>
+          <td>{{ getEmployeeName(row.employeeId) }}</td>
+          <td>{{ row.healthGrade }}（{{ row.pensionGrade }}）</td>
+          <td>{{ row.healthMonthly | currency:'JPY':'symbol' }}</td>
+          <td>{{ row.applyYearMonth }}</td>
           <td>
-            <span *ngIf="row.status === 'change'">変更予定あり <span style="color:#fbc02d;">🟡</span></span>
-            <span *ngIf="row.status === 'nochange'">変更なし <span style="color:#43a047;">🟢</span></span>
+            <ng-container *ngIf="getNextDecision(row) as next; else noNext">
+              {{ next.healthGrade }}（{{ next.pensionGrade }}）
+            </ng-container>
+            <ng-template #noNext>ー</ng-template>
+          </td>
+          <td>
+            <ng-container *ngIf="getNextDecision(row) as next; else noNext">
+              {{ next.healthMonthly | currency:'JPY':'symbol' }}
+            </ng-container>
+            <ng-template #noNext>ー</ng-template>
+          </td>
+          <td>
+            <ng-container *ngIf="getNextDecision(row) as next; else noNext">
+              {{ next.applyYearMonth }}
+            </ng-container>
+            <ng-template #noNext>ー</ng-template>
+          </td>
+          <td>
+            -
           </td>
           <td>
             <button (click)="onRevision(row)">随時改定</button>

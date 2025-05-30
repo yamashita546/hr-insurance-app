@@ -277,4 +277,12 @@ export class FirestoreService {
       updatedAt: now
     });
   }
+
+  // 会社IDで標準報酬月額決定データ一覧取得
+  async getStandardMonthlyDecisionsByCompanyId(companyId: string): Promise<any[]> {
+    const decisionsCol = collection(this.firestore, 'standardMonthlyDecisions');
+    const q = query(decisionsCol, where('companyId', '==', companyId));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ ...(doc.data() as any) }));
+  }
 }

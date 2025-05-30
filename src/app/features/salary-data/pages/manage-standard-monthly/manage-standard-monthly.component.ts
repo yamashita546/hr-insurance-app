@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { filter } from 'rxjs/operators';
 import { Router, RouterModule } from '@angular/router';
-
+import { FirestoreService } from '../../../../core/services/firestore.service';
+import { StandardMonthlyDecision } from '../../../../core/models/standard-monthly-decision .model';
+import { Office } from '../../../../core/models/company.model';
 @Component({
   selector: 'app-manage-standard-monthly',
   standalone: true,
@@ -15,43 +17,62 @@ export class ManageStandardMonthlyComponent implements OnInit {
   companyId: string = '';
   companyDisplayId: string = '';
   companyName: string = '';
+  offices: Office[] = [];
+  standardMonthlyList: StandardMonthlyDecision[] = [];
+  employees: any[] = [];
 
-  standardMonthlyList = [
-    {
-      name: '山田 太郎',
-      currentGrade: '17等級',
-      currentMonthly: 230000,
-      currentStartDate: '2023/09/01',
-      nextGrade: '19等級',
-      nextMonthly: 280000,
-      nextStartDate: '2024/09/01',
-      status: 'change',
-    },
-    {
-      name: '鈴木 花子',
-      currentGrade: '14等級',
-      currentMonthly: 190000,
-      currentStartDate: '2023/09/01',
-      nextGrade: '14等級',
-      nextMonthly: 190000,
-      nextStartDate: '2024/09/01',
-      status: 'nochange',
-    },
-  ];
-
-  constructor(private userCompanyService: UserCompanyService) {}
+  constructor(private userCompanyService: UserCompanyService, private firestoreService: FirestoreService) {}
 
   ngOnInit() {
     this.userCompanyService.company$
       .pipe(filter(company => !!company && !!company.companyId))
-      .subscribe(company => {
+      .subscribe(async company => {
         this.companyId = company!.companyId;
         this.companyDisplayId = company!.displayId;
         this.companyName = company!.name;
+        // Firestoreから標準報酬月額決定データを取得
+        const snap = await this.firestoreService.getStandardMonthlyDecisionsByCompanyId(this.companyId);
+        this.standardMonthlyList = snap;
+        // Firestoreから従業員リストも取得
+        this.employees = await this.firestoreService.getEmployeesByCompanyId(this.companyId);
+        // Firestoreから支社リストも取得
+        this.offices = await this.firestoreService.getOffices(this.companyId);
       });
+  }
+
+  getEmployeeName(employeeId: string): string {
+    const emp = this.employees.find(e => e.employeeId === employeeId);
+    return emp ? `${emp.lastName} ${emp.firstName}` : employeeId;
+  }
+
+  getOfficeName(officeId: string): string {
+    const office = this.offices.find(o => o.id === officeId);
+    return office ? office.name : officeId;
   }
 
   onRevision(row: any) {
     alert(`「${row.name}」の随時改定ボタンがクリックされました。`);
+  }
+
+  getNextGrade(row: StandardMonthlyDecision): string {
+    const next = this.standardMonthlyList
+      .filter(r =>
+        r.employeeId === row.employeeId &&
+        r.officeId === row.officeId &&
+        r.applyYearMonth > row.applyYearMonth
+      )
+      .sort((a, b) => a.applyYearMonth.localeCompare(b.applyYearMonth))[0];
+    return next ? `${next.healthGrade}（${next.pensionGrade}）` : 'ー';
+  }
+
+  getNextDecision(row: StandardMonthlyDecision): StandardMonthlyDecision | null {
+    const next = this.standardMonthlyList
+      .filter(r =>
+        r.employeeId === row.employeeId &&
+        r.officeId === row.officeId &&
+        r.applyYearMonth > row.applyYearMonth
+      )
+      .sort((a, b) => a.applyYearMonth.localeCompare(b.applyYearMonth))[0];
+    return next || null;
   }
 }

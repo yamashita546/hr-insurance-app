@@ -70,8 +70,18 @@
       <tbody>
         <tr *ngFor="let row of resultList; let i = index">
           <td>{{ row.employeeName }}</td>
-          <td>{{ row.currentGrade }}</td>
-          <td>{{ row.currentMonthly | currency:'JPY':'symbol':'1.0-0' }}</td>
+          <td>
+            <ng-container *ngIf="getCurrentDecisionForEmployee(row.employeeId, row.officeId) as current; else noCurrent">
+              {{ current.healthGrade }}（{{ current.pensionGrade }}）
+            </ng-container>
+            <ng-template #noCurrent>ー</ng-template>
+          </td>
+          <td>
+            <ng-container *ngIf="getCurrentDecisionForEmployee(row.employeeId, row.officeId) as current; else noCurrent">
+              {{ current.healthMonthly | currency:'JPY':'symbol':'1.0-0' }}
+            </ng-container>
+            <ng-template #noCurrent>ー</ng-template>
+          </td>
           <td>{{ row.salaryTotal | currency:'JPY':'symbol':'1.0-0' }}</td>
           <td>{{ row.salaryAvg | currency:'JPY':'symbol':'1.0-0' }}</td>
           <td>

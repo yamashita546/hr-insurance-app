@@ -27,11 +27,21 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let row of standardMonthlyList">
+        <tr *ngFor="let row of getCurrentStandardMonthlyList()">
           <td>{{ getOfficeName(row.officeId) }}</td>
           <td>{{ getEmployeeName(row.employeeId) }}</td>
-          <td>{{ row.healthGrade }}（{{ row.pensionGrade }}）</td>
-          <td>{{ row.healthMonthly | currency:'JPY':'symbol' }}</td>
+          <td>
+            <ng-container *ngIf="getCurrentDecision(row) as current; else noCurrent">
+              {{ current.healthGrade }}（{{ current.pensionGrade }}）
+            </ng-container>
+            <ng-template #noCurrent>ー</ng-template>
+          </td>
+          <td>
+            <ng-container *ngIf="getCurrentDecision(row) as current; else noCurrent">
+              {{ current.healthMonthly | currency:'JPY':'symbol' }}
+            </ng-container>
+            <ng-template #noCurrent>ー</ng-template>
+          </td>
           <td>{{ row.applyYearMonth }}</td>
           <td>
             <ng-container *ngIf="getNextDecision(row) as next; else noNext">

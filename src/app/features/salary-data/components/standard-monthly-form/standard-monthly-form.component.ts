@@ -26,6 +26,7 @@ export class StandardMonthlyFormComponent implements OnInit {
   employees: any[] = [];
   salaries: any[] = [];
   standardMonthlyGrades: any[] = [];
+  standardMonthlyDecisions: StandardMonthlyDecision[] = [];
 
   // フォーム用バインド変数
   selectedOfficeId: string = '';
@@ -61,7 +62,24 @@ export class StandardMonthlyFormComponent implements OnInit {
         console.log('Firestoreから取得したgrades:', grades);
         this.standardMonthlyGrades = grades || [];
         console.log('this.standardMonthlyGradesセット直後:', this.standardMonthlyGrades);
+        // 標準報酬月額決定データも取得
+        this.standardMonthlyDecisions = await this.firestoreService.getStandardMonthlyDecisionsByCompanyId(this.companyId);
       });
+  }
+
+  getCurrentDecisionForEmployee(employeeId: string, officeId: string): StandardMonthlyDecision | null {
+    const today = new Date();
+    const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    console.log('currentYm:', currentYm, 'employeeId:', employeeId, 'officeId:', officeId);
+    const candidates = this.standardMonthlyDecisions
+      .filter(r =>
+        r.employeeId === employeeId &&
+        r.officeId === officeId &&
+        r.applyYearMonth <= currentYm
+      )
+      .sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth));
+    console.log('candidates:', candidates);
+    return candidates[0] || null;
   }
 
   // 決定ボタン押下時
@@ -139,6 +157,8 @@ export class StandardMonthlyFormComponent implements OnInit {
       console.log('matchedPensionGrade:', matchedPensionGrade);
 
       return {
+        employeeId: emp.employeeId,
+        officeId: emp.officeId,
         employeeName: emp.lastName + ' ' + emp.firstName,
         currentGrade: emp.grade || '',
         currentMonthly: emp.monthly || 0,

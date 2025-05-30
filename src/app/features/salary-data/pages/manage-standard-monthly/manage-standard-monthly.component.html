@@ -19,10 +19,9 @@
           <th>現在の等級</th>
           <th>現在の報酬月額</th>
           <th>適用開始日</th>
-          <th>次回等級（予定）</th>
+          <th>次回等級</th>
           <th>新報酬月額</th>
           <th>適用開始予定</th>
-          <th>ステータス</th>
           <th>随時改定</th>
         </tr>
       </thead>
@@ -60,9 +59,6 @@
               {{ next.applyYearMonth }}
             </ng-container>
             <ng-template #noNext>ー</ng-template>
-          </td>
-          <td>
-            -
           </td>
           <td>
             <button (click)="onRevision(row)">随時改定</button>

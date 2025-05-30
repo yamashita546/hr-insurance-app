@@ -1,1 +1,120 @@
-<p>insurance-form works!</p>
+<!-- 保険料計算 -->
+
+<div class="insurance-form-container">
+    <h2>社会保険料計算・登録フォーム</h2>
+    <form class="insurance-form">
+        <!-- 給与・賞与選択ラジオボタン -->
+        <div class="form-row" style="margin-bottom: 1em;">
+            <label><input type="radio" [(ngModel)]="selectedType" name="type" value="salary"> 給与</label>
+            <label style="margin-left: 1em;"><input type="radio" [(ngModel)]="selectedType" name="type" value="bonus"> 賞与</label>
+        </div>
+        <div class="form-row" style="margin-bottom: 1em;">
+            <label>支社</label>
+            <select [(ngModel)]="selectedOfficeId" name="office">
+                <option value="">全支社</option>
+                <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
+            </select>
+            <label style="margin-left: 1em;">従業員</label>
+            <select [(ngModel)]="selectedEmployeeId" name="employee">
+                <option value="">全従業員</option>
+                <option *ngFor="let emp of filteredEmployees" [value]="emp.employeeId">{{ emp.lastName }} {{ emp.firstName }}</option>
+            </select>
+        </div>
+        <div class="form-row" style="margin-bottom: 1em;">
+            <label>対象年月</label>
+            <select [(ngModel)]="selectedYear" name="year">
+                <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
+            </select>
+            <select [(ngModel)]="selectedMonth" name="month" style="margin-left: 1em;">
+                <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
+            </select>
+        </div>
+        <div class="form-row" style="margin-bottom: 1em;">
+            <button type="button" (click)="onDecision()">決定</button>
+        </div>
+    </form>
+
+    <div class="insurance-preview-block">
+        <h3>計算結果プレビュー</h3>
+        <!-- 給与プレビュー -->
+        <table class="insurance-preview-table" *ngIf="selectedType === 'salary'">
+            <thead>
+                <tr>
+                    <th>支社</th>
+                    <th>従業員名</th>
+                    <th>介護保険適用</th>
+                    <th>当月給与総支給</th>
+                    <th>等級</th>
+                    <th>標準報酬月額</th>
+                    <th>健康保険料</th>
+                    <th>健康保険料控除額</th>
+                    <th>厚生年金保険料</th>
+                    <th>厚生年金保険料控除額</th>
+                    <th>控除額合計</th>
+                    <th>子ども子育て拠出金</th>
+                    <th>会社負担</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let row of previewList">
+                    <td>{{ row.officeName }}</td>
+                    <td>{{ row.employeeName }}</td>
+                    <td>{{ row.careInsurance }}</td>
+                    <td>{{ row.salaryTotal }}</td>
+                    <td>{{ row.grade }}</td>
+                    <td>{{ row.monthly }}</td>
+                    <td>{{ row.healthInsurance }}</td>
+                    <td>{{ row.healthInsuranceDeduction }}</td>
+                    <td>{{ row.pension }}</td>
+                    <td>{{ row.pensionDeduction }}</td>
+                    <td>{{ row.deductionTotal }}</td>
+                    <td>{{ row.childcare }}</td>
+                    <td>{{ row.companyShare }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <!-- 賞与プレビュー -->
+        <table class="insurance-preview-table" *ngIf="selectedType === 'bonus'">
+            <thead>
+                <tr>
+                    <th>支社</th>
+                    <th>従業員名</th>
+                    <th>介護保険適用</th>
+                    <th>当月賞与</th>
+                    <th>標準賞与額</th> <!-- 1000円未満切り捨て -->
+                    <th>年度賞与合計</th>
+                    <th>健康保険料</th>
+                    <th>健康保険料控除額</th>
+                    <th>厚生年金保険料</th>
+                    <th>厚生年金保険料控除額</th>
+                    <th>控除額合計</th>
+                    <th>子ども子育て拠出金</th>
+                    <th>会社負担</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let row of previewList">
+                    <td>{{ row.officeName }}</td>
+                    <td>{{ row.employeeName }}</td>
+                    <td>{{ row.careInsurance }}</td>
+                    <td>{{ row.bonus }}</td>
+                    <td>{{ row.standardBonus }}</td>
+                    <td>{{ row.bonusTotal }}</td>
+                    <td>{{ row.healthInsurance }}</td>
+                    <td>{{ row.healthInsuranceDeduction }}</td>
+                    <td>{{ row.pension }}</td>
+                    <td>{{ row.pensionDeduction }}</td>
+                    <td>{{ row.deductionTotal }}</td>
+                    <td>{{ row.childcare }}</td>
+                    <td>{{ row.companyShare }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="form-actions">
+            <button type="button">保存</button>
+        </div>
+    </div>
+</div>
+
+
+

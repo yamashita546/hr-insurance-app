@@ -24,3 +24,8 @@ export interface InsuranceRate {
     updatedAt: Timestamp;
 }
 
+
+// 子ども子育て拠出金
+export enum ChildcareInsuranceRate {
+    CHILDCARE_INSURANCE_RATE = 0.36,
+}

@@ -2,21 +2,26 @@
   <h2>社会保険料計算</h2>
   <form class="insurance-form">
     <div class="form-row">
+      <!-- 給与・賞与選択ラジオボタン -->
+      <label><input type="radio" [(ngModel)]="selectedType" name="type" value="salary" (ngModelChange)="updateResultList()"> 給与</label>
+      <label style="margin-left: 1em;"><input type="radio" [(ngModel)]="selectedType" name="type" value="bonus" (ngModelChange)="updateResultList()"> 賞与</label>
+    </div>
+    <div class="form-row">
       <label>支社</label>
-      <select>
+      <select [(ngModel)]="selectedOfficeId" name="office" (ngModelChange)="updateResultList()">
         <option value="">全支社</option>
-        <!-- *ngForで支社リストを表示予定 -->
+        <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
       </select>
       <label>従業員</label>
-      <select>
+      <select [(ngModel)]="selectedEmployeeId" name="employee" (ngModelChange)="updateResultList()">
         <option value="">全従業員</option>
-        <!-- *ngForで従業員リストを表示予定 -->
+        <option *ngFor="let emp of filteredEmployees" [value]="emp.employeeId">{{ emp.lastName }} {{ emp.firstName }}</option>
       </select>
       <label>対象年月</label>
-      <select>
+      <select [(ngModel)]="selectedYear" name="year" (ngModelChange)="updateResultList()">
         <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
       </select>
-      <select>
+      <select [(ngModel)]="selectedMonth" name="month" (ngModelChange)="updateResultList()">
         <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
       </select>
       <button type="button" routerLink="/insurance-form">計算</button>
@@ -26,29 +31,72 @@
   <div class="insurance-result-table-block">
     <table class="insurance-result-table">
       <thead>
-        <tr>
+        <tr *ngIf="selectedType === 'salary'">
           <th>支社</th>
           <th>従業員名</th>
+          <th>介護保険適用</th>
+          <th>当月給与総支給</th>
           <th>等級</th>
           <th>標準報酬月額</th>
-          <th>当月給与総支給</th>
-          <th>当月賞与</th>
           <th>健康保険料</th>
+          <th>健康保険料控除額</th>
           <th>厚生年金保険料</th>
+          <th>厚生年金保険料控除額</th>
+          <th>控除額合計</th>
+          <th>子ども子育て拠出金</th>
           <th>会社負担</th>
-          <th>本人負担</th>
+        </tr>
+        <tr *ngIf="selectedType === 'bonus'">
+          <th>支社</th>
+          <th>従業員名</th>
+          <th>介護保険適用</th>
+          <th>当月賞与</th>
+          <th>標準賞与額</th>
+          <th>年度賞与合計</th>
+          <th>健康保険料</th>
+          <th>健康保険料控除額</th>
+          <th>厚生年金保険料</th>
+          <th>厚生年金保険料控除額</th>
+          <th>控除額合計</th>
+          <th>子ども子育て拠出金</th>
+          <th>会社負担</th>
         </tr>
       </thead>
       <tbody>
-        <!-- *ngForで計算結果を表示予定 -->
-        <tr>
-          <td>山田 太郎</td>
-          <td>¥380,000</td>
-          <td>¥18,000</td>
-          <td>¥34,000</td>
-          <td>¥26,000</td>
-          <td>¥26,000</td>
-        </tr>
+        <ng-container *ngIf="selectedType === 'salary'">
+          <tr *ngFor="let row of resultList">
+            <td>{{ row.officeName }}</td>
+            <td>{{ row.employeeName }}</td>
+            <td>{{ row.careInsurance }}</td>
+            <td>{{ row.salaryTotal }}</td>
+            <td>{{ row.grade }}</td>
+            <td>{{ row.monthly }}</td>
+            <td>{{ row.healthInsurance }}</td>
+            <td>{{ row.healthInsuranceDeduction }}</td>
+            <td>{{ row.pension }}</td>
+            <td>{{ row.pensionDeduction }}</td>
+            <td>{{ row.deductionTotal }}</td>
+            <td>{{ row.childcare }}</td>
+            <td>{{ row.companyShare }}</td>
+          </tr>
+        </ng-container>
+        <ng-container *ngIf="selectedType === 'bonus'">
+          <tr *ngFor="let row of resultList">
+            <td>{{ row.officeName }}</td>
+            <td>{{ row.employeeName }}</td>
+            <td>{{ row.careInsurance }}</td>
+            <td>{{ row.bonus }}</td>
+            <td>{{ row.standardBonus }}</td>
+            <td>{{ row.annualBonusTotal }}</td>
+            <td>{{ row.healthInsurance }}</td>
+            <td>{{ row.healthInsuranceDeduction }}</td>
+            <td>{{ row.pension }}</td>
+            <td>{{ row.pensionDeduction }}</td>
+            <td>{{ row.deductionTotal }}</td>
+            <td>{{ row.childcare }}</td>
+            <td>{{ row.companyShare }}</td>
+          </tr>
+        </ng-container>
       </tbody>
     </table>
   </div>

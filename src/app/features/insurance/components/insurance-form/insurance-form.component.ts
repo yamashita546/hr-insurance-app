@@ -171,6 +171,8 @@ export class InsuranceFormComponent implements OnInit {
           companyShare = this.formatDecimal(companyShareVal);
         }
         return {
+          officeId: emp.officeId,
+          employeeId: emp.employeeId,
           officeName: this.offices.find(o => o.id === emp.officeId)?.name || '',
           employeeName: emp.lastName + ' ' + emp.firstName,
           careInsurance,
@@ -282,6 +284,8 @@ export class InsuranceFormComponent implements OnInit {
           }
         }
         return {
+          officeId: emp.officeId,
+          employeeId: emp.employeeId,
           officeName: this.offices.find(o => o.id === emp.officeId)?.name || '',
           employeeName: emp.lastName + ' ' + emp.firstName,
           careInsurance,
@@ -313,12 +317,10 @@ export class InsuranceFormComponent implements OnInit {
         return;
       }
       const promises = this.previewList.map(async row => {
-        const emp = this.employees.find(e => e.employeeId === row.employeeId);
-        const officeId = emp ? emp.officeId : '';
         const calculation: Omit<import('../../../../core/models/insurance-calculation.model').InsuranceSalaryCalculation, 'createdAt' | 'updatedAt'> = {
           companyId: this.companyId,
-          officeId: officeId,
-          employeeId: emp ? emp.employeeId : '',
+          officeId: row.officeId,
+          employeeId: row.employeeId,
           applyYearMonth,
           healthGrade: row.grade,
           healthMonthly: Number(row.monthly.toString().replace(/,/g, '')),
@@ -346,12 +348,10 @@ export class InsuranceFormComponent implements OnInit {
         return;
       }
       const promises = this.previewList.map(async row => {
-        const emp = this.employees.find(e => e.employeeId === row.employeeId);
-        const officeId = emp ? emp.officeId : '';
         const calculation: Omit<import('../../../../core/models/insurance-calculation.model').InsuranceBonusCalculation, 'createdAt' | 'updatedAt'> = {
           companyId: this.companyId,
-          officeId: officeId,
-          employeeId: emp ? emp.employeeId : '',
+          officeId: row.officeId,
+          employeeId: row.employeeId,
           applyYearMonth,
           healthGrade: row.grade,
           healthMonthly: Number(row.monthly.toString().replace(/,/g, '')),

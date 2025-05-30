@@ -288,24 +288,42 @@ export class FirestoreService {
   }
 
   // 給与計算結果保存
-  async addInsuranceSalaryCalculation(calculation: Omit<InsuranceSalaryCalculation, 'createdAt' | 'updatedAt'>) {
+  async addInsuranceSalaryCalculation(calculation: Omit<InsuranceSalaryCalculation, 'createdAt' | 'updatedAt' | 'id'>) {
+    if (!calculation.employeeId || !calculation.officeId) return; // id欠損時は保存しない
     const col = collection(this.firestore, 'insuranceSalaryCalculations');
     const now = Timestamp.now();
-    await addDoc(col, {
+    const docRef = await addDoc(col, {
       ...calculation,
       createdAt: now,
       updatedAt: now
     });
+    await setDoc(docRef, { id: docRef.id }, { merge: true });
   }
 
   // 賞与計算結果保存
-  async addInsuranceBonusCalculation(calculation: Omit<InsuranceBonusCalculation, 'createdAt' | 'updatedAt'>) {
+  async addInsuranceBonusCalculation(calculation: Omit<InsuranceBonusCalculation, 'createdAt' | 'updatedAt' | 'id'>) {
+    if (!calculation.employeeId || !calculation.officeId) return; // id欠損時は保存しない
     const col = collection(this.firestore, 'insuranceBonusCalculations');
     const now = Timestamp.now();
-    await addDoc(col, {
+    const docRef = await addDoc(col, {
       ...calculation,
       createdAt: now,
       updatedAt: now
     });
+    await setDoc(docRef, { id: docRef.id }, { merge: true });
+  }
+
+  // 給与計算結果一覧取得
+  async getInsuranceSalaryCalculations(): Promise<InsuranceSalaryCalculation[]> {
+    const colRef = collection(this.firestore, 'insuranceSalaryCalculations');
+    const snap = await getDocs(colRef);
+    return snap.docs.map(doc => ({ ...(doc.data() as InsuranceSalaryCalculation) }));
+  }
+
+  // 賞与計算結果一覧取得
+  async getInsuranceBonusCalculations(): Promise<InsuranceBonusCalculation[]> {
+    const colRef = collection(this.firestore, 'insuranceBonusCalculations');
+    const snap = await getDocs(colRef);
+    return snap.docs.map(doc => ({ ...(doc.data() as InsuranceBonusCalculation) }));
   }
 }

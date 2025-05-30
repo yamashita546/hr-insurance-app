@@ -301,4 +301,77 @@ export class InsuranceFormComponent implements OnInit {
       });
     }
   }
+
+  // 給与・賞与の計算結果保存処理
+  async onSave() {
+    const applyYearMonth = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+    // 当月データ存在チェック
+    if (this.selectedType === 'salary') {
+      const hasSalary = this.previewList.some(row => row.salaryTotal && row.salaryTotal !== 'ー');
+      if (!hasSalary) {
+        alert(`${this.selectedYear}年${this.selectedMonth}月の給与データの登録がありません。`);
+        return;
+      }
+      const promises = this.previewList.map(async row => {
+        const emp = this.employees.find(e => e.employeeId === row.employeeId);
+        const officeId = emp ? emp.officeId : '';
+        const calculation: Omit<import('../../../../core/models/insurance-calculation.model').InsuranceSalaryCalculation, 'createdAt' | 'updatedAt'> = {
+          companyId: this.companyId,
+          officeId: officeId,
+          employeeId: emp ? emp.employeeId : '',
+          applyYearMonth,
+          healthGrade: row.grade,
+          healthMonthly: Number(row.monthly.toString().replace(/,/g, '')),
+          pensionGrade: '', // 必要に応じてrowから取得
+          pensionMonthly: 0, // 必要に応じてrowから取得
+          salaryTotal: row.salaryTotal ? Number(row.salaryTotal.toString().replace(/,/g, '')) : 0,
+          salaryAvg: 0, // 必要に応じて計算
+          careInsurance: row.careInsurance === '〇',
+          healthInsurance: Number(row.healthInsurance.toString().replace(/,/g, '')),
+          healthInsuranceDeduction: Number(row.healthInsuranceDeduction.toString().replace(/,/g, '')),
+          pension: Number(row.pension.toString().replace(/,/g, '')),
+          pensionDeduction: Number(row.pensionDeduction.toString().replace(/,/g, '')),
+          deductionTotal: Number(row.deductionTotal.toString().replace(/,/g, '')),
+          childcare: Number(row.childcare.toString().replace(/,/g, '')),
+          companyShare: Number(row.companyShare.toString().replace(/,/g, '')),
+        };
+        await this.firestoreService.addInsuranceSalaryCalculation(calculation);
+      });
+      await Promise.all(promises);
+      alert(`${this.previewList.length}件の給与計算結果を保存しました。`);
+    } else if (this.selectedType === 'bonus') {
+      const hasBonus = this.previewList.some(row => row.bonus && row.bonus !== 'ー');
+      if (!hasBonus) {
+        alert(`${this.selectedYear}年${this.selectedMonth}月の賞与データの登録がありません。`);
+        return;
+      }
+      const promises = this.previewList.map(async row => {
+        const emp = this.employees.find(e => e.employeeId === row.employeeId);
+        const officeId = emp ? emp.officeId : '';
+        const calculation: Omit<import('../../../../core/models/insurance-calculation.model').InsuranceBonusCalculation, 'createdAt' | 'updatedAt'> = {
+          companyId: this.companyId,
+          officeId: officeId,
+          employeeId: emp ? emp.employeeId : '',
+          applyYearMonth,
+          healthGrade: row.grade,
+          healthMonthly: Number(row.monthly.toString().replace(/,/g, '')),
+          pensionGrade: '', // 必要に応じてrowから取得
+          pensionMonthly: 0, // 必要に応じてrowから取得
+          bonusTotal: row.bonus ? Number(row.bonus.toString().replace(/,/g, '')) : 0,
+          bonusAvg: row.bonus ? Number(row.bonus.toString().replace(/,/g, '')) : 0, // 必要に応じて平均値を計算
+          careInsurance: row.careInsurance === '〇',
+          healthInsurance: Number(row.healthInsurance.toString().replace(/,/g, '')),
+          healthInsuranceDeduction: Number(row.healthInsuranceDeduction.toString().replace(/,/g, '')),
+          pension: Number(row.pension.toString().replace(/,/g, '')),
+          pensionDeduction: Number(row.pensionDeduction.toString().replace(/,/g, '')),
+          deductionTotal: Number(row.deductionTotal.toString().replace(/,/g, '')),
+          childcare: Number(row.childcare.toString().replace(/,/g, '')),
+          companyShare: Number(row.companyShare.toString().replace(/,/g, '')),
+        };
+        await this.firestoreService.addInsuranceBonusCalculation(calculation);
+      });
+      await Promise.all(promises);
+      alert(`${this.previewList.length}件の賞与計算結果を保存しました。`);
+    }
+  }
 }

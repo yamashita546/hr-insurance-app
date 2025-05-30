@@ -19,6 +19,7 @@ import { InsuranceRate } from '../models/insurance-rate.model';
 import { Employee } from '../models/employee.model';
 import { Attendance } from '../models/attendance.model';
 import { Salary } from '../models/salary.model';
+import { InsuranceSalaryCalculation, InsuranceBonusCalculation } from '../models/insurance-calculation.model';
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreService {
@@ -284,5 +285,27 @@ export class FirestoreService {
     const q = query(decisionsCol, where('companyId', '==', companyId));
     const snap = await getDocs(q);
     return snap.docs.map(doc => ({ ...(doc.data() as any) }));
+  }
+
+  // 給与計算結果保存
+  async addInsuranceSalaryCalculation(calculation: Omit<InsuranceSalaryCalculation, 'createdAt' | 'updatedAt'>) {
+    const col = collection(this.firestore, 'insuranceSalaryCalculations');
+    const now = Timestamp.now();
+    await addDoc(col, {
+      ...calculation,
+      createdAt: now,
+      updatedAt: now
+    });
+  }
+
+  // 賞与計算結果保存
+  async addInsuranceBonusCalculation(calculation: Omit<InsuranceBonusCalculation, 'createdAt' | 'updatedAt'>) {
+    const col = collection(this.firestore, 'insuranceBonusCalculations');
+    const now = Timestamp.now();
+    await addDoc(col, {
+      ...calculation,
+      createdAt: now,
+      updatedAt: now
+    });
   }
 }

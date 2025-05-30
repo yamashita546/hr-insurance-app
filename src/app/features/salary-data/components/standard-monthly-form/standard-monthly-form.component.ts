@@ -7,12 +7,14 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
+import { StandardMonthlyDecision } from '../../../../core/models/standard-monthly-decision .model';
+import { Router ,RouterModule } from '@angular/router';
 
 
 @Component({
   selector: 'app-standard-monthly-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule],
   templateUrl: './standard-monthly-form.component.html',
   styleUrl: './standard-monthly-form.component.css'
 })
@@ -40,7 +42,8 @@ export class StandardMonthlyFormComponent implements OnInit {
 
   constructor(
     private userCompanyService: UserCompanyService,
-    private firestoreService: FirestoreService
+    private firestoreService: FirestoreService,
+    private router: Router
   ) {}
 
   async ngOnInit() {
@@ -155,9 +158,30 @@ export class StandardMonthlyFormComponent implements OnInit {
     alert(`${this.resultList[index].employeeName} の修正ボタンが押されました`);
   }
 
-  // 保存ボタン押下時（現状はダミー）
-  onSave() {
-    // TODO: Firestoreへ一括保存処理
-    alert('標準報酬月額データを保存します（ダミー）');
+  // 保存ボタン押下時
+  async onSave() {
+    // 判定結果をStandardMonthlyDecision型に変換し、Firestoreに一括保存
+    const applyYearMonth = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
+    const promises = this.resultList.map(async row => {
+      // 従業員のofficeIdを取得
+      const emp = this.employees.find(e => `${e.lastName} ${e.firstName}` === row.employeeName);
+      const officeId = emp ? emp.officeId : '';
+      const decision: Omit<StandardMonthlyDecision, 'createdAt' | 'updatedAt'> = {
+        companyId: this.companyId,
+        officeId: officeId,
+        employeeId: emp ? emp.employeeId : '',
+        applyYearMonth,
+        healthGrade: row.judgedGrade,
+        healthMonthly: row.judgedMonthly,
+        pensionGrade: row.pensionJudgedGrade,
+        pensionMonthly: row.pensionJudgedMonthly,
+        salaryTotal: row.salaryTotal,
+        salaryAvg: row.salaryAvg
+      };
+      await this.firestoreService.addStandardMonthlyDecision(decision);
+    });
+    await Promise.all(promises);
+    alert(`${this.resultList.length}件の標準報酬月額データを保存しました。`);
+    this.router.navigate(['/manage-standard-monthly']);
   }
 }

@@ -266,4 +266,15 @@ export class FirestoreService {
       await setDoc(docRef, { ...bonus, updatedAt: Timestamp.now() }, { merge: true });
     }
   }
+
+  // 標準報酬月額決定データ保存
+  async addStandardMonthlyDecision(decision: Omit<import('../models/standard-monthly-decision .model').StandardMonthlyDecision, 'createdAt' | 'updatedAt'>) {
+    const decisionsCol = collection(this.firestore, 'standardMonthlyDecisions');
+    const now = Timestamp.now();
+    await addDoc(decisionsCol, {
+      ...decision,
+      createdAt: now,
+      updatedAt: now
+    });
+  }
 }

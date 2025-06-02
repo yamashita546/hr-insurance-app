@@ -23,6 +23,7 @@ export class EmployeeListComponent {
   sortAsc: boolean = true;
   selectedOffice: string = '';
   selectedDepartment: string = '';
+  selectedEmploymentType: string = '';
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -59,6 +60,10 @@ export class EmployeeListComponent {
     return Array.from(new Set(this.employees.map(e => e.department).filter(Boolean)));
   }
 
+  get employmentTypeList() {
+    return Array.from(new Set(this.employees.map(e => e.employeeType).filter(Boolean)));
+  }
+
   get filteredEmployees() {
     let list = this.employees;
     if (this.selectedOffice) {
@@ -66,6 +71,9 @@ export class EmployeeListComponent {
     }
     if (this.selectedDepartment) {
       list = list.filter(emp => emp.department === this.selectedDepartment);
+    }
+    if (this.selectedEmploymentType) {
+      list = list.filter(emp => emp.employeeType === this.selectedEmploymentType);
     }
     if (this.searchText) {
       const keyword = this.searchText.toLowerCase();

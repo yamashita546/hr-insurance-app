@@ -18,6 +18,10 @@
         <option value="">全部署</option>
         <option *ngFor="let d of departmentList" [value]="d">{{ d }}</option>
       </select>
+      <select [(ngModel)]="selectedEmploymentType" style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;">
+        <option value="">全雇用形態</option>
+        <option *ngFor="let e of employmentTypeList" [value]="e">{{ e }}</option>
+      </select>
     </div>
   </div>
   <div class="employee-list">
@@ -28,8 +32,9 @@
           <th (click)="changeSort('lastName')" style="cursor:pointer;">氏名 <span *ngIf="sortKey==='lastName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
           <th (click)="changeSort('officeName')" style="cursor:pointer;">事業所名 <span *ngIf="sortKey==='officeName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
           <th (click)="changeSort('department')" style="cursor:pointer;">部署 <span *ngIf="sortKey==='department'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-          <th>扶養家族人数</th>
-          <th>適用中休職特例</th>
+          <th (click)="changeSort('employmentType')" style="cursor:pointer;">雇用形態 <span *ngIf="sortKey==='employmentType'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th>扶養家族<br>人数</th>
+          <th>適用中<br>休職特例</th>
           <th></th>
         </tr>
       </thead>
@@ -39,6 +44,7 @@
           <td>{{ employee.lastName }} {{ employee.firstName }}</td>
           <td>{{ employee.officeName }}</td>
           <td>{{ employee.department }}</td>
+          <td>{{ employee.employeeType }}</td>
           <td>{{ employee.dependents?.length || 0 }}</td>
           <td>
             <ng-container *ngIf="employee.extraordinaryLeaves?.length">

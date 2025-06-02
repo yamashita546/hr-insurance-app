@@ -4,69 +4,75 @@
     <div>企業名：{{ company?.name }}</div>
   </div>
   <h1>勤怠情報管理</h1>
+  <div *ngIf="alertTargets.length > 0" style="background:#fff3cd; color:#856404; border:1px solid #ffeeba; border-radius:6px; padding:16px; margin-bottom:18px;">
+    <strong>社会保険加入判定アラート</strong>
+    <ul style="margin: 8px 0 0 0; padding-left: 1.2em;">
+      <li *ngFor="let alert of alertTargets">
+        <span style="font-weight:bold;">{{ alert.employeeName }}</span>（{{ alert.officeName }}・{{ alert.employeeType }}）
+        ：勤務時間 {{ alert.actualWorkHours }}h／勤務日数 {{ alert.actualWorkDays }}日
+        <span style="color:#d9534f; font-weight:bold;">→ 社会保険未加入</span>
+      </li>
+    </ul>
+    <div style="font-size:0.95em; color:#856404; margin-top:8px;">※週20時間以上勤務のパート・アルバイトで社会保険未加入の従業員が対象です。</div>
+  </div>
   <div class="attendance-actions">
     <div class="csv-toolbar">
       <button class="add-btn" routerLink="/attendance-form">勤怠情報を追加</button>
-      <button class="csv-btn" (click)="onExportCsv()">CSVひな型出力</button>
-      <label class="file-label">
-        ファイルを選択
-        <input type="file" (change)="onImportCsv($event)" accept=".csv" style="display: none;" #fileInput />
-      </label>
-      <span class="file-name">{{ fileName || '選択されていません' }}</span>
     </div>
-  </div>
-  <div class="sort-toolbar">
-    <label>年度
-      <select [(ngModel)]="selectedYear" (change)="onSortChange()">
-        <option value="">すべて</option>
+    <div style="margin-top: 12px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+      <input type="text" [(ngModel)]="searchText" placeholder="ID・氏名・事業所で検索" style="width: 220px; padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;" />
+      <select [(ngModel)]="selectedYear" style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;">
+        <option value="">すべての年度</option>
         <option *ngFor="let y of yearList" [value]="y">{{ y }}</option>
       </select>
-    </label>
-    <label>月
-      <select [(ngModel)]="selectedMonth" (change)="onSortChange()">
-        <option value="">すべて</option>
+      <select [(ngModel)]="selectedMonth" style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;">
+        <option value="">すべての月</option>
         <option *ngFor="let m of monthList" [value]="m">{{ m }}</option>
       </select>
-    </label>
-    <label>事業所
-      <select [(ngModel)]="selectedOfficeId" (change)="onSortChange()">
-        <option value="">すべて</option>
+      <select [(ngModel)]="selectedOfficeId" style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;">
+        <option value="">すべての事業所</option>
         <option *ngFor="let o of offices" [value]="o.id">{{ o.name }}</option>
       </select>
-    </label>
+      <select [(ngModel)]="selectedEmployeeType" style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;">
+        <option value="">全勤務形態</option>
+        <option *ngFor="let e of employeeTypeList" [value]="e">{{ e }}</option>
+      </select>
+    </div>
   </div>
   <div class="attendance-list">
     <table>
       <thead>
         <tr>
-          <th>年度</th>
-          <th>月</th>
-          <th>事業所</th>
-          <th>ID</th>
-          <th>氏名</th>
+          <th (click)="changeSort('employeeId')" style="cursor:pointer;">ID <span *ngIf="sortKey==='employeeId'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span></th>
+          <th (click)="changeSort('employeeName')" style="cursor:pointer;">氏名 <span *ngIf="sortKey==='employeeName'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span></th>
+          <th (click)="changeSort('officeName')" style="cursor:pointer;">事業所 <span *ngIf="sortKey==='officeName'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span></th>
+          <th (click)="changeSort('employeeType')" style="cursor:pointer;">勤務形態 <span *ngIf="sortKey==='employeeType'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span></th>
+          <th (click)="changeSort('year')" style="cursor:pointer;">年度 <span *ngIf="sortKey==='year'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span></th>
+          <th (click)="changeSort('month')" style="cursor:pointer;">月 <span *ngIf="sortKey==='month'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span></th>
           <th>所定労働日数</th>
           <th>勤務日数</th>
-          <th>所定労働時間数</th>
-          <th>実際の労働時間</th>
+          <th>所定労働<br>時間数</th>
+          <th>実際の労働<br>時間</th>
           <th>欠勤日数</th>
           <th>無給休暇日数</th>
           <th>有給取得日数</th>
-          <th>育児休業開始日</th>
-          <th>育児休業終了日</th>
-          <th>介護休業開始日</th>
-          <th>介護休業終了日</th>
-          <th>傷病休業開始日</th>
-          <th>傷病休業終了日</th>
+          <th>育児休業<br>開始日</th>
+          <th>育児休業<br>終了日</th>
+          <th>介護休業<br>開始日</th>
+          <th>介護休業<br>終了日</th>
+          <th>傷病休業<br>開始日</th>
+          <th>傷病休業<br>終了日</th>
           <th>全休月</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let attendance of attendances">
-          <td>{{ attendance.year || '未入力' }}</td>
-          <td>{{ attendance.month || '未入力' }}</td>
-          <td>{{ attendance.officeName || '未入力' }}</td>
+        <tr *ngFor="let attendance of filteredAttendances">
           <td>{{ attendance.employeeId || '未入力' }}</td>
           <td>{{ attendance.employeeName || '未入力' }}</td>
+          <td>{{ attendance.officeName || '未入力' }}</td>
+          <td>{{ attendance.employeeType || '' }}</td>
+          <td>{{ attendance.year || '未入力' }}</td>
+          <td>{{ attendance.month || '未入力' }}</td>
           <td>{{ attendance.scheduledWorkDays }}</td>
           <td>{{ attendance.actualWorkDays }}</td>
           <td>{{ attendance.scheduledWorkHours }}</td>
@@ -84,60 +90,6 @@
         </tr>
       </tbody>
     </table>
-  </div>
-  <div *ngIf="pendingImportData.length > 0">
-    <h3>インポート予定データ</h3>
-    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px;">
-      <button (click)="confirmImport()" [disabled]="importErrors.length > 0">保存</button>
-      <button (click)="cancelImport()" class="cancel-btn">キャンセル</button>
-    </div>
-    <div style="max-width:100%;overflow-x:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th *ngFor="let key of ATTENDANCE_COLUMN_ORDER_DISPLAY">{{ ATTENDANCE_COLUMN_LABELS[key] }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of pendingImportData">
-            <td *ngFor="let key of ATTENDANCE_COLUMN_ORDER_DISPLAY">{{ row[key] }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div *ngIf="importErrors.length > 0" style="color:red;">
-    <h3>エラー一覧</h3>
-    <ul>
-      <li *ngFor="let err of importErrors">{{ err }}</li>
-    </ul>
-  </div>
-  <div *ngIf="showCsvDialog" class="csv-dialog-backdrop">
-    <div class="csv-dialog">
-      <h3>CSVひな型出力：年度・月を選択</h3>
-      <label>年度
-        <select [(ngModel)]="csvYear">
-          <option *ngFor="let y of yearList" [value]="y">{{ y }}</option>
-        </select>
-      </label>
-      <label>月
-        <select [(ngModel)]="csvMonth">
-          <option *ngFor="let m of monthList" [value]="m">{{ m }}</option>
-        </select>
-      </label>
-      <div class="csv-dialog-actions">
-        <button (click)="onCsvDialogExport()">OK</button>
-        <button (click)="onCsvDialogCancel()">キャンセル</button>
-      </div>
-    </div>
-  </div>
-  <div *ngIf="showFormDialog" class="csv-dialog-backdrop">
-    <div class="csv-dialog" style="max-width:95vw;overflow-x:auto;">
-      <app-attendance-form (formSaved)="onFormSaved()" (formCancel)="onFormCancel()"></app-attendance-form>
-      <div style="text-align:right;margin-top:1rem;">
-        <button (click)="onFormCancel()">閉じる</button>
-      </div>
-    </div>
   </div>
 </div>
 

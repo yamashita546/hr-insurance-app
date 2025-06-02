@@ -9,9 +9,10 @@ table {
   background: #fff;
 }
 th, td {
-  border: 1px solid #ccc;
-  padding: 0.4em 0.6em;
-  text-align: center;
+  padding: 8px 6px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 0.98rem;
 }
 th {
   background: #f0f4fa;

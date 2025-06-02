@@ -1,7 +1,67 @@
-
 <h1>勤怠情報入力</h1>
 
-<div class="attendance-form-container">
+<div class="csv-toolbar">
+  <button class="csv-btn" (click)="onExportCsv()">CSVひな型出力</button>
+  <label class="file-label" style="display:inline-block; cursor:pointer; background:#1976d2; color:#fff; padding:8px 16px; border-radius:4px; margin-left:8px;">
+    ファイルを選択
+    <input type="file" (change)="onImportCsv($event)" accept=".csv" style="display: none;" #fileInput />
+  </label>
+  <span class="file-name" style="margin-left:8px;">{{ fileName || '選択されていません' }}</span>
+</div>
+<div *ngIf="pendingImportData.length > 0">
+  <h3>インポート予定データ</h3>
+  <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px;">
+    <button (click)="confirmImport()" [disabled]="importErrors.length > 0">保存</button>
+    <button (click)="cancelImport()" class="cancel-btn">キャンセル</button>
+  </div>
+  <div style="max-width:100%;overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th *ngFor="let key of ATTENDANCE_COLUMN_ORDER">{{ ATTENDANCE_COLUMN_LABELS[key] }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of pendingImportData">
+          <td *ngFor="let key of ATTENDANCE_COLUMN_ORDER">{{ row[key] }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div *ngIf="importErrors.length > 0" style="color:red;">
+  <h3>エラー一覧</h3>
+  <ul>
+    <li *ngFor="let err of importErrors">{{ err }}</li>
+  </ul>
+</div>
+<div *ngIf="showCsvDialog" class="csv-dialog-backdrop">
+  <div class="csv-dialog">
+    <h3>CSVひな型出力：年度・月・事業所を選択</h3>
+    <label>年度
+      <select [(ngModel)]="csvYear">
+        <option *ngFor="let y of yearList" [value]="y">{{ y }}</option>
+      </select>
+    </label>
+    <label>月
+      <select [(ngModel)]="csvMonth">
+        <option *ngFor="let m of monthList" [value]="m">{{ m }}</option>
+      </select>
+    </label>
+    <label>事業所
+      <select [(ngModel)]="csvOfficeId">
+        <option value="">全事業所</option>
+        <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
+      </select>
+    </label>
+    <div class="csv-dialog-actions" style="margin-top: 16px;">
+      <button (click)="onCsvDialogExport()">OK</button>
+      <button (click)="onCsvDialogCancel()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<div class="attendance-form-container" style="margin-top: 32px;">
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
     <table>
       <thead>

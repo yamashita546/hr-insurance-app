@@ -10,6 +10,7 @@ import { FirestoreService } from '../../../../core/services/firestore.service';
 import { ATTENDANCE_COLUMN_LABELS, ATTENDANCE_COLUMN_ORDER } from '../../../../core/models/attendance.model';
 import { AttendanceFormComponent } from '../../components/attendance-form/attendance-form.component';
 import { RouterModule } from '@angular/router';
+import { Employee } from '../../../../core/models/employee.model';
 
 @Component({
   selector: 'app-attendance-list',
@@ -22,9 +23,6 @@ import { RouterModule } from '@angular/router';
 export class AttendanceListComponent {
   company: Company | null = null;
   attendances: any[] = [];
-  fileName: string = '';
-  pendingImportData: any[] = [];
-  importErrors: string[] = [];
   sortKey: string = 'year';
   sortOrder: 'asc' | 'desc' = 'desc';
   offices: any[] = [];
@@ -33,11 +31,11 @@ export class AttendanceListComponent {
   selectedOfficeId: string = '';
   yearList: string[] = [];
   monthList: string[] = Array.from({length: 12}, (_, i) => String(i+1));
-  showCsvDialog: boolean = false;
-  csvYear: string = '';
-  csvMonth: string = '';
+  employeeType: string[] = [];
+  searchText: string = '';
+  selectedEmployeeType: string = '';
   employees: any[] = [];
-  showFormDialog: boolean = false;
+  alertTargets: any[] = [];
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -58,7 +56,14 @@ export class AttendanceListComponent {
     const attendancesCol = collection(this.firestore, 'attendances');
     const q = query(attendancesCol, where('companyKey', '==', companyKey));
     const snap = await getDocs(q);
-    this.attendances = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const attendances = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    this.employees = await this.firestoreService.getEmployeesByCompanyKey(companyKey);
+    this.attendances = attendances.map(att => {
+      const attAny = att as any;
+      const emp = this.employees.find(e => e.employeeId === String(attAny.employeeId ?? ''));
+      return { ...att, employeeType: emp?.employeeType || '' };
+    });
+    this.extractAlertTargets();
     this.sortAttendances();
   }
 
@@ -98,133 +103,118 @@ export class AttendanceListComponent {
   }
 
   onAddAttendance() {
-    this.showFormDialog = true;
-  }
-
-  async onExportCsv() {
-    this.showCsvDialog = true;
-    this.csvYear = this.selectedYear || (this.yearList.length ? this.yearList[0] : String(new Date().getFullYear()));
-    this.csvMonth = this.selectedMonth || '1';
-    if (this.company?.companyKey) {
-      this.employees = await this.firestoreService.getEmployeesByCompanyKey(this.company.companyKey);
-    }
-  }
-
-  onCsvDialogCancel() {
-    this.showCsvDialog = false;
-  }
-
-  onCsvDialogExport() {
-    // Attendanceモデルの全カラム
-    const header = [
-      'year', 'month', 'officeName', 'employeeId', 'employeeName',
-      'scheduledWorkDays', 'actualWorkDays', 'scheduledWorkHours', 'actualWorkHours',
-      'absentDays', 'leaveWithoutPayDays', 'paidLeaveDays',
-      'childCareLeaveStartDate', 'childCareLeaveEndDate',
-      'familyCareLeaveStartDate', 'familyCareLeaveEndDate',
-      'injuryOrSicknessLeaveStartDate', 'injuryOrSicknessLeaveEndDate',
-      'isOnFullLeaveThisMonth', 'companyKey'
-    ];
-    // 各従業員ごとに1行生成
-    const rows: Record<string, any>[] = this.employees.map(emp => {
-      const row: Record<string, any> = {};
-      header.forEach(h => row[h] = '');
-      row['companyKey'] = emp.companyKey;
-      row['employeeId'] = emp.employeeId;
-      row['employeeName'] = emp.lastName + ' ' + emp.firstName;
-      row['officeName'] = emp.officeName || '';
-      row['year'] = this.csvYear;
-      row['month'] = this.csvMonth;
-      return row;
-    });
-    const csv = [header.join(','), ...rows.map(r => header.map(h => r[h]).join(','))].join('\r\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `attendance_template_${this.csvYear}_${this.csvMonth}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    this.showCsvDialog = false;
-  }
-
-  onImportCsv(event: any) {
-    const file = event.target.files[0];
-    this.fileName = file ? file.name : '';
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e: any) => {
-      const text = e.target.result;
-      const { data, errors } = this.parseCsv(text);
-      this.pendingImportData = data;
-      this.importErrors = errors;
-    };
-    reader.readAsText(file, 'utf-8');
-  }
-
-  parseCsv(text: string): { data: any[], errors: string[] } {
-    const lines = text.split(/\r?\n/).filter(l => l.trim());
-    if (lines.length < 2) return { data: [], errors: ['CSVにデータがありません'] };
-    const headers = lines[0].split(',');
-    const data: any[] = [];
-    const errors: string[] = [];
-    for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(',');
-      if (cols.length !== headers.length) {
-        errors.push(`${i+1}行目: 列数が一致しません`);
-        continue;
-      }
-      const row: any = {};
-      for (let j = 0; j < headers.length; j++) {
-        row[headers[j]] = cols[j];
-      }
-      // 必須項目チェック
-      if (!row['employeeId']) {
-        errors.push(`${i+1}行目: employeeIdが未入力です`);
-        continue;
-      }
-      if (!row['year'] || !row['month']) {
-        errors.push(`${i+1}行目: 年度または月が未入力です`);
-        continue;
-      }
-      data.push(row);
-    }
-    return { data, errors };
-  }
-
-  async confirmImport() {
-    if (this.importErrors.length > 0) {
-      alert('エラーがあります。修正してください。');
-      return;
-    }
-    for (const att of this.pendingImportData) {
-      await addDoc(collection(this.firestore, 'attendances'), att);
-    }
-    alert('インポートが完了しました');
-    this.pendingImportData = [];
-    this.fileName = '';
-    await this.loadAttendances(this.company?.companyKey || '');
-  }
-
-  cancelImport() {
-    this.pendingImportData = [];
-    this.importErrors = [];
-    this.fileName = '';
-  }
-
-  onFormSaved() {
-    this.showFormDialog = false;
-    if (this.company?.companyKey) {
-      this.loadAttendances(this.company.companyKey);
-    }
-  }
-
-  onFormCancel() {
-    this.showFormDialog = false;
+    // Implementation of onAddAttendance method
   }
 
   // テンプレートで使うためにエクスポート
   ATTENDANCE_COLUMN_LABELS = ATTENDANCE_COLUMN_LABELS;
   ATTENDANCE_COLUMN_ORDER = ATTENDANCE_COLUMN_ORDER;
   ATTENDANCE_COLUMN_ORDER_DISPLAY = ATTENDANCE_COLUMN_ORDER.filter(col => col !== 'companyKey');
+
+  get employeeTypeList() {
+    return Array.from(new Set(this.attendances.map(a => a.employeeType).filter(Boolean)));
+  }
+
+  get filteredAttendances() {
+    let list = this.attendances;
+    if (this.selectedYear) {
+      list = list.filter(a => a.year === this.selectedYear);
+    }
+    if (this.selectedMonth) {
+      list = list.filter(a => a.month === this.selectedMonth);
+    }
+    if (this.selectedOfficeId) {
+      list = list.filter(a => a.officeId === this.selectedOfficeId);
+    }
+    if (this.selectedEmployeeType) {
+      list = list.filter(a => a.employeeType === this.selectedEmployeeType);
+    }
+    if (this.searchText) {
+      const keyword = this.searchText.toLowerCase();
+      list = list.filter(a =>
+        (a.employeeId && String(a.employeeId).toLowerCase().includes(keyword)) ||
+        (a.employeeName && a.employeeName.toLowerCase().includes(keyword)) ||
+        (a.officeName && a.officeName.toLowerCase().includes(keyword))
+      );
+    }
+    // 最新の1件だけ残す
+    const latestMap = new Map();
+    list.forEach(a => {
+      const key = String(a.employeeId);
+      const y = Number(a.year);
+      const m = Number(a.month);
+      if (!latestMap.has(key)) {
+        latestMap.set(key, a);
+      } else {
+        const prev = latestMap.get(key);
+        const prevY = Number(prev.year);
+        const prevM = Number(prev.month);
+        if (y > prevY || (y === prevY && m > prevM)) {
+          latestMap.set(key, a);
+        }
+      }
+    });
+    list = Array.from(latestMap.values());
+    // ソート
+    list = [...list].sort((a, b) => {
+      const aVal = (a[this.sortKey] || '').toString().toLowerCase();
+      const bVal = (b[this.sortKey] || '').toString().toLowerCase();
+      if (aVal < bVal) return this.sortOrder === 'asc' ? -1 : 1;
+      if (aVal > bVal) return this.sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return list;
+  }
+
+  changeSort(key: string) {
+    if (this.sortKey === key) {
+      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortKey = key;
+      this.sortOrder = 'asc';
+    }
+  }
+
+  extractAlertTargets() {
+    // 社会保険未加入かつパート・アルバイトで週20時間以上勤務
+    // 週20時間 = 月約87時間（20×52÷12）
+    const thresholdHours = 87;
+    // 最新の1件だけ残す
+    const latestMap = new Map();
+    this.attendances.forEach(a => {
+      const key = String(a.employeeId);
+      const y = Number(a.year);
+      const m = Number(a.month);
+      if (!latestMap.has(key)) {
+        latestMap.set(key, a);
+      } else {
+        const prev = latestMap.get(key);
+        const prevY = Number(prev.year);
+        const prevM = Number(prev.month);
+        if (y > prevY || (y === prevY && m > prevM)) {
+          latestMap.set(key, a);
+        }
+      }
+    });
+    const latestList = Array.from(latestMap.values());
+    this.alertTargets = latestList.filter(att => {
+      const emp = this.employees.find(e => e.employeeId === String((att as any).employeeId ?? ''));
+      if (!emp) return false;
+      const type = (emp.employeeType || '').toLowerCase();
+      const isPartOrBaito = type.includes('パート') || type.includes('ｱﾙﾊﾞｲﾄ') || type.includes('アルバイト');
+      const isNotJoined = !emp.isHealthInsuranceApplicable && !emp.isPensionApplicable;
+      const enoughHours = Number(att.actualWorkHours) >= thresholdHours;
+      return isPartOrBaito && isNotJoined && enoughHours;
+    }).map(att => {
+      const emp = this.employees.find(e => e.employeeId === String((att as any).employeeId ?? ''));
+      return {
+        employeeName: att.employeeName,
+        officeName: att.officeName,
+        employeeType: emp?.employeeType,
+        actualWorkHours: att.actualWorkHours,
+        actualWorkDays: att.actualWorkDays,
+        employeeId: att.employeeId
+      };
+    });
+  }
 }

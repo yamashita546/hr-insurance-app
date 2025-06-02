@@ -1,1 +1,47 @@
-<p>dashboard works!</p>
+<div class="dashboard-container">
+  <h1>ダッシュボード</h1>
+
+  <!-- KPIカード -->
+  <div class="kpi-cards">
+    <div class="kpi-card">
+      <div class="kpi-title">従業員数</div>
+      <div class="kpi-value">{{ employeeCount | number }} 人</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">支社数</div>
+      <div class="kpi-value">{{ officeCount | number }} 箇所</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">今月の総給与</div>
+      <div class="kpi-value">{{ salaryTotal | number }} 円</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">今月の保険料総額</div>
+      <div class="kpi-value">{{ insuranceTotal | number }} 円</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">従業員控除額合計</div>
+      <div class="kpi-value">{{ employeeDeductionTotal | number }} 円</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">会社負担額合計</div>
+      <div class="kpi-value">{{ companyShareTotal | number }} 円</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">端数処理誤差合計</div>
+      <div class="kpi-value">{{ roundingErrorTotal | number:'1.0-2' }} 円</div>
+    </div>
+  </div>
+
+  <!-- 月別給与・保険料推移グラフ（プレースホルダー） -->
+  <div class="dashboard-section">
+    <h2>月別給与・保険料推移</h2>
+    <div class="chart-placeholder">グラフ（今後実装）</div>
+  </div>
+
+  <!-- 支社別ランキング（プレースホルダー） -->
+  <div class="dashboard-section">
+    <h2>支社別ランキング</h2>
+    <div class="ranking-placeholder">ランキング表（今後実装）</div>
+  </div>
+</div>

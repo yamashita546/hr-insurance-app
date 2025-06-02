@@ -20,7 +20,7 @@ export class InsuranceListComponent implements OnInit {
 
   salaryList: InsuranceSalaryCalculation[] = [];
   bonusList: InsuranceBonusCalculation[] = [];
-  companyId: string = '';
+  companyKey: string = '';
   offices: any[] = [];
   employees: any[] = [];
 
@@ -41,15 +41,15 @@ export class InsuranceListComponent implements OnInit {
 
   async ngOnInit() {
     this.userCompanyService.company$
-      .pipe(filter(company => !!company && !!company.companyId), take(1))
+      .pipe(filter(company => !!company && !!company.companyKey), take(1))
       .subscribe(async company => {
-        this.companyId = company!.companyId;
-        this.offices = await this.firestoreService.getOffices(this.companyId);
-        this.employees = await this.firestoreService.getEmployeesByCompanyId(this.companyId);
-        // Firestoreから給与・賞与計算結果を取得（companyIdで絞り込み）
+        this.companyKey = company!.companyKey;
+        this.offices = await this.firestoreService.getOffices(this.companyKey);
+        this.employees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
+        // Firestoreから給与・賞与計算結果を取得（companyKeyで絞り込み）
         const [salarySnap, bonusSnap] = await Promise.all([
-          (await this.firestoreService.getInsuranceSalaryCalculations()).filter((c: any) => c.companyId === this.companyId),
-          (await this.firestoreService.getInsuranceBonusCalculations()).filter((c: any) => c.companyId === this.companyId)
+          (await this.firestoreService.getInsuranceSalaryCalculations()).filter((c: any) => c.companyKey === this.companyKey),
+          (await this.firestoreService.getInsuranceBonusCalculations()).filter((c: any) => c.companyKey === this.companyKey)
         ]);
         this.salaryList = salarySnap;
         this.bonusList = bonusSnap;

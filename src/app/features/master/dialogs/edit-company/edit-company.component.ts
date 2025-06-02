@@ -24,7 +24,7 @@ export class EditCompanyComponent implements OnInit {
   ngOnInit() {
     this.originalData = { ...this.data };
     this.form = this.fb.group({
-      displayId: [{ value: this.data.displayId, disabled: true }],
+      companyId: [{ value: this.data.companyId, disabled: true }],
       corporateNumber: [this.data.corporateNumber],
       companyName: [this.data.name, Validators.required],
       industry: [this.data.industry],

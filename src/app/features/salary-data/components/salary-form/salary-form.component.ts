@@ -16,7 +16,7 @@ import { filter, take } from 'rxjs/operators';
   styleUrl: './salary-form.component.css'
 })
 export class SalaryFormComponent implements OnInit {
-  companyId: string | null = null;
+  companyKey: string | null = null;
   offices: Office[] = [];
   employees: Employee[] = [];
   filteredEmployees: Employee[] = [];
@@ -69,13 +69,13 @@ export class SalaryFormComponent implements OnInit {
   async ngOnInit() {
     this.userCompanyService.company$
       .pipe(
-        filter(company => !!company && !!company.companyId),
+        filter(company => !!company && !!company.companyKey),
         take(1)
       )
       .subscribe(async company => {
-        this.companyId = company!.companyId;
-        this.offices = await this.firestoreService.getOffices(this.companyId);
-        this.employees = await this.firestoreService.getEmployeesByCompanyId(this.companyId);
+        this.companyKey = company!.companyKey;
+        this.offices = await this.firestoreService.getOffices(this.companyKey);
+        this.employees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
         this.filterEmployees();
         this.isLoading = false;
         this.calculateTotalSalary();
@@ -138,7 +138,7 @@ export class SalaryFormComponent implements OnInit {
         return;
       }
       // 既存給与データの重複チェック
-      const existingSalaries = await this.firestoreService.getSalariesByCompanyId(this.companyId!);
+      const existingSalaries = await this.firestoreService.getSalariesByCompanyKey(this.companyKey!);
       const salaryExists = existingSalaries.some(s => s.employeeId === this.selectedEmployeeObj!.employeeId && s.targetYearMonth === ym);
       if (salaryExists) {
         alert('既に給与が登録されています。');
@@ -166,7 +166,7 @@ export class SalaryFormComponent implements OnInit {
       const totalAllowance = otherAllowances.reduce((sum, a) => sum + (a.otherAllowance || 0), 0);
       const totalSalary = (Number(this.salaryForm.basicSalary) || 0) + (Number(this.salaryForm.overtimeSalary) || 0) + totalAllowance;
       const salary = {
-        companyId: this.companyId,
+        companyKey: this.companyKey,
         employeeId: this.selectedEmployeeObj.employeeId,
         targetYearMonth: ym,
         basicSalary: Number(this.salaryForm.basicSalary) || 0,
@@ -206,7 +206,7 @@ export class SalaryFormComponent implements OnInit {
         }
       }
       // 既存賞与データの重複チェック
-      const existingBonuses = await this.firestoreService.getBonusesByCompanyId(this.companyId!);
+      const existingBonuses = await this.firestoreService.getBonusesByCompanyKey(this.companyKey!);
       const bonusExists = existingBonuses.some(b => b.employeeId === this.selectedEmployeeObj!.employeeId && b.targetYearMonth === ym);
       if (bonusExists) {
         alert('既に賞与が登録されています。');
@@ -215,7 +215,7 @@ export class SalaryFormComponent implements OnInit {
       for (const bonus of this.bonusForms) {
         if (!bonus.bonusType) continue;
         const bonusData = {
-          companyId: this.companyId,
+          companyKey: this.companyKey,
           employeeId: this.selectedEmployeeObj.employeeId,
           targetYearMonth: ym,
           bonusName: bonus.bonusType === 'その他賞与' ? bonus.bonusName : '',
@@ -302,13 +302,13 @@ export class SalaryFormComponent implements OnInit {
     let overwriteRows: any[] = [];
     if (this.csvTemplateType === 'salary') {
       // 既存給与データ取得
-      const existingSalaries = await this.firestoreService.getSalariesByCompanyId(this.companyId!);
+      const existingSalaries = await this.firestoreService.getSalariesByCompanyKey(this.companyKey!);
       overwriteRows = this.csvImportData.filter(row =>
         existingSalaries.some(s => s.employeeId === row.employeeId && s.targetYearMonth === `${row.targetYear}-${String(row.targetMonth).padStart(2, '0')}`)
       );
     } else if (this.csvTemplateType === 'bonus') {
       // 既存賞与データ取得
-      const existingBonuses = await this.firestoreService.getBonusesByCompanyId(this.companyId!);
+      const existingBonuses = await this.firestoreService.getBonusesByCompanyKey(this.companyKey!);
       overwriteRows = this.csvImportData.filter(row =>
         existingBonuses.some(b => b.employeeId === row.employeeId && b.targetYearMonth === `${row.targetYear}-${String(row.targetMonth).padStart(2, '0')}`)
       );
@@ -330,7 +330,7 @@ export class SalaryFormComponent implements OnInit {
         const totalAllowance = (Number(row.commuteAllowance) || 0) + (Number(row.positionAllowance) || 0) + (Number(row.otherAllowance) || 0);
         const totalSalary = (Number(row.basicSalary) || 0) + (Number(row.overtimeSalary) || 0) + totalAllowance;
         const salary = {
-          companyId: row.companyId || this.companyId,
+          companyKey: row.companyKey || this.companyKey,
           employeeId: row.employeeId,
           targetYearMonth: `${row.targetYear}-${String(row.targetMonth).padStart(2, '0')}`,
           basicSalary: Number(row.basicSalary) || 0,
@@ -345,7 +345,7 @@ export class SalaryFormComponent implements OnInit {
         console.log('import salary:', salary);
         const isOverwrite = overwriteRows.some(orow => orow.employeeId === row.employeeId && orow.targetYear === row.targetYear && orow.targetMonth === row.targetMonth);
         if (isOverwrite) {
-          await this.firestoreService.updateSalary(salary.companyId!, salary.employeeId, salary.targetYearMonth, salary);
+          await this.firestoreService.updateSalary(salary.companyKey!, salary.employeeId, salary.targetYearMonth, salary);
         } else {
           await this.firestoreService.addSalary(salary);
         }
@@ -353,7 +353,7 @@ export class SalaryFormComponent implements OnInit {
     } else if (this.csvTemplateType === 'bonus') {
       for (const row of this.csvImportData) {
         const bonusData = {
-          companyId: row.companyId || this.companyId,
+          companyKey: row.companyKey || this.companyKey,
           employeeId: row.employeeId,
           targetYearMonth: `${row.targetYear}-${String(row.targetMonth).padStart(2, '0')}`,
           bonusType: row.bonusType || '',
@@ -365,7 +365,7 @@ export class SalaryFormComponent implements OnInit {
         console.log('import bonus:', bonusData);
         const isOverwrite = overwriteRows.some(orow => orow.employeeId === row.employeeId && orow.targetYear === row.targetYear && orow.targetMonth === row.targetMonth);
         if (isOverwrite) {
-          await this.firestoreService.updateBonus(bonusData.companyId!, bonusData.employeeId, bonusData.targetYearMonth, bonusData);
+          await this.firestoreService.updateBonus(bonusData.companyKey!, bonusData.employeeId, bonusData.targetYearMonth, bonusData);
         } else {
           await this.firestoreService.addBonus(bonusData);
         }
@@ -407,12 +407,12 @@ export class SalaryFormComponent implements OnInit {
     if (this.csvTemplateType === 'salary') {
       // 給与CSVひな型
       const header = [
-        'companyId', 'employeeId', 'lastName', 'firstName', 'officeId', 'officeName',
+        'companyKey', 'employeeId', 'lastName', 'firstName', 'officeId', 'officeName',
         'targetYear', 'targetMonth', 'basicSalary', 'overtimeSalary', 'commuteAllowance', 'positionAllowance', 'otherAllowance', 'remarks'
       ];
       const rows = targetEmployees.map(emp => {
         return [
-          emp.companyId || this.companyId,
+          emp.companyKey || this.companyKey,
           emp.employeeId || '',
           emp.lastName || '',
           emp.firstName || '',
@@ -435,12 +435,12 @@ export class SalaryFormComponent implements OnInit {
     } else if (this.csvTemplateType === 'bonus') {
       // 賞与CSVひな型
       const header = [
-        'companyId', 'employeeId', 'lastName', 'firstName', 'officeId', 'officeName',
+        'companyKey', 'employeeId', 'lastName', 'firstName', 'officeId', 'officeName',
         'targetYear', 'targetMonth', 'bonusType', 'bonusName', 'bonus', 'remarks'
       ];
       const rows = targetEmployees.map(emp => {
         return [
-          emp.companyId || this.companyId,
+          emp.companyKey || this.companyKey,
           emp.employeeId || '',
           emp.lastName || '',
           emp.firstName || '',
@@ -482,7 +482,7 @@ export class SalaryFormComponent implements OnInit {
     this.editTarget = employee;
     // 対象年月・従業員IDで既存データ取得
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
-    const salaries = await this.firestoreService.getSalariesByCompanyId(this.companyId!);
+    const salaries = await this.firestoreService.getSalariesByCompanyKey(this.companyKey!);
     const salary = salaries.find(s => s.employeeId === employee.employeeId && s.targetYearMonth === ym);
     if (salary) {
       this.selectedEmployeeId = employee.employeeId;
@@ -504,7 +504,7 @@ export class SalaryFormComponent implements OnInit {
     this.editMode = 'bonus';
     this.editTarget = employee;
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
-    const bonuses = await this.firestoreService.getBonusesByCompanyId(this.companyId!);
+    const bonuses = await this.firestoreService.getBonusesByCompanyKey(this.companyKey!);
     const bonusList = bonuses.filter(b => b.employeeId === employee.employeeId && b.targetYearMonth === ym);
     if (bonusList.length > 0) {
       this.selectedEmployeeId = employee.employeeId;
@@ -543,7 +543,7 @@ export class SalaryFormComponent implements OnInit {
       const totalAllowance = otherAllowances.reduce((sum, a) => sum + (a.otherAllowance || 0), 0);
       const totalSalary = (Number(this.salaryForm.basicSalary) || 0) + (Number(this.salaryForm.overtimeSalary) || 0) + totalAllowance;
       const salary = {
-        companyId: this.companyId,
+        companyKey: this.companyKey,
         employeeId: this.selectedEmployeeObj.employeeId,
         targetYearMonth: ym,
         basicSalary: Number(this.salaryForm.basicSalary) || 0,
@@ -553,7 +553,7 @@ export class SalaryFormComponent implements OnInit {
         totalSalary,
         remarks: this.salaryForm.remarks || '',
       };
-      await this.firestoreService.updateSalary(salary.companyId!, salary.employeeId, salary.targetYearMonth, salary);
+      await this.firestoreService.updateSalary(salary.companyKey!, salary.employeeId, salary.targetYearMonth, salary);
       alert('給与情報を更新しました');
       this.editMode = null;
       this.editTarget = null;
@@ -561,7 +561,7 @@ export class SalaryFormComponent implements OnInit {
     } else if (this.editMode === 'bonus' && this.selectedEmployeeObj) {
       for (const bonus of this.bonusForms) {
         const bonusData = {
-          companyId: this.companyId,
+          companyKey: this.companyKey,
           employeeId: this.selectedEmployeeObj.employeeId,
           targetYearMonth: ym,
           bonusType: bonus.bonusType,
@@ -570,7 +570,7 @@ export class SalaryFormComponent implements OnInit {
           bonusTotal: this.bonusTotal,
           remarks: this.bonusRemark || '',
         };
-        await this.firestoreService.updateBonus(bonusData.companyId!, bonusData.employeeId, bonusData.targetYearMonth, bonusData);
+        await this.firestoreService.updateBonus(bonusData.companyKey!, bonusData.employeeId, bonusData.targetYearMonth, bonusData);
       }
       alert('賞与情報を更新しました');
       this.editMode = null;

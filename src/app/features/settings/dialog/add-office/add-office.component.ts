@@ -25,8 +25,8 @@ export class AddOfficeComponent implements OnInit {
   form!: FormGroup;
   prefectures = PREFECTURES;
   insuranceTypes = INSURANCE_TYPES;
+  companyKey: string = '';
   companyId: string = '';
-  companyDisplayId: string = '';
   companyHeadOfficeAddress: any = null;
   industryClassifications = INDUSTRY_CLASSIFICATIONS;
   office: any = {};
@@ -35,11 +35,11 @@ export class AddOfficeComponent implements OnInit {
 
   ngOnInit() {
     this.userCompanyService.company$.subscribe(company => {
+      this.companyKey = company?.companyKey || '';
       this.companyId = company?.companyId || '';
-      this.companyDisplayId = company?.displayId || '';
       this.companyHeadOfficeAddress = company?.headOfficeAddress || null;
       this.form = this.fb.group({
-        companyId: [{ value: this.companyDisplayId, disabled: true }, Validators.required],
+        companyKey: [{ value: this.companyKey, disabled: true }, Validators.required],
         name: ['', Validators.required],
         isHeadOffice: [false],
         address: this.fb.group({
@@ -83,7 +83,7 @@ export class AddOfficeComponent implements OnInit {
     if (this.form.invalid) return;
     const office: Office = {
       ...this.form.getRawValue(),
-      companyId: this.companyId,
+      companyKey: this.companyKey,
       createdAt: new Date(),
       updatedAt: new Date(),
       id: '', // Firestoreで自動生成 or 保存時に付与

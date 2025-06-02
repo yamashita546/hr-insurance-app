@@ -7,7 +7,7 @@ export interface AppUser {
   uid: string;
   email: string;
   displayName?: string;
-  companyId: string;
+  companyKey: string;
   role: 'admin' | 'owner' | 'leader' | 'operator';
   invitedBy?: string;
   createdAt: Timestamp;

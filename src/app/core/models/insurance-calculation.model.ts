@@ -1,6 +1,6 @@
 // Firestore保存用：給与計算結果
 export interface InsuranceSalaryCalculation {
-  companyId: string;
+  companyKey: string;
   officeId: string;
   employeeId: string;
   applyYearMonth: string;
@@ -24,7 +24,7 @@ export interface InsuranceSalaryCalculation {
 
 // Firestore保存用：賞与計算結果
 export interface InsuranceBonusCalculation {
-  companyId: string;
+  companyKey: string;
   officeId: string;
   employeeId: string;
   applyYearMonth: string;

@@ -19,8 +19,8 @@ import { Router ,RouterModule } from '@angular/router';
   styleUrl: './standard-monthly-form.component.css'
 })
 export class StandardMonthlyFormComponent implements OnInit {
+  companyKey: string = '';
   companyId: string = '';
-  companyDisplayId: string = '';
   companyName: string = '';
   offices: any[] = [];
   employees: any[] = [];
@@ -49,21 +49,21 @@ export class StandardMonthlyFormComponent implements OnInit {
 
   async ngOnInit() {
     this.userCompanyService.company$
-      .pipe(filter(company => !!company && !!company.companyId), take(1))
+      .pipe(filter(company => !!company && !!company.companyKey), take(1))
       .subscribe(async company => {
+        this.companyKey = company!.companyKey;
         this.companyId = company!.companyId;
-        this.companyDisplayId = company!.displayId;
         this.companyName = company!.name;
-        this.offices = await this.firestoreService.getOffices(this.companyId);
-        this.employees = await this.firestoreService.getEmployeesByCompanyId(this.companyId);
-        this.salaries = await this.firestoreService.getSalariesByCompanyId(this.companyId);
+        this.offices = await this.firestoreService.getOffices(this.companyKey);
+        this.employees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
+        this.salaries = await this.firestoreService.getSalariesByCompanyKey(this.companyKey);
         console.log('取得した給与データ:', this.salaries);
         const grades = await firstValueFrom(this.firestoreService.getStandardMonthlyGrades());
         console.log('Firestoreから取得したgrades:', grades);
         this.standardMonthlyGrades = grades || [];
         console.log('this.standardMonthlyGradesセット直後:', this.standardMonthlyGrades);
         // 標準報酬月額決定データも取得
-        this.standardMonthlyDecisions = await this.firestoreService.getStandardMonthlyDecisionsByCompanyId(this.companyId);
+        this.standardMonthlyDecisions = await this.firestoreService.getStandardMonthlyDecisionsByCompanyKey(this.companyKey);
       });
   }
 
@@ -187,7 +187,7 @@ export class StandardMonthlyFormComponent implements OnInit {
       const emp = this.employees.find(e => `${e.lastName} ${e.firstName}` === row.employeeName);
       const officeId = emp ? emp.officeId : '';
       const decision: Omit<StandardMonthlyDecision, 'createdAt' | 'updatedAt'> = {
-        companyId: this.companyId,
+        companyKey: this.companyKey,
         officeId: officeId,
         employeeId: emp ? emp.employeeId : '',
         applyYearMonth,

@@ -46,24 +46,24 @@ export class AttendanceListComponent {
   ) {
     this.userCompanyService.company$.subscribe(async (company: Company | null) => {
       this.company = company;
-      if (company?.companyId) {
-        await this.loadAttendances(company.companyId);
-        await this.loadOffices(company.companyId);
+      if (company?.companyKey) {
+        await this.loadAttendances(company.companyKey);
+        await this.loadOffices(company.companyKey);
         this.generateYearList();
       }
     });
   }
 
-  async loadAttendances(companyId: string) {
+  async loadAttendances(companyKey: string) {
     const attendancesCol = collection(this.firestore, 'attendances');
-    const q = query(attendancesCol, where('companyId', '==', companyId));
+    const q = query(attendancesCol, where('companyKey', '==', companyKey));
     const snap = await getDocs(q);
     this.attendances = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     this.sortAttendances();
   }
 
-  async loadOffices(companyId: string) {
-    this.offices = await this.firestoreService.getOffices(companyId);
+  async loadOffices(companyKey: string) {
+    this.offices = await this.firestoreService.getOffices(companyKey);
   }
 
   generateYearList() {
@@ -105,8 +105,8 @@ export class AttendanceListComponent {
     this.showCsvDialog = true;
     this.csvYear = this.selectedYear || (this.yearList.length ? this.yearList[0] : String(new Date().getFullYear()));
     this.csvMonth = this.selectedMonth || '1';
-    if (this.company?.companyId) {
-      this.employees = await this.firestoreService.getEmployeesByCompanyId(this.company.companyId);
+    if (this.company?.companyKey) {
+      this.employees = await this.firestoreService.getEmployeesByCompanyKey(this.company.companyKey);
     }
   }
 
@@ -123,13 +123,13 @@ export class AttendanceListComponent {
       'childCareLeaveStartDate', 'childCareLeaveEndDate',
       'familyCareLeaveStartDate', 'familyCareLeaveEndDate',
       'injuryOrSicknessLeaveStartDate', 'injuryOrSicknessLeaveEndDate',
-      'isOnFullLeaveThisMonth', 'companyId'
+      'isOnFullLeaveThisMonth', 'companyKey'
     ];
     // 各従業員ごとに1行生成
     const rows: Record<string, any>[] = this.employees.map(emp => {
       const row: Record<string, any> = {};
       header.forEach(h => row[h] = '');
-      row['companyId'] = emp.companyId;
+      row['companyKey'] = emp.companyKey;
       row['employeeId'] = emp.employeeId;
       row['employeeName'] = emp.lastName + ' ' + emp.firstName;
       row['officeName'] = emp.officeName || '';
@@ -203,7 +203,7 @@ export class AttendanceListComponent {
     alert('インポートが完了しました');
     this.pendingImportData = [];
     this.fileName = '';
-    await this.loadAttendances(this.company?.companyId || '');
+    await this.loadAttendances(this.company?.companyKey || '');
   }
 
   cancelImport() {
@@ -214,8 +214,8 @@ export class AttendanceListComponent {
 
   onFormSaved() {
     this.showFormDialog = false;
-    if (this.company?.companyId) {
-      this.loadAttendances(this.company.companyId);
+    if (this.company?.companyKey) {
+      this.loadAttendances(this.company.companyKey);
     }
   }
 
@@ -226,5 +226,5 @@ export class AttendanceListComponent {
   // テンプレートで使うためにエクスポート
   ATTENDANCE_COLUMN_LABELS = ATTENDANCE_COLUMN_LABELS;
   ATTENDANCE_COLUMN_ORDER = ATTENDANCE_COLUMN_ORDER;
-  ATTENDANCE_COLUMN_ORDER_DISPLAY = ATTENDANCE_COLUMN_ORDER.filter(col => col !== 'companyId');
+  ATTENDANCE_COLUMN_ORDER_DISPLAY = ATTENDANCE_COLUMN_ORDER.filter(col => col !== 'companyKey');
 }

@@ -30,7 +30,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   extraordinaryLeaveTypes = EXTRAORDINARY_LEAVE_TYPES;
   offices: Office[] = [];
   private docId: string = '';
-  companyId = '';
+  companyKey = '';
   prefectures = PREFECTURES;
   private companySub?: Subscription;
 
@@ -79,10 +79,10 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
 
     // company$をsubscribeして、値が取得できたら処理を進める
     this.companySub = this.userCompanyService.company$.subscribe(async company => {
-      if (company && company.companyId) {
-        this.companyId = company.companyId;
-        console.log('companyId:', this.companyId);
-        const officesCol = collection(this.firestore, `companies/${this.companyId}/offices`);
+      if (company && company.companyKey) {
+        this.companyKey = company.companyKey;
+        console.log('companyKey:', this.companyKey);
+        const officesCol = collection(this.firestore, `companies/${this.companyKey}/offices`);
         const officesSnap = await getDocs(officesCol);
         this.offices = officesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Office));
         console.log('offices:', this.offices);

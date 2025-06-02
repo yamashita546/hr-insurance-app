@@ -14,8 +14,8 @@ import { ChildcareInsuranceRate } from '../../../../core/models/insurance-rate.m
   styleUrls: ['./insurance-form.component.css']
 })
 export class InsuranceFormComponent implements OnInit {
-  companyId: string = '';
-  companyDisplayId: string = '';
+  companyKey: string = '';
+  companyDisplayKey: string = '';
   companyName: string = '';
   offices: any[] = [];
   employees: any[] = [];
@@ -37,16 +37,16 @@ export class InsuranceFormComponent implements OnInit {
 
   async ngOnInit() {
     this.userCompanyService.company$
-      .pipe(filter(company => !!company && !!company.companyId), take(1))
+      .pipe(filter(company => !!company && !!company.companyKey), take(1))
       .subscribe(async company => {
-        this.companyId = company!.companyId;
-        this.companyDisplayId = company!.displayId;
+        this.companyKey = company!.companyKey;
+        this.companyDisplayKey = company!.companyKey;
         this.companyName = company!.name;
-        this.offices = await this.firestoreService.getOffices(this.companyId);
-        this.employees = await this.firestoreService.getEmployeesByCompanyId(this.companyId);
-        this.standardMonthlyDecisions = await this.firestoreService.getStandardMonthlyDecisionsByCompanyId(this.companyId);
-        this.salaries = await this.firestoreService.getSalariesByCompanyId(this.companyId);
-        this.bonuses = await this.firestoreService.getBonusesByCompanyId(this.companyId);
+        this.offices = await this.firestoreService.getOffices(this.companyKey);
+        this.employees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
+        this.standardMonthlyDecisions = await this.firestoreService.getStandardMonthlyDecisionsByCompanyKey(this.companyKey);
+        this.salaries = await this.firestoreService.getSalariesByCompanyKey(this.companyKey);
+        this.bonuses = await this.firestoreService.getBonusesByCompanyKey(this.companyKey);
         this.firestoreService.getInsuranceRates().subscribe(rates => {
           this.insuranceRates = rates;
         });
@@ -318,7 +318,7 @@ export class InsuranceFormComponent implements OnInit {
       }
       const promises = this.previewList.map(async row => {
         const calculation: Omit<import('../../../../core/models/insurance-calculation.model').InsuranceSalaryCalculation, 'createdAt' | 'updatedAt'> = {
-          companyId: this.companyId,
+          companyKey: this.companyKey,
           officeId: row.officeId,
           employeeId: row.employeeId,
           applyYearMonth,
@@ -349,7 +349,7 @@ export class InsuranceFormComponent implements OnInit {
       }
       const promises = this.previewList.map(async row => {
         const calculation: Omit<import('../../../../core/models/insurance-calculation.model').InsuranceBonusCalculation, 'createdAt' | 'updatedAt'> = {
-          companyId: this.companyId,
+          companyKey: this.companyKey,
           officeId: row.officeId,
           employeeId: row.employeeId,
           applyYearMonth,

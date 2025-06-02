@@ -5,9 +5,9 @@ import { IndustryClassification } from './industry-classification.model';
 
 // 企業モデル
 export type Company = {
-    companyId: string; // ※自動生成
+    companyKey: string; // ※自動生成
     corporateNumber?: string; // ※法人番号
-    displayId: string; // ※表示・検索用ID
+    companyId: string; // ※表示・検索用ID
     name: string; // ※企業名
     industry?: string; // ※業種（後々正確な分類に変更できたらよい）
     companyOwner?: string; // ※代表者名
@@ -23,7 +23,7 @@ export type Company = {
   export interface Office {
     id: string;//※自動生成
     displayOfficeId: string; // 表示用事業所ID（例: 13-0001-01）
-    companyId: string;        // ※紐付け
+    companyKey: string;        // ※紐付け
     name: string;             // "本社", "大阪営業所"など
     isHeadOffice: boolean;    // ※本社フラグ
     address: Address;

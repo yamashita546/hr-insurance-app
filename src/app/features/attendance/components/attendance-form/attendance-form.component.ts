@@ -24,7 +24,7 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
   employees: Employee[] = [];
   offices: Office[] = [];
   filteredEmployees: { [officeId: string]: Employee[] } = {};
-  companyId: string = '';
+  companyKey: string = '';
   ATTENDANCE_COLUMN_ORDER = ATTENDANCE_COLUMN_ORDER;
   ATTENDANCE_COLUMN_LABELS = ATTENDANCE_COLUMN_LABELS;
   private companySub?: Subscription;
@@ -39,10 +39,10 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.companySub = this.userCompanyService.company$.subscribe(async company => {
-      if (company && company.companyId) {
-        this.companyId = company.companyId;
-        this.offices = await this.firestoreService.getOffices(company.companyId);
-        this.employees = await this.firestoreService.getEmployeesByCompanyId(company.companyId);
+      if (company && company.companyKey) {
+        this.companyKey = company.companyKey;
+        this.offices = await this.firestoreService.getOffices(company.companyKey);
+        this.employees = await this.firestoreService.getEmployeesByCompanyKey(company.companyKey);
         this.filteredEmployees = {};
         this.offices.forEach(office => {
           this.filteredEmployees[office.id] = this.employees.filter(
@@ -93,7 +93,7 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
       injuryOrSicknessLeaveStartDate: [''],
       injuryOrSicknessLeaveEndDate: [''],
       isOnFullLeaveThisMonth: [false],
-      companyId: [this.companyId]
+      companyKey: [this.companyKey]
     }));
   }
 
@@ -152,7 +152,7 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
   async onSubmit() {
     if (this.form.invalid) return;
     for (const group of this.attendances.controls) {
-      const data = { ...group.value, companyId: this.companyId };
+      const data = { ...group.value, companyKey: this.companyKey };
       await this.firestoreService.addAttendance(data);
     }
     alert('保存しました');

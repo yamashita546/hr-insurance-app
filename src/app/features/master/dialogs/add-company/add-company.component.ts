@@ -50,7 +50,7 @@ export class AddCompanyComponent {
     private auth: Auth
   ) {
     this.form = this.fb.group({
-      displayId: [''],
+      companyId: [''],
       corporateNumber: ['', corporateNumberValidator],
       companyName: ['', Validators.required],
       industry: [''],
@@ -100,30 +100,30 @@ export class AddCompanyComponent {
     if (this.form.invalid) return;
     this.loading = true;
     try {
-      // displayId自動生成
+      // companyId自動生成
       const prefCode = this.form.value.headOfficeAddress.prefecture;
-      let nextDisplayId = '';
+      let nextCompanyId = '';
       if (prefCode) {
         const companiesRef = collection(this.firestoreService['firestore'], 'companies');
         const q = query(
           companiesRef,
-          where('displayId', '>=', `${prefCode}-0000`),
-          where('displayId', '<', `${prefCode}-9999`),
-          orderBy('displayId', 'desc'),
+          where('companyId', '>=', `${prefCode}-0000`),
+          where('companyId', '<', `${prefCode}-9999`),
+          orderBy('companyId', 'desc'),
           limit(1)
         );
         const snapshot = await getDocs(q);
         let nextNumber = 1;
         if (!snapshot.empty) {
-          const lastId = snapshot.docs[0].data()['displayId'];
+          const lastId = snapshot.docs[0].data()['companyId'];
           const lastNum = parseInt(lastId.split('-')[1], 10);
           nextNumber = lastNum + 1;
         }
-        nextDisplayId = `${prefCode}-${nextNumber.toString().padStart(4, '0')}`;
+        nextCompanyId = `${prefCode}-${nextNumber.toString().padStart(4, '0')}`;
       }
       // 会社情報を保存
       await this.firestoreService.addCompany({
-        displayId: nextDisplayId,
+        companyId: nextCompanyId,
         corporateNumber: this.form.value.corporateNumber,
         name: this.form.value.companyName,
         industry: this.form.value.industry,

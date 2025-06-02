@@ -14,8 +14,8 @@ import { Office } from '../../../../core/models/company.model';
   styleUrl: './manage-standard-monthly.component.css'
 })
 export class ManageStandardMonthlyComponent implements OnInit {
+  companyKey: string = '';
   companyId: string = '';
-  companyDisplayId: string = '';
   companyName: string = '';
   offices: Office[] = [];
   standardMonthlyList: StandardMonthlyDecision[] = [];
@@ -25,18 +25,18 @@ export class ManageStandardMonthlyComponent implements OnInit {
 
   ngOnInit() {
     this.userCompanyService.company$
-      .pipe(filter(company => !!company && !!company.companyId))
+      .pipe(filter(company => !!company && !!company.companyKey))
       .subscribe(async company => {
+        this.companyKey = company!.companyKey;
         this.companyId = company!.companyId;
-        this.companyDisplayId = company!.displayId;
         this.companyName = company!.name;
         // Firestoreから標準報酬月額決定データを取得
-        const snap = await this.firestoreService.getStandardMonthlyDecisionsByCompanyId(this.companyId);
+        const snap = await this.firestoreService.getStandardMonthlyDecisionsByCompanyKey(this.companyKey);
         this.standardMonthlyList = snap;
         // Firestoreから従業員リストも取得
-        this.employees = await this.firestoreService.getEmployeesByCompanyId(this.companyId);
+        this.employees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
         // Firestoreから支社リストも取得
-        this.offices = await this.firestoreService.getOffices(this.companyId);
+        this.offices = await this.firestoreService.getOffices(this.companyKey);
       });
   }
 

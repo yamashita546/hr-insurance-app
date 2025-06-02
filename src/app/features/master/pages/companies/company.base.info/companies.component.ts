@@ -27,14 +27,14 @@ export class CompaniesComponent {
   }
 
   isSelected(company: any): boolean {
-    return this.selectedCompanies.some(c => c.displayId === company.displayId);
+    return this.selectedCompanies.some(c => c.companyId === company.companyId);
   }
 
   toggleSelection(company: any, event: any) {
     if (event.target.checked) {
       this.selectedCompanies.push(company);
     } else {
-      this.selectedCompanies = this.selectedCompanies.filter(c => c.displayId !== company.displayId);
+      this.selectedCompanies = this.selectedCompanies.filter(c => c.companyId !== company.companyId);
     }
   }
 
@@ -77,7 +77,7 @@ export class CompaniesComponent {
     if (instance) {
       instance.data = { ...company };
       instance.saved.subscribe((updated: any) => {
-        const idx = this.companies.findIndex(c => c.displayId === updated.displayId);
+        const idx = this.companies.findIndex(c => c.companyId === updated.companyId);
         if (idx !== -1) {
           this.companies[idx] = { ...updated };
         }
@@ -106,7 +106,7 @@ export class CompaniesComponent {
   async applyChanges() {
     // 差分のみ抽出
     const updatedCompanies = this.companies.filter(company => {
-      const original = this.originalCompanies.find(c => c.displayId === company.displayId);
+      const original = this.originalCompanies.find(c => c.companyId === company.companyId);
       return !original || Object.keys(company).some(key => JSON.stringify(company[key]) !== JSON.stringify(original[key]));
     });
     if (updatedCompanies.length === 0) {
@@ -126,7 +126,7 @@ export class CompaniesComponent {
   }
 
   isChanged(company: any): boolean {
-    const original = this.originalCompanies.find(c => c.displayId === company.displayId);
+    const original = this.originalCompanies.find(c => c.companyId === company.companyId);
     if (!original) return false;
     // 主要な項目で差分があれば変更とみなす
     return (
@@ -141,27 +141,27 @@ export class CompaniesComponent {
   }
 
   isChangedCorporateNumber(company: any): boolean {
-    const original = this.originalCompanies.find(c => c.displayId === company.displayId);
+    const original = this.originalCompanies.find(c => c.companyId === company.companyId);
     return original ? company.corporateNumber !== original.corporateNumber : false;
   }
 
   isChangedName(company: any): boolean {
-    const original = this.originalCompanies.find(c => c.displayId === company.displayId);
+    const original = this.originalCompanies.find(c => c.companyId === company.companyId);
     return original ? company.name !== original.name : false;
   }
 
   isChangedIndustry(company: any): boolean {
-    const original = this.originalCompanies.find(c => c.displayId === company.displayId);
+    const original = this.originalCompanies.find(c => c.companyId === company.companyId);
     return original ? company.industry !== original.industry : false;
   }
 
   isChangedCompanyOwner(company: any): boolean {
-    const original = this.originalCompanies.find(c => c.displayId === company.displayId);
+    const original = this.originalCompanies.find(c => c.companyId === company.companyId);
     return original ? company.companyOwner !== original.companyOwner : false;
   }
 
   isChangedHeadOfficeAddress(company: any): boolean {
-    const original = this.originalCompanies.find(c => c.displayId === company.displayId);
+      const original = this.originalCompanies.find(c => c.companyId === company.companyId);
     if (!original) return false;
     const addr = company.headOfficeAddress || {};
     const origAddr = original.headOfficeAddress || {};
@@ -176,12 +176,12 @@ export class CompaniesComponent {
   }
 
   isChangedEstablishmentDate(company: any): boolean {
-    const original = this.originalCompanies.find(c => c.displayId === company.displayId);
+    const original = this.originalCompanies.find(c => c.companyId === company.companyId);
     return original ? company.establishmentDate !== original.establishmentDate : false;
   }
 
   isChangedIsActive(company: any): boolean {
-    const original = this.originalCompanies.find(c => c.displayId === company.displayId);
+    const original = this.originalCompanies.find(c => c.companyId === company.companyId);
     return original ? company.isActive !== original.isActive : false;
   }
 
@@ -192,7 +192,7 @@ export class CompaniesComponent {
     }
     let changed = false;
     this.selectedCompanies.forEach(selected => {
-      const idx = this.companies.findIndex(c => c.displayId === selected.displayId);
+      const idx = this.companies.findIndex(c => c.companyId === selected.companyId);
       if (idx !== -1) {
         const company = this.companies[idx];
         const action = company.isActive ? '無効' : '有効';

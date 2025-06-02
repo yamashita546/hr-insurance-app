@@ -15,7 +15,7 @@
       </span>
     </h2>
     <table *ngIf="editedCompany as company">
-      <tr><td>企業ID</td><td>{{ company.displayId }}</td></tr>
+      <tr><td>企業ID</td><td>{{ company.companyId }}</td></tr>
       <tr><td [class.highlight]="isChanged('corporateNumber')">法人番号</td><td [class.highlight]="isChanged('corporateNumber')">{{ company.corporateNumber }}</td></tr>
       <tr><td [class.highlight]="isChanged('name')">会社名</td><td [class.highlight]="isChanged('name')">{{ company.name }}</td></tr>
       <tr><td [class.highlight]="isChanged('industry')">業種</td><td [class.highlight]="isChanged('industry')">{{ company.industry }}</td></tr>

@@ -26,15 +26,15 @@ export class EmployeeListComponent {
   ) {
     this.userCompanyService.company$.subscribe(async (company: Company | null) => {
       this.company = company;
-      if (company?.companyId) {
-        await this.loadEmployees(company.companyId);
+      if (company?.companyKey) {
+        await this.loadEmployees(company.companyKey);
       }
     });
   }
 
-  async loadEmployees(companyId: string) {
+  async loadEmployees(companyKey: string) {
     const employeesCol = collection(this.firestore, 'employees');
-    const q = query(employeesCol, where('companyId', '==', companyId));
+    const q = query(employeesCol, where('companyKey', '==', companyKey));
     const snap = await getDocs(q);
     this.employees = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   }
@@ -70,7 +70,7 @@ export class EmployeeListComponent {
       'income', 'certificationDate', 'certificationType', 'lossDate', 'remarks', 'isActive'
     ];
     const headers = [
-      'companyId',
+      'companyKey',
       'employeeId', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana', 'gender', 'birthday', 'myNumber',
       'email', 'phoneNumber',
       'address.postalCode', 'address.prefecture', 'address.city', 'address.town', 'address.streetAddress',
@@ -119,7 +119,7 @@ export class EmployeeListComponent {
     } else {
       // 空のひな型
       const sampleRow = [
-        this.company?.companyId || '',
+        this.company?.companyKey || '',
         ...Array(headers.length - 1).fill('')
       ];
       rows.push(sampleRow.join(','));
@@ -190,7 +190,7 @@ export class EmployeeListComponent {
       return;
     }
     // 1. 事前に全オフィスを取得
-    const officesCol = collection(this.firestore, `companies/${this.company?.companyId}/offices`);
+    const officesCol = collection(this.firestore, `companies/${this.company?.companyKey}/offices`);
     const officesSnap = await getDocs(officesCol);
     const displayOfficeIdToId: { [displayOfficeId: string]: string } = {};
     officesSnap.forEach(docSnap => {
@@ -226,7 +226,7 @@ export class EmployeeListComponent {
     alert('インポートが完了しました');
     this.pendingImportData = [];
     this.fileName = '';
-    await this.loadEmployees(this.company?.companyId || '');
+    await this.loadEmployees(this.company?.companyKey || '');
   }
 
   cancelImport() {

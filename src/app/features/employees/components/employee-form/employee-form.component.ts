@@ -46,8 +46,8 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
 
   validationErrors: string[] = [];
 
+  companyKey = '';
   companyId = '';
-  companyDisplayId = '';
   companyName = '';
   offices: Office[] = [];
 
@@ -207,11 +207,11 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     });
 
     this.userCompanyService.company$.subscribe((company: Company | null) => {
+      this.companyKey = company?.companyKey || '';
       this.companyId = company?.companyId || '';
-      this.companyDisplayId = company?.displayId || '';
       this.companyName = company?.name || '';
-      if (company?.companyId) {
-        this.loadOffices(company.companyId);
+      if (company?.companyKey) {
+        this.loadOffices(company.companyKey);
       }
     });
   }
@@ -258,10 +258,10 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       this.validationErrors = this.getFormValidationErrors(this.form);
       return;
     }
-    // companyIdとofficeIdを従業員データに追加
+    // companyKeyとofficeIdを従業員データに追加
     const employee = {
       ...this.form.value,
-      companyId: this.companyId,
+      companyKey: this.companyKey,
       officeId: this.form.get('officeId')!.value
     };
     try {
@@ -340,8 +340,8 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     localStorage.setItem(EmployeeFormComponent.TAB_STORAGE_KEY, index.toString());
   }
 
-  async loadOffices(companyId: string) {
-    const officesCol = collection(this.firestore, `companies/${companyId}/offices`);
+  async loadOffices(companyKey: string) {
+    const officesCol = collection(this.firestore, `companies/${companyKey}/offices`);
     const snap = await getDocs(officesCol);
     this.offices = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Office));
   }

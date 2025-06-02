@@ -25,17 +25,17 @@ import { InsuranceSalaryCalculation, InsuranceBonusCalculation } from '../models
 export class FirestoreService {
   private firestore = inject(Firestore);
 
-  async addCompany(company: Omit<Company, 'companyId' | 'createdAt' | 'updatedAt'>): Promise<string> {
-    const companyId = doc(collection(this.firestore, 'companies')).id;
+  async addCompany(company: Omit<Company, 'companyKey' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    const companyKey = doc(collection(this.firestore, 'companies')).id;
     const now = Timestamp.now();
-    await setDoc(doc(this.firestore, 'companies', companyId), {
+    await setDoc(doc(this.firestore, 'companies', companyKey), {
       ...company,
-      companyId,
+      companyKey,
       createdAt: now,
       updatedAt: now,
       isActive: true
     });
-    return companyId;
+    return companyKey;
   }
 
   async addUser(user: Omit<AppUser, 'createdAt' | 'updatedAt'>, uid: string) {
@@ -48,11 +48,11 @@ export class FirestoreService {
     });
   }
 
-  async inviteOwner(email: string, companyId: string, tempPassword: string) {
+  async inviteOwner(email: string, companyKey: string, tempPassword: string) {
     const token = Math.random().toString(36).slice(2);
     await addDoc(collection(this.firestore, 'invites'), {
       email,
-      companyId,
+      companyKey,
       tempPassword,
       token,
       role: 'owner',
@@ -65,7 +65,7 @@ export class FirestoreService {
   getCompanies(): Observable<Company[]> {
     const ref = collection(this.firestore, 'companies');
     const q = query(ref);
-    return collectionData(q, { idField: 'companyId' }) as Observable<Company[]>;
+    return collectionData(q, { idField: 'companyKey' }) as Observable<Company[]>;
   }
 
   // 健康保険料率マスタ追加
@@ -131,38 +131,38 @@ export class FirestoreService {
 
   async updateCompany(company: any) {
     const now = Timestamp.now();
-    await setDoc(doc(this.firestore, 'companies', company.companyId), {
+    await setDoc(doc(this.firestore, 'companies', company.companyKey), {
       ...company,
       updatedAt: now
     }, { merge: true });
   }
 
   // 支社（offices）一覧取得
-  async getOffices(companyId: string): Promise<Office[]> {
-    const officesCol = collection(this.firestore, `companies/${companyId}/offices`);
+  async getOffices(companyKey: string): Promise<Office[]> {
+    const officesCol = collection(this.firestore, `companies/${companyKey}/offices`);
     const snap = await getDocs(officesCol);
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Office));
   }
 
   // 事業所（offices）追加（displayOfficeId自動生成）
-  async addOffice(companyId: string, office: Omit<Office, 'id' | 'displayOfficeId'>, companyDisplayId: string): Promise<void> {
-    const officesCol = collection(this.firestore, `companies/${companyId}/offices`);
+  async addOffice(companyKey: string, office: Omit<Office, 'id' | 'displayOfficeId'>, companyId: string): Promise<void> {
+    const officesCol = collection(this.firestore, `companies/${companyKey}/offices`);
     const snap = await getDocs(officesCol);
     // 既存のdisplayOfficeIdの最大値を取得
     const maxId = snap.docs
-      .map(doc => doc.data()['displayOfficeId'])
+      .map(doc => doc.data()['id'])
       .map(id => parseInt((id || '').split('-').pop() || '0', 10))
       .reduce((max, curr) => Math.max(max, curr), 0);
     // 新しいdisplayOfficeIdを生成
-    const newDisplayOfficeId = `${companyDisplayId}-${String(maxId + 1).padStart(2, '0')}`;
+    const newOfficeId = `${companyId}-${String(maxId + 1).padStart(2, '0')}`;
     // Firestoreに保存
-    const docRef = await addDoc(officesCol, { ...office, displayOfficeId: newDisplayOfficeId });
+    const docRef = await addDoc(officesCol, { ...office, id: newOfficeId });
     await setDoc(docRef, { id: docRef.id }, { merge: true });
   }
 
   // 事業所（offices）一括上書き
-  async updateAllOffices(companyId: string, offices: Office[]): Promise<void> {
-    const officesCol = collection(this.firestore, `companies/${companyId}/offices`);
+  async updateAllOffices(companyKey: string, offices: Office[]): Promise<void> {
+    const officesCol = collection(this.firestore, `companies/${companyKey}/offices`);
     for (const office of offices) {
       // officesプロパティなど不要なものを除外
       const { offices, ...officeData } = office as any;
@@ -191,9 +191,9 @@ export class FirestoreService {
     }, { merge: true });
   }
 
-  async getEmployeesByCompanyId(companyId: string): Promise<Employee[]> {
+  async getEmployeesByCompanyKey(companyKey: string): Promise<Employee[]> {
     const employeesCol = collection(this.firestore, 'employees');
-    const q = query(employeesCol, where('companyId', '==', companyId));
+    const q = query(employeesCol, where('companyKey', '==', companyKey));
     const snap = await getDocs(q);
     return snap.docs.map(doc => ({ ...(doc.data() as Employee)}));
   }
@@ -231,25 +231,25 @@ export class FirestoreService {
   }
 
   // 会社IDでsalaries一覧取得
-  async getSalariesByCompanyId(companyId: string): Promise<any[]> {
+  async getSalariesByCompanyKey(companyKey: string): Promise<any[]> {
     const salariesCol = collection(this.firestore, 'salaries');
-    const q = query(salariesCol, where('companyId', '==', companyId));
+    const q = query(salariesCol, where('companyKey', '==', companyKey));
     const snap = await getDocs(q);
     return snap.docs.map(doc => ({ ...(doc.data() as any) }));
   }
 
   // 会社IDでbonuses一覧取得
-  async getBonusesByCompanyId(companyId: string): Promise<any[]> {
+  async getBonusesByCompanyKey(companyKey: string): Promise<any[]> {
     const bonusesCol = collection(this.firestore, 'bonuses');
-    const q = query(bonusesCol, where('companyId', '==', companyId));
+    const q = query(bonusesCol, where('companyKey', '==', companyKey));
     const snap = await getDocs(q);
     return snap.docs.map(doc => ({ ...(doc.data() as any) }));
   }
 
   // 給与（salary）更新（employeeId, targetYearMonthで検索して上書き）
-  async updateSalary(companyId: string, employeeId: string, targetYearMonth: string, salary: Omit<Salary, 'createdAt' | 'updatedAt'>) {
+  async updateSalary(companyKey: string, employeeId: string, targetYearMonth: string, salary: Omit<Salary, 'createdAt' | 'updatedAt'>) {
     const salariesCol = collection(this.firestore, 'salaries');
-    const q = query(salariesCol, where('companyId', '==', companyId), where('employeeId', '==', employeeId), where('targetYearMonth', '==', targetYearMonth));
+    const q = query(salariesCol, where('companyKey', '==', companyKey), where('employeeId', '==', employeeId), where('targetYearMonth', '==', targetYearMonth));
     const snap = await getDocs(q);
     if (!snap.empty) {
       const docRef = doc(this.firestore, 'salaries', snap.docs[0].id);
@@ -258,9 +258,9 @@ export class FirestoreService {
   }
 
   // 賞与（bonus）更新（employeeId, targetYearMonthで検索して上書き）
-  async updateBonus(companyId: string, employeeId: string, targetYearMonth: string, bonus: Omit<import('../models/salary.model').Bonus, 'createdAt' | 'updatedAt'>) {
+    async updateBonus(companyKey: string, employeeId: string, targetYearMonth: string, bonus: Omit<import('../models/salary.model').Bonus, 'createdAt' | 'updatedAt'>) {
     const bonusesCol = collection(this.firestore, 'bonuses');
-    const q = query(bonusesCol, where('companyId', '==', companyId), where('employeeId', '==', employeeId), where('targetYearMonth', '==', targetYearMonth));
+    const q = query(bonusesCol, where('companyKey', '==', companyKey), where('employeeId', '==', employeeId), where('targetYearMonth', '==', targetYearMonth));
     const snap = await getDocs(q);
     if (!snap.empty) {
       const docRef = doc(this.firestore, 'bonuses', snap.docs[0].id);
@@ -280,9 +280,9 @@ export class FirestoreService {
   }
 
   // 会社IDで標準報酬月額決定データ一覧取得
-  async getStandardMonthlyDecisionsByCompanyId(companyId: string): Promise<any[]> {
+  async getStandardMonthlyDecisionsByCompanyKey(companyKey: string): Promise<any[]> {
     const decisionsCol = collection(this.firestore, 'standardMonthlyDecisions');
-    const q = query(decisionsCol, where('companyId', '==', companyId));
+    const q = query(decisionsCol, where('companyKey', '==', companyKey));
     const snap = await getDocs(q);
     return snap.docs.map(doc => ({ ...(doc.data() as any) }));
   }

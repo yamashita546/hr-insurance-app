@@ -1,6 +1,6 @@
 // 勤怠情報モデル
 export interface Attendance {
-  companyId: number;
+  companyKey: string;
   employeeId: number;
   employeeName: string;
   scheduledWorkDays: number; // 所定労働日数（その月に勤務予定だった日数）
@@ -43,7 +43,7 @@ export const ATTENDANCE_COLUMN_LABELS: { [key: string]: string } = {
   injuryOrSicknessLeaveStartDate: '傷病休業開始日',
   injuryOrSicknessLeaveEndDate: '傷病休業終了日',
   isOnFullLeaveThisMonth: '全休',
-  companyId: '会社ID'
+  companyKey: '会社ID'
 };
 
 // 画面表示順のカラム配列
@@ -54,5 +54,5 @@ export const ATTENDANCE_COLUMN_ORDER = [
   'childCareLeaveStartDate', 'childCareLeaveEndDate',
   'familyCareLeaveStartDate', 'familyCareLeaveEndDate',
   'injuryOrSicknessLeaveStartDate', 'injuryOrSicknessLeaveEndDate',
-  'isOnFullLeaveThisMonth', 'companyId'
+  'isOnFullLeaveThisMonth', 'companyKey'
 ];

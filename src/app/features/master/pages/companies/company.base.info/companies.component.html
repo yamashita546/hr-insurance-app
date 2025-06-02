@@ -29,7 +29,7 @@
       <tbody>
         <tr *ngFor="let company of companies" [class.selected]="isSelected(company)" [class.changed]="isChanged(company)">
           <td><input type="checkbox" [checked]="isSelected(company)" (change)="toggleSelection(company, $event)" /></td>
-          <td>{{ company.displayId }}</td>
+          <td>{{ company.companyId }}</td>
           <td [class.highlight]="isChangedCorporateNumber(company)">{{ company.corporateNumber }}</td>
           <td [class.highlight]="isChangedName(company)">{{ company.name }}</td>
           <td [class.highlight]="isChangedIndustry(company)">{{ company.industry }}</td>

@@ -1,6 +1,6 @@
 
 export interface StandardMonthlyDecision {
-  companyId: string;
+  companyKey: string;
   officeId: string;
   employeeId: string;
   applyYearMonth: string; // 例: "2025-09"
@@ -15,7 +15,7 @@ export interface StandardMonthlyDecision {
 }
 
 export interface StandardBonusDecision {
-  companyId: string;
+  companyKey: string;
   officeId: string;
   employeeId: string;
   applyYearMonth: string; // 例: "2025-09"

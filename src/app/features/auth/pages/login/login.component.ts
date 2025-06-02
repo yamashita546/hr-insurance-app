@@ -13,7 +13,7 @@ import { CommonModule } from '@angular/common';
   styleUrl: './login.component.css'
 })
 export class LoginComponent {
-  showCompanyId = false;
+  showCompanyKey = false;
   loginForm: FormGroup;
 
   constructor(
@@ -23,7 +23,7 @@ export class LoginComponent {
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      companyId: [''],
+      companyKey: [''],
       password: ['', Validators.required],
       remember: [false]
     });
@@ -31,7 +31,7 @@ export class LoginComponent {
 
   async onSubmit() {
     if (this.loginForm.invalid) return;
-    const { email, password } = this.loginForm.value;
+    const { email, password, companyKey } = this.loginForm.value;
     try {
       await signInWithEmailAndPassword(this.auth, email, password);
       this.router.navigate(['/']);

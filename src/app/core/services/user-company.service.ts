@@ -23,8 +23,8 @@ export class UserCompanyService {
         this.userSubject.next(user);
 
         // 会社情報も取得
-        if (user?.companyId) {
-          const companyDoc = doc(this.firestore, 'companies', user.companyId);
+        if (user?.companyKey) {
+          const companyDoc = doc(this.firestore, 'companies', user.companyKey);
           const companySnap = await getDoc(companyDoc);
           this.companySubject.next(companySnap.data() as Company);
         } else {
@@ -46,7 +46,7 @@ export class UserCompanyService {
   }
 
   async updateCompany(company: Company) {
-    const companyDoc = doc(this.firestore, 'companies', company.companyId);
+    const companyDoc = doc(this.firestore, 'companies', company.companyKey);
     await updateDoc(companyDoc, { ...company });
     this.companySubject.next({ ...company });
   }

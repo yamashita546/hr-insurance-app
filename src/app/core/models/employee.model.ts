@@ -4,8 +4,8 @@ import { Timestamp } from '@angular/fire/firestore';
 import { Address } from './address.model';
 
 export type Employee = {
-    companyId: string;
-    displayCompanyId: string;
+    companyKey: string;
+    displayCompanyKey: string;
     employeeId: string;
     displayEmployeeId?: string;
     officeId: string;

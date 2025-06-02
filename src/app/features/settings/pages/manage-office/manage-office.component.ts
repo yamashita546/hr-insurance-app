@@ -38,7 +38,7 @@ export class ManageOfficeComponent {
 
   async fetchOffices() {
     if (!this.company) return;
-    this.offices = await this.firestoreService.getOffices(this.company.companyId);
+    this.offices = await this.firestoreService.getOffices(this.company.companyKey);
     this.originalOffices = this.offices.map(o => ({ ...o }));
   }
 
@@ -47,7 +47,7 @@ export class ManageOfficeComponent {
     this.dialogRef = this.dialog.open(AddOfficeComponent, { width: '500px', data: { offices: this.offices } });
     this.dialogRef.componentInstance.saved.subscribe(async (office: Office) => {
       if (!this.company) return;
-      await this.firestoreService.addOffice(this.company.companyId, office, this.company.displayId);
+      await this.firestoreService.addOffice(this.company.companyKey, office, this.company.companyId);
       this.dialogRef?.close();
       this.dialogRef = null;
       await this.fetchOffices();
@@ -102,7 +102,7 @@ export class ManageOfficeComponent {
 
   async applyChanges() {
     if (!this.company) return;
-    await this.firestoreService.updateAllOffices(this.company.companyId, this.offices);
+    await this.firestoreService.updateAllOffices(this.company.companyKey, this.offices);
     alert('変更をFirestoreに保存しました');
     await this.fetchOffices();
   }

@@ -24,8 +24,8 @@ export class SalaryRegistrationComponent {
   sortKey: string = '';
   sortAsc: boolean = true;
 
+  companyKey: string = '';
   companyId: string = '';
-  companyDisplayId: string = '';
   companyName: string = '';
 
   employees: any[] = [];
@@ -78,9 +78,9 @@ export class SalaryRegistrationComponent {
 
   async loadData() {
     // Firestoreから従業員・給与・賞与データを取得
-    this.employees = await this.firestoreService.getEmployeesByCompanyId(this.companyId);
-    this.allSalaries = await this.firestoreService.getSalariesByCompanyId(this.companyId);
-    this.allBonuses = await this.firestoreService.getBonusesByCompanyId(this.companyId);
+    this.employees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
+    this.allSalaries = await this.firestoreService.getSalariesByCompanyKey(this.companyKey);
+    this.allBonuses = await this.firestoreService.getBonusesByCompanyKey(this.companyKey);
     console.log('従業員:', this.employees);
     console.log('給与:', this.allSalaries);
     console.log('賞与:', this.allBonuses);
@@ -140,7 +140,7 @@ export class SalaryRegistrationComponent {
     this.editMode = 'salary';
     this.editTarget = employee;
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
-    const salaries = await this.firestoreService.getSalariesByCompanyId(this.companyId);
+    const salaries = await this.firestoreService.getSalariesByCompanyKey(this.companyKey);
     const salary = salaries.find(s => s.employeeId === employee.employeeId && s.targetYearMonth === ym);
     if (salary) {
       this.editSalaryForm = {
@@ -159,7 +159,7 @@ export class SalaryRegistrationComponent {
     this.editMode = 'bonus';
     this.editTarget = employee;
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
-    const bonuses = await this.firestoreService.getBonusesByCompanyId(this.companyId);
+    const bonuses = await this.firestoreService.getBonusesByCompanyKey(this.companyKey);
     const bonusList = bonuses.filter(b => b.employeeId === employee.employeeId && b.targetYearMonth === ym);
     if (bonusList.length > 0) {
       this.editBonusForms = bonusList.map(b => ({
@@ -196,7 +196,7 @@ export class SalaryRegistrationComponent {
       const totalAllowance = otherAllowances.reduce((sum, a) => sum + (a.otherAllowance || 0), 0);
       const totalSalary = (Number(this.editSalaryForm.basicSalary) || 0) + (Number(this.editSalaryForm.overtimeSalary) || 0) + totalAllowance;
       const salary = {
-        companyId: this.companyId,
+        companyKey: this.companyKey,
         employeeId: this.editTarget.employeeId,
         targetYearMonth: ym,
         basicSalary: Number(this.editSalaryForm.basicSalary) || 0,
@@ -206,7 +206,7 @@ export class SalaryRegistrationComponent {
         totalSalary,
         remarks: this.editSalaryForm.remarks || '',
       };
-      await this.firestoreService.updateSalary(salary.companyId, salary.employeeId, salary.targetYearMonth, salary);
+      await this.firestoreService.updateSalary(salary.companyKey, salary.employeeId, salary.targetYearMonth, salary);
       alert('給与情報を更新しました');
       this.editMode = null;
       this.editTarget = null;
@@ -215,7 +215,7 @@ export class SalaryRegistrationComponent {
     } else if (this.editMode === 'bonus' && this.editTarget) {
       for (const bonus of this.editBonusForms) {
         const bonusData = {
-          companyId: this.companyId,
+          companyKey: this.companyKey,
           employeeId: this.editTarget.employeeId,
           targetYearMonth: ym,
           bonusType: bonus.bonusType,
@@ -224,7 +224,7 @@ export class SalaryRegistrationComponent {
           bonusTotal: Number(bonus.bonus) || 0,
           remarks: this.editBonusRemark || '',
         };
-        await this.firestoreService.updateBonus(bonusData.companyId, bonusData.employeeId, bonusData.targetYearMonth, bonusData);
+        await this.firestoreService.updateBonus(bonusData.companyKey, bonusData.employeeId, bonusData.targetYearMonth, bonusData);
       }
       alert('賞与情報を更新しました');
       this.editMode = null;
@@ -246,15 +246,15 @@ export class SalaryRegistrationComponent {
   async ngOnInit() {
     this.userCompanyService.company$
       .pipe(
-        filter(company => !!company && !!company.companyId),
+        filter(company => !!company && !!company.companyKey),
         take(1)
       )
       .subscribe(async company => {
+        this.companyKey = company!.companyKey;
         this.companyId = company!.companyId;
-        this.companyDisplayId = company!.displayId;
         this.companyName = company!.name;
         // 支社一覧をFirestoreから取得
-        const offices = await this.firestoreService.getOffices(this.companyId);
+        const offices = await this.firestoreService.getOffices(this.companyKey);
         this.branches = ['全支社', ...offices.map(o => o.name)];
         // 初期化後に必ずloadDataを呼ぶ
         setTimeout(() => this.loadData(), 0);

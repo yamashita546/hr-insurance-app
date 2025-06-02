@@ -1,7 +1,7 @@
 <div class="standard-monthly-form-container">
   <h2>標準報酬月額 定時決定 一括登録</h2>
-  <div class="company-info-block" *ngIf="companyDisplayId && companyName">
-    <div>企業ID：{{ companyDisplayId }}</div>
+  <div class="company-info-block" *ngIf="companyId && companyName">
+    <div>企業ID：{{ companyId }}</div>
     <div>企業名：{{ companyName }}</div>
   </div>
   <form (ngSubmit)="$event.preventDefault()">

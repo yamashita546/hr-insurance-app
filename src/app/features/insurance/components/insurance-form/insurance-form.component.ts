@@ -5,11 +5,12 @@ import { filter, take } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChildcareInsuranceRate } from '../../../../core/models/insurance-rate.model';
+import { Router, RouterModule  } from '@angular/router';
 
 @Component({
   selector: 'app-insurance-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './insurance-form.component.html',
   styleUrls: ['./insurance-form.component.css']
 })
@@ -32,7 +33,8 @@ export class InsuranceFormComponent implements OnInit {
 
   constructor(
     private userCompanyService: UserCompanyService,
-    private firestoreService: FirestoreService
+    private firestoreService: FirestoreService,
+    private router: Router
   ) {}
 
   async ngOnInit() {
@@ -50,6 +52,9 @@ export class InsuranceFormComponent implements OnInit {
         this.firestoreService.getInsuranceRates().subscribe(rates => {
           this.insuranceRates = rates;
         });
+        // データ内容の調査用ログ
+        console.log('standardMonthlyDecisions', this.standardMonthlyDecisions);
+        console.log('salaries', this.salaries);
       });
   }
 
@@ -64,7 +69,6 @@ export class InsuranceFormComponent implements OnInit {
     const candidates = this.standardMonthlyDecisions
       .filter(r => r.employeeId === employeeId && r.officeId === officeId && r.applyYearMonth <= ym)
       .sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth));
-    console.log('getStandardMonthlyForEmployee:', { ym, employeeId, officeId, candidates, result: candidates[0] || null });
     return candidates[0] || null;
   }
 
@@ -125,9 +129,14 @@ export class InsuranceFormComponent implements OnInit {
     }
     if (this.selectedType === 'salary') {
       this.previewList = targetEmployees.map(emp => {
+        // 調査用ログ
+        console.log('emp:', emp);
         const std = this.getStandardMonthlyForEmployee(emp.employeeId, emp.officeId);
+        console.log('std:', std);
         const salary = this.getSalaryForEmployee(emp.employeeId);
+        console.log('salary:', salary);
         const rate = this.getInsuranceRateForOffice(emp.officeId);
+        console.log('rate:', rate);
         let careInsurance = '×';
         let healthInsurance = 'ー';
         let healthInsuranceDeduction = 'ー';
@@ -141,6 +150,7 @@ export class InsuranceFormComponent implements OnInit {
         if (std && rate) {
           // 介護保険適用判定
           const age = this.getAgeAtYearMonth1st(emp.birthday, this.selectedYear, this.selectedMonth);
+          console.log('age:', age);
           const isCare = age >= 40 && age < 65;
           careInsurance = isCare ? '〇' : '×';
           // 料率
@@ -341,6 +351,7 @@ export class InsuranceFormComponent implements OnInit {
       });
       await Promise.all(promises);
       alert(`${this.previewList.length}件の給与計算結果を保存しました。`);
+      this.router.navigate(['/insurance-list']);
     } else if (this.selectedType === 'bonus') {
       const hasBonus = this.previewList.some(row => row.bonus && row.bonus !== 'ー');
       if (!hasBonus) {
@@ -372,6 +383,7 @@ export class InsuranceFormComponent implements OnInit {
       });
       await Promise.all(promises);
       alert(`${this.previewList.length}件の賞与計算結果を保存しました。`);
+      this.router.navigate(['/insurance-calc']);
     }
   }
 }

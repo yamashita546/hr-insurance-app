@@ -101,7 +101,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     // 未入力セクションも編集できるように最低限の構造を用意
     if (!this.editEmployee.address) this.editEmployee.address = {};
     if (!this.editEmployee.foreignWorker) this.editEmployee.foreignWorker = {};
-    if (!this.editEmployee.extraordinaryLeave) this.editEmployee.extraordinaryLeave = {};
+    if (!this.editEmployee.extraordinaryLeaves) this.editEmployee.extraordinaryLeaves = [];
     if (!this.editEmployee.dependents) this.editEmployee.dependents = [];
   }
 
@@ -123,5 +123,22 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
       return window.confirm('編集中の内容が保存されていません。ページを離れますか？');
     }
     return true;
+  }
+
+  addExtraordinaryLeave() {
+    if (!this.editEmployee.extraordinaryLeaves) this.editEmployee.extraordinaryLeaves = [];
+    this.editEmployee.extraordinaryLeaves.push({
+      leaveTypeCode: '',
+      leaveStartDate: '',
+      leaveEndDate: '',
+      returnPlanDate: '',
+      leaveReason: '',
+      isHealthInsuranceExempted: false,
+      isPensionExempted: false,
+      isEmploymentInsuranceExempted: false,
+      isCareInsuranceExempted: false,
+      isChildcareLeave: false,
+      isNursingCareLeave: false
+    });
   }
 }

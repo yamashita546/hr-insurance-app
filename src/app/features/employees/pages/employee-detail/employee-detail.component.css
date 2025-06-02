@@ -47,37 +47,35 @@
 }
 
 .sub-table {
-  margin: 16px 0 24px 0;
-  padding: 12px;
-  background: #f8fafd;
+  border: 1px solid #bdbdbd;
   border-radius: 8px;
-  border: 1px solid #e3eaf2;
+  background: #f9f9f9;
+  margin-bottom: 18px;
+  padding: 12px 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 .sub-table h4 {
-  margin: 0 0 8px 0;
-  font-size: 1em;
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 1.1em;
   color: #1976d2;
 }
 
 .sub-table table {
   width: 100%;
   border-collapse: collapse;
+  background: transparent;
 }
 
 .sub-table th, .sub-table td {
   padding: 6px 10px;
   border-bottom: 1px solid #e0e0e0;
+  font-size: 1em;
 }
 
-.sub-table th {
-  background: #eaf3fb;
-  color: #1976d2;
-  width: 120px;
-}
-
-.sub-table td {
-  background: #fafdff;
+.sub-table tr:last-child td {
+  border-bottom: none;
 }
 
 .edit-btn-container {

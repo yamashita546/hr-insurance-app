@@ -230,10 +230,22 @@
           <table>
             <tr><th>姓</th><td>{{ dep.lastName || '未入力' }}</td></tr>
             <tr><th>名</th><td>{{ dep.firstName || '未入力' }}</td></tr>
+            <tr><th>姓カナ</th><td>{{ dep.lastNameKana || '未入力' }}</td></tr>
+            <tr><th>名カナ</th><td>{{ dep.firstNameKana || '未入力' }}</td></tr>
             <tr><th>続柄</th><td>{{ dep.relationship || '未入力' }}</td></tr>
+            <tr><th>続柄コード</th><td>{{ dep.relationshipCode || '未入力' }}</td></tr>
             <tr><th>生年月日</th><td>{{ dep.birthday || '未入力' }}</td></tr>
+            <tr><th>性別</th><td>{{ dep.gender || '未入力' }}</td></tr>
             <tr><th>マイナンバー</th><td>{{ dep.myNumber || '未入力' }}</td></tr>
+            <tr><th>配偶者</th><td>{{ dep.isSpouse ? '○' : '×' }}</td></tr>
+            <tr><th>子供</th><td>{{ dep.isChild ? '○' : '×' }}</td></tr>
+            <tr><th>障害者</th><td>{{ dep.isDisabled ? '○' : '×' }}</td></tr>
+            <tr><th>学生</th><td>{{ dep.isStudent ? '○' : '×' }}</td></tr>
+            <tr><th>同居</th><td>{{ dep.isLivingTogether ? '○' : '×' }}</td></tr>
             <tr><th>年収</th><td>{{ dep.income || '未入力' }}</td></tr>
+            <tr><th>被扶養者認定日</th><td>{{ dep.certificationDate || '未入力' }}</td></tr>
+            <tr><th>認定区分</th><td>{{ dep.certificationType || '未入力' }}</td></tr>
+            <tr><th>資格喪失日</th><td>{{ dep.lossDate || '未入力' }}</td></tr>
             <tr><th>備考</th><td>{{ dep.remarks || '未入力' }}</td></tr>
           </table>
         </div>
@@ -248,12 +260,33 @@
         <table>
           <tr><th>姓</th><td><input [(ngModel)]="dep.lastName"></td></tr>
           <tr><th>名</th><td><input [(ngModel)]="dep.firstName"></td></tr>
+          <tr><th>姓カナ</th><td><input [(ngModel)]="dep.lastNameKana"></td></tr>
+          <tr><th>名カナ</th><td><input [(ngModel)]="dep.firstNameKana"></td></tr>
           <tr><th>続柄</th><td><input [(ngModel)]="dep.relationship"></td></tr>
+          <tr><th>続柄コード</th><td><input [(ngModel)]="dep.relationshipCode"></td></tr>
           <tr><th>生年月日</th><td><input type="date" [(ngModel)]="dep.birthday"></td></tr>
+          <tr><th>性別</th>
+            <td>
+              <select [(ngModel)]="dep.gender">
+                <option value="">選択</option>
+                <option value="M">男</option>
+                <option value="F">女</option>
+              </select>
+            </td>
+          </tr>
           <tr><th>マイナンバー</th><td><input [(ngModel)]="dep.myNumber"></td></tr>
-          <tr><th>年収</th><td><input [(ngModel)]="dep.income"></td></tr>
+          <tr><th>配偶者</th><td><input type="checkbox" [(ngModel)]="dep.isSpouse"></td></tr>
+          <tr><th>子供</th><td><input type="checkbox" [(ngModel)]="dep.isChild"></td></tr>
+          <tr><th>障害者</th><td><input type="checkbox" [(ngModel)]="dep.isDisabled"></td></tr>
+          <tr><th>学生</th><td><input type="checkbox" [(ngModel)]="dep.isStudent"></td></tr>
+          <tr><th>同居</th><td><input type="checkbox" [(ngModel)]="dep.isLivingTogether"></td></tr>
+          <tr><th>年収</th><td><input type="number" [(ngModel)]="dep.income"></td></tr>
+          <tr><th>被扶養者認定日</th><td><input type="date" [(ngModel)]="dep.certificationDate"></td></tr>
+          <tr><th>認定区分</th><td><input [(ngModel)]="dep.certificationType"></td></tr>
+          <tr><th>資格喪失日</th><td><input type="date" [(ngModel)]="dep.lossDate"></td></tr>
           <tr><th>備考</th><td><input [(ngModel)]="dep.remarks"></td></tr>
         </table>
+        <button (click)="editEmployee.dependents.splice(i, 1)">削除</button>
       </div>
       <button (click)="editEmployee.dependents.push({})">＋扶養家族を追加</button>
     </div>
@@ -354,68 +387,49 @@
   <!-- 休職特例 -->
   <section class="detail-section">
     <h3>休職特例（産休・育休・介護等）</h3>
-    <table class="detail-table">
-      <tr>
-        <th>休職区分</th>
-        <td *ngIf="!isEditMode">{{ employee.extraordinaryLeave?.leaveTypeCode || '未入力' }}</td>
-        <td *ngIf="isEditMode">
-          <select [(ngModel)]="editEmployee.extraordinaryLeave.leaveTypeCode">
-            <option value="">選択してください</option>
-            <option *ngFor="let t of extraordinaryLeaveTypes" [value]="t.code">{{ t.label }}</option>
-          </select>
-        </td>
-      </tr>
-      <tr>
-        <th>休職開始日</th>
-        <td *ngIf="!isEditMode">{{ employee.extraordinaryLeave?.leaveStartDate || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.extraordinaryLeave.leaveStartDate"></td>
-      </tr>
-      <tr>
-        <th>休職終了日</th>
-        <td *ngIf="!isEditMode">{{ employee.extraordinaryLeave?.leaveEndDate || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.extraordinaryLeave.leaveEndDate"></td>
-      </tr>
-      <tr>
-        <th>復職予定日</th>
-        <td *ngIf="!isEditMode">{{ employee.extraordinaryLeave?.returnPlanDate || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.extraordinaryLeave.returnPlanDate"></td>
-      </tr>
-      <tr>
-        <th>休職理由</th>
-        <td *ngIf="!isEditMode">{{ employee.extraordinaryLeave?.leaveReason || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.extraordinaryLeave.leaveReason"></td>
-      </tr>
-      <tr>
-        <th>健康保険料免除</th>
-        <td *ngIf="!isEditMode">{{ employee.extraordinaryLeave?.isHealthInsuranceExempted ? '○' : '×' }}</td>
-        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.extraordinaryLeave.isHealthInsuranceExempted"></td>
-      </tr>
-      <tr>
-        <th>厚生年金免除</th>
-        <td *ngIf="!isEditMode">{{ employee.extraordinaryLeave?.isPensionExempted ? '○' : '×' }}</td>
-        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.extraordinaryLeave.isPensionExempted"></td>
-      </tr>
-      <tr>
-        <th>雇用保険免除</th>
-        <td *ngIf="!isEditMode">{{ employee.extraordinaryLeave?.isEmploymentInsuranceExempted ? '○' : '×' }}</td>
-        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.extraordinaryLeave.isEmploymentInsuranceExempted"></td>
-      </tr>
-      <tr>
-        <th>介護保険免除</th>
-        <td *ngIf="!isEditMode">{{ employee.extraordinaryLeave?.isCareInsuranceExempted ? '○' : '×' }}</td>
-        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.extraordinaryLeave.isCareInsuranceExempted"></td>
-      </tr>
-      <tr>
-        <th>育児休業</th>
-        <td *ngIf="!isEditMode">{{ employee.extraordinaryLeave?.isChildcareLeave ? '○' : '×' }}</td>
-        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.extraordinaryLeave.isChildcareLeave"></td>
-      </tr>
-      <tr>
-        <th>介護休業</th>
-        <td *ngIf="!isEditMode">{{ employee.extraordinaryLeave?.isNursingCareLeave ? '○' : '×' }}</td>
-        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.extraordinaryLeave.isNursingCareLeave"></td>
-      </tr>
-    </table>
+    <div *ngIf="!isEditMode">
+      <div *ngIf="employee.extraordinaryLeaves?.length; else noLeave">
+        <div *ngFor="let leave of employee.extraordinaryLeaves; let i = index" class="sub-table">
+          <h4>休職特例 {{ i + 1 }}</h4>
+          <table>
+            <tr><th>休職区分</th><td>{{ leave.leaveTypeCode || '未入力' }}</td></tr>
+            <tr><th>休職開始日</th><td>{{ leave.leaveStartDate || '未入力' }}</td></tr>
+            <tr><th>休職終了日</th><td>{{ leave.leaveEndDate || '未入力' }}</td></tr>
+            <tr><th>復職予定日</th><td>{{ leave.returnPlanDate || '未入力' }}</td></tr>
+            <tr><th>休職理由</th><td>{{ leave.leaveReason || '未入力' }}</td></tr>
+            <tr><th>健康保険料免除</th><td>{{ leave.isHealthInsuranceExempted ? '○' : '×' }}</td></tr>
+            <tr><th>厚生年金免除</th><td>{{ leave.isPensionExempted ? '○' : '×' }}</td></tr>
+            <tr><th>雇用保険免除</th><td>{{ leave.isEmploymentInsuranceExempted ? '○' : '×' }}</td></tr>
+            <tr><th>介護保険免除</th><td>{{ leave.isCareInsuranceExempted ? '○' : '×' }}</td></tr>
+            <tr><th>育児休業</th><td>{{ leave.isChildcareLeave ? '○' : '×' }}</td></tr>
+            <tr><th>介護休業</th><td>{{ leave.isNursingCareLeave ? '○' : '×' }}</td></tr>
+          </table>
+        </div>
+      </div>
+      <ng-template #noLeave>
+        <div>未入力</div>
+      </ng-template>
+    </div>
+    <div *ngIf="isEditMode">
+      <div *ngFor="let leave of editEmployee.extraordinaryLeaves; let i = index" class="sub-table">
+        <h4>休職特例 {{ i + 1 }}</h4>
+        <table>
+          <tr><th>休職区分</th><td><input [(ngModel)]="leave.leaveTypeCode"></td></tr>
+          <tr><th>休職開始日</th><td><input type="date" [(ngModel)]="leave.leaveStartDate"></td></tr>
+          <tr><th>休職終了日</th><td><input type="date" [(ngModel)]="leave.leaveEndDate"></td></tr>
+          <tr><th>復職予定日</th><td><input type="date" [(ngModel)]="leave.returnPlanDate"></td></tr>
+          <tr><th>休職理由</th><td><input [(ngModel)]="leave.leaveReason"></td></tr>
+          <tr><th>健康保険料免除</th><td><input type="checkbox" [(ngModel)]="leave.isHealthInsuranceExempted"></td></tr>
+          <tr><th>厚生年金免除</th><td><input type="checkbox" [(ngModel)]="leave.isPensionExempted"></td></tr>
+          <tr><th>雇用保険免除</th><td><input type="checkbox" [(ngModel)]="leave.isEmploymentInsuranceExempted"></td></tr>
+          <tr><th>介護保険免除</th><td><input type="checkbox" [(ngModel)]="leave.isCareInsuranceExempted"></td></tr>
+          <tr><th>育児休業</th><td><input type="checkbox" [(ngModel)]="leave.isChildcareLeave"></td></tr>
+          <tr><th>介護休業</th><td><input type="checkbox" [(ngModel)]="leave.isNursingCareLeave"></td></tr>
+        </table>
+        <button (click)="editEmployee.extraordinaryLeaves.splice(i, 1)">削除</button>
+      </div>
+      <button (click)="editEmployee.extraordinaryLeaves.push({})">＋休職特例を追加</button>
+    </div>
   </section>
 
   <!-- 備考 -->

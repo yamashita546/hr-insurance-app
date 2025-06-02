@@ -51,6 +51,7 @@ export type Employee = {
     deletedAt?: Timestamp;
 
     name: string;  // 氏名を追加
+    extraordinaryLeaves?: ExtraordinaryLeave[];
 };
 
 export type Dependent = {
@@ -87,3 +88,67 @@ export type EmergencyContact = {
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
+
+export type ExtraordinaryLeave = {
+  leaveTypeCode: string;
+  leaveStartDate: Date;
+  leaveEndDate: Date;
+  returnPlanDate?: Date;
+  leaveReason?: string;
+  isHealthInsuranceExempted?: boolean;
+  isPensionExempted?: boolean;
+  isEmploymentInsuranceExempted?: boolean;
+  isCareInsuranceExempted?: boolean;
+  isChildcareLeave?: boolean;
+  isNursingCareLeave?: boolean;
+};
+
+export const EMPLOYEE_CSV_FIELD_LABELS: { [key: string]: string } = {
+  companyKey: '企業キー',
+  displayCompanyKey: '表示用企業キー',
+  employeeId: '従業員ID',
+  displayEmployeeId: '表示用従業員ID',
+  officeId: '事業所ID',
+  officeName: '事業所名',
+  department: '部署',
+  position: '役職',
+  employeeType: '雇用形態',
+  lastName: '姓',
+  firstName: '名',
+  lastNameKana: '姓カナ',
+  firstNameKana: '名カナ',
+  gender: '性別',
+  birthday: '生年月日',
+  contractStartDate: '契約開始日',
+  contractEndDate: '契約終了日',
+  resignationReason: '退職理由',
+  workStyle: '勤務形態',
+  myNumber: 'マイナンバー',
+  myNumberCollected: 'マイナンバー収集済み',
+  myNumberCollectionDate: 'マイナンバー収集日',
+  email: 'メールアドレス',
+  phoneNumber: '電話番号',
+  'address.postalCode': '郵便番号',
+  'address.prefecture': '都道府県',
+  'address.city': '市区町村',
+  'address.town': '町域・番地',
+  'address.streetAddress': '建物名',
+  nationality: '国籍',
+  residenceStatus: '在留資格',
+  employmentInsuranceNumber: '雇用保険番号',
+  healthInsuranceNumber: '健康保険番号',
+  pensionNumber: '年金番号',
+  emergencyContactName: '緊急連絡先氏名',
+  emergencyContactPhone: '緊急連絡先電話番号',
+  hasDependents: '扶養家族あり',
+  dependentsCount: '扶養人数',
+  isHealthInsuranceApplicable: '健康保険適用',
+  isPensionApplicable: '厚生年金適用',
+  isCareInsuranceApplicable: '介護保険適用',
+  remarks: '備考',
+  isActive: '有効',
+  createdAt: '作成日時',
+  updatedAt: '更新日時',
+  deletedAt: '削除日時',
+  name: '氏名'
+};

@@ -7,12 +7,6 @@
   <div class="employee-actions">
     <div class="csv-toolbar">
       <button class="add-btn" routerLink="/employee-form">従業員を追加</button>
-      <button class="csv-btn" (click)="onExportCsv()">CSVひな型出力</button>
-      <label class="file-label">
-        ファイルを選択
-        <input type="file" (change)="onImportCsv($event)" accept=".csv" style="display: none;" #fileInput />
-      </label>
-      <span class="file-name">{{ fileName || '選択されていません' }}</span>
     </div>
   </div>
   <div class="employee-list">
@@ -20,51 +14,35 @@
       <thead>
         <tr>
           <th>従業員ID</th>
-          <th>姓</th>
-          <th>名</th>
+          <th>氏名</th>
           <th>事業所名</th>
           <th>部署</th>
-          
+          <th>扶養家族人数</th>
+          <th>適用中休職特例</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let employee of employees">
           <td>{{ employee.employeeId }}</td>
-          <td>{{ employee.lastName }}</td>
-          <td>{{ employee.firstName }}</td>
+          <td>{{ employee.lastName }} {{ employee.firstName }}</td>
           <td>{{ employee.officeName }}</td>
           <td>{{ employee.department }}</td>
+          <td>{{ employee.dependents?.length || 0 }}</td>
+          <td>
+            <ng-container *ngIf="employee.extraordinaryLeaves?.length">
+              <span *ngFor="let leave of employee.extraordinaryLeaves">
+                <ng-container *ngIf="!leave?.leaveEndDate || leave?.leaveEndDate > today">
+                  {{ leave?.leaveTypeCode }}
+                </ng-container>
+              </span>
+            </ng-container>
+            <ng-container *ngIf="!employee.extraordinaryLeaves?.length">-</ng-container>
+          </td>
           <td><button class="detail-btn" [routerLink]="['/employee-detail', employee.id]">詳細</button></td>
         </tr>
       </tbody>
     </table>
   </div>
-  <div *ngIf="pendingImportData.length > 0">
-    <h3>インポート予定データ</h3>
-    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px;">
-      <button (click)="confirmImport()" [disabled]="importErrors.length > 0">保存</button>
-      <button (click)="cancelImport()" class="cancel-btn">キャンセル</button>
-    </div>
-    <div style="max-width:100%;overflow-x:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th *ngFor="let key of pendingImportData[0] | keyvalue">{{ key.key }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of pendingImportData">
-            <td *ngFor="let key of row | keyvalue">{{ key.value }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div *ngIf="importErrors.length > 0" style="color:red;">
-    <h3>エラー一覧</h3>
-    <ul>
-      <li *ngFor="let err of importErrors">{{ err }}</li>
-    </ul>
-  </div>
+  
 </div>

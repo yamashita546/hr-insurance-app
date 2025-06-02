@@ -190,3 +190,140 @@
   margin-bottom: 18px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
+
+.dependents-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1em;
+}
+.dependents-table th, .dependents-table td {
+  border: 1px solid #e0e0e0;
+  padding: 0.3em 0.5em;
+  text-align: center;
+  font-size: 0.95em;
+}
+.dependents-table th {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+/* --- 外国人労働者セクションのデザイン改善 --- */
+.foreign-worker-section {
+  border: 1px solid #ccc;
+  padding: 16px;
+  margin-bottom: 24px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+.form-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.form-row label {
+  width: 180px;
+  font-weight: bold;
+  margin-bottom: 0;
+}
+.form-row input,
+.form-row select {
+  flex: 1;
+  margin-left: 8px;
+}
+.required {
+  color: red;
+  margin-left: 4px;
+}
+
+/* チェックボックス行の調整 */
+.form-row.checkbox-row {
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  font-weight: normal;
+  margin-bottom: 0;
+  margin-left: 0;
+  gap: 8px;
+}
+
+@media (max-width: 700px) {
+  .form-row.checkbox-row {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .checkbox-label {
+    white-space: normal;
+    font-size: 0.98em;
+  }
+}
+
+/* 休職特例セクションのデザイン */
+.extraordinary-leave-section {
+  border: 1px solid #ccc;
+  padding: 16px;
+  margin-bottom: 24px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+/* CSVツールバー・インポートプレビュー用CSS（employee-listから移植） */
+.csv-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  margin-bottom: 24px;
+  justify-content: flex-end;
+}
+.csv-btn,
+.cancel-btn {
+  background-color: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+.csv-btn:last-child,
+.cancel-btn:last-child {
+  margin-right: 0;
+}
+.csv-btn:hover,
+.cancel-btn:hover {
+  background-color: #1565c0;
+}
+.cancel-btn {
+  background-color: #bdbdbd;
+  color: #333;
+}
+.cancel-btn:hover {
+  background-color: #757575;
+  color: #fff;
+}
+.file-label {
+  display: inline-block;
+  background: #f5f5f5;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  margin-right: 8px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  transition: background 0.2s;
+}
+.file-label:hover {
+  background: #e0e0e0;
+}
+.file-name {
+  font-size: 0.95rem;
+  color: #555;
+}

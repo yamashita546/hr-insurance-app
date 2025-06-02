@@ -18,6 +18,8 @@ import { RouterModule, Router } from '@angular/router';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { Company, Office } from '../../../../core/models/company.model';
+import { Prefecture, PREFECTURES } from '../../../../core/models/prefecture.model';
+import { EMPLOYEE_CSV_FIELD_LABELS } from '../../../../core/models/employee.model';
 
 @Component({
   selector: 'app-employee-form',
@@ -25,6 +27,7 @@ import { Company, Office } from '../../../../core/models/company.model';
   imports: [MatExpansionModule, ReactiveFormsModule, CommonModule,
             MatInputModule, MatSelectModule, MatDatepickerModule, 
             MatNativeDateModule, MatButtonModule, MatTabsModule, RouterModule
+                
   ],
   templateUrl: './employee-form.component.html',
   styleUrl: './employee-form.component.css'
@@ -50,6 +53,19 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   companyId = '';
   companyName = '';
   offices: Office[] = [];
+  prefectures: Prefecture[] = PREFECTURES;
+
+  nationalities = ['中国', '韓国', 'ベトナム', 'フィリピン', 'ネパール', 'アメリカ', 'ブラジル', 'その他'];
+  residenceStatusList = [
+    '技術・人文知識・国際業務', '技能実習', '特定技能', '永住者', '家族滞在', '留学', '特定活動', 'その他'
+  ];
+  residenceStatusTypeList = ['1号', '2号', '3号', 'その他'];
+
+  fileName: string = '';
+  pendingImportData: any[] = [];
+  importErrors: string[] = [];
+
+  public EMPLOYEE_CSV_FIELD_LABELS = EMPLOYEE_CSV_FIELD_LABELS;
 
   get dependents(): FormArray {
     return this.form.get('dependents') as FormArray;
@@ -59,8 +75,15 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     return this.form.get('foreignWorker') as FormGroup;
   }
 
-  get extraordinaryLeave(): FormGroup {
-    return this.form.get('extraordinaryLeave') as FormGroup;
+  get extraordinaryLeaves(): FormArray {
+    return this.form.get('extraordinaryLeaves') as FormArray;
+  }
+
+  get previewKeys(): string[] {
+    if (this.pendingImportData.length > 0) {
+      return Object.keys(this.pendingImportData[0]);
+    }
+    return [];
   }
 
   constructor(
@@ -134,20 +157,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
         returnPlannedDate: [''],
         remarks: [''],
       }),
-      isExtraordinaryLeave: [false],
-      extraordinaryLeave: this.fb.group({
-        leaveTypeCode: [''],
-        leaveStartDate: [''],
-        leaveEndDate: [''],
-        returnPlanDate: [''],
-        leaveReason: [''],
-        isHealthInsuranceExempted: [false],
-        isPensionExempted: [false],
-        isEmploymentInsuranceExempted: [false],
-        isCareInsuranceExempted: [false],
-        isChildcareLeave: [false],
-        isNursingCareLeave: [false],
-      }),
+      extraordinaryLeaves: this.fb.array([]),
     });
 
     // localStorageからフォーム内容を復元
@@ -251,6 +261,26 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     this.dependents.removeAt(i);
   }
 
+  addExtraordinaryLeave() {
+    this.extraordinaryLeaves.push(this.fb.group({
+      leaveTypeCode: [''],
+      leaveStartDate: [''],
+      leaveEndDate: [''],
+      returnPlanDate: [''],
+      leaveReason: [''],
+      isHealthInsuranceExempted: [false],
+      isPensionExempted: [false],
+      isEmploymentInsuranceExempted: [false],
+      isCareInsuranceExempted: [false],
+      isChildcareLeave: [false],
+      isNursingCareLeave: [false],
+    }));
+  }
+
+  removeExtraordinaryLeave(i: number) {
+    this.extraordinaryLeaves.removeAt(i);
+  }
+
   async onSubmit() {
     this.validationErrors = [];
     if (this.form.invalid) {
@@ -343,7 +373,9 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   async loadOffices(companyKey: string) {
     const officesCol = collection(this.firestore, `companies/${companyKey}/offices`);
     const snap = await getDocs(officesCol);
-    this.offices = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Office));
+    this.offices = snap.docs
+      .map(doc => ({ id: doc.id, ...doc.data() } as Office))
+      .sort((a, b) => a.id.localeCompare(b.id, 'ja'));
   }
 
   canDeactivate(): boolean {
@@ -351,5 +383,181 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       return window.confirm('入力内容が保存されていません。ページを離れますか？');
     }
     return true;
+  }
+
+  onExportCsv() {
+    const result = window.prompt(
+      'CSV出力方法を選択してください：\n1: ひな型だけ\n2: 現在のデータを含む\nキャンセル: ダイアログを閉じる',
+      '1'
+    );
+    if (result === '1') {
+      this.exportCsv(false);
+    } else if (result === '2') {
+      this.exportCsv(true);
+    }
+  }
+
+  async exportCsv(includeData: boolean) {
+    const dependentFields = [
+      'lastName', 'firstName', 'lastNameKana', 'firstNameKana',
+      'relationship', 'relationshipCode', 'birthday', 'myNumber',
+      'isSpouse', 'isChild', 'isDisabled', 'isStudent', 'isLivingTogether',
+      'income', 'certificationDate', 'certificationType', 'lossDate', 'remarks', 'isActive'
+    ];
+    const headers = [
+      'companyKey',
+      'employeeId', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana', 'gender', 'birthday', 'myNumber',
+      'email', 'phoneNumber',
+      'address.postalCode', 'address.prefecture', 'address.city', 'address.town', 'address.streetAddress',
+      'officeName',
+      'displayOfficeId',
+      'department', 'position', 'employeeType', 'workStyle', 'contractStartDate', 'contractEndDate', 'resignationReason',
+      'healthInsuranceNumber', 'pensionNumber', 'employmentInsuranceNumber',
+      'isHealthInsuranceApplicable', 'isPensionApplicable', 'isEmploymentInsuranceApplicable', 'isCareInsuranceApplicable',
+      'emergencyContactName', 'emergencyContactRelationship', 'emergencyContactPhone', 'emergencyContactIsActive',
+      'hasDependents', 'remarks',
+      ...[0,1,2,3].flatMap(i => dependentFields.map(f => `dependents[${i}].${f}`)),
+      'foreignWorker.romanName', 'foreignWorker.nationality', 'foreignWorker.residenceStatus', 'foreignWorker.residenceStatusType',
+      'foreignWorker.residenceCardNumber', 'foreignWorker.residenceCardExpiry', 'foreignWorker.residenceStatusHistory',
+      'foreignWorker.passportNumber', 'foreignWorker.passportExpiry', 'foreignWorker.hasResidenceCardCopy', 'foreignWorker.hasSpecialExemption',
+      'foreignWorker.exemptionReason', 'foreignWorker.employmentStartDate', 'foreignWorker.employmentEndDate', 'foreignWorker.hasSpecificActivity',
+      'foreignWorker.returnPlannedDate', 'foreignWorker.remarks',
+      ...[0,1,2,3].flatMap(i => dependentFields.map(f => `extraordinaryLeaves[${i}].${f}`)),
+    ];
+    // 日本語タイトルで出力
+    const headerRow = headers.map(key => EMPLOYEE_CSV_FIELD_LABELS[key] || key).join(',');
+    let rows: string[] = [];
+    if (includeData) {
+      // Firestoreから従業員データを取得
+      const employeesCol = collection(this.firestore, 'employees');
+      const q = this.companyKey ? (await import('firebase/firestore')).query(employeesCol, (await import('firebase/firestore')).where('companyKey', '==', this.companyKey)) : employeesCol;
+      const snap = await getDocs(q);
+      const employees = snap.docs.map(doc => doc.data());
+      for (const emp of employees) {
+        const row = headers.map(h => {
+          // ネスト対応
+          if (h.includes('.')) {
+            const [parent, child] = h.split('.');
+            return emp[parent]?.[child] ?? '';
+          } else if (h.startsWith('dependents[')) {
+            const match = h.match(/dependents\[(\d+)\]\.(.+)/);
+            if (match) {
+              const idx = +match[1];
+              const key = match[2];
+              return emp['dependents']?.[idx]?.[key] ?? '';
+            }
+          } else if (h.startsWith('extraordinaryLeaves[')) {
+            const match = h.match(/extraordinaryLeaves\[(\d+)\]\.(.+)/);
+            if (match) {
+              const idx = +match[1];
+              const key = match[2];
+              return emp['extraordinaryLeaves']?.[idx]?.[key] ?? '';
+            }
+          }
+          return emp[h] ?? '';
+        });
+        rows.push(row.join(','));
+      }
+    } else {
+      const sampleRow = [
+        this.companyKey || '',
+        ...Array(headers.length - 1).fill('')
+      ];
+      rows.push(sampleRow.join(','));
+    }
+    const csv = [headerRow, ...rows].join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'employee-template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  onImportCsv(event: any) {
+    const file = event.target.files[0];
+    this.fileName = file ? file.name : '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const text = e.target.result;
+      const { data, errors } = this.parseCsv(text);
+      this.pendingImportData = data;
+      this.importErrors = errors;
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  parseCsv(text: string): { data: any[], errors: string[] } {
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) return { data: [], errors: ['CSVにデータがありません'] };
+    const headerRow = lines[0].split(',');
+    // 日本語→英語キー変換
+    const keyMap = Object.fromEntries(
+      Object.entries(EMPLOYEE_CSV_FIELD_LABELS).map(([k, v]) => [v, k])
+    );
+    const keys = headerRow.map(label => keyMap[label] || label);
+    const data: any[] = [];
+    const errors: string[] = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',');
+      if (cols.length !== keys.length) {
+        errors.push(`${i+1}行目: 列数が一致しません`);
+        continue;
+      }
+      const row: any = {};
+      for (let j = 0; j < keys.length; j++) {
+        row[keys[j]] = cols[j];
+      }
+      if (!row['employeeId']) {
+        errors.push(`${i+1}行目: employeeIdが未入力です`);
+        continue;
+      }
+      if (row['birthday'] && !/^\d{4}-\d{2}-\d{2}$/.test(row['birthday'])) {
+        errors.push(`${i+1}行目: birthdayの日付形式が不正です`);
+      }
+      if (row['gender'] && !['male','female','other'].includes(row['gender'])) {
+        errors.push(`${i+1}行目: genderが不正です`);
+      }
+      data.push(row);
+    }
+    return { data, errors };
+  }
+
+  async confirmImport() {
+    if (this.importErrors.length > 0) {
+      alert('エラーがあります。修正してください。');
+      return;
+    }
+    // 1. 事前に全オフィスを取得
+    const officesCol = collection(this.firestore, `companies/${this.companyKey}/offices`);
+    const officesSnap = await getDocs(officesCol);
+    const displayOfficeIdToId: { [displayOfficeId: string]: string } = {};
+    officesSnap.forEach(docSnap => {
+      const data = docSnap.data();
+      displayOfficeIdToId[data['displayOfficeId']] = docSnap.id;
+    });
+
+    // 2. 各従業員データにofficeIdを付与して保存
+    for (const emp of this.pendingImportData) {
+      const officeId = displayOfficeIdToId[emp.displayOfficeId];
+      if (officeId) {
+        emp.officeId = officeId;
+      } else {
+        emp.officeId = '';
+        console.warn(`displayOfficeId「${emp.displayOfficeId}」に一致する事業所がありません`);
+      }
+      await addDoc(collection(this.firestore, 'employees'), emp);
+    }
+    alert('インポートが完了しました');
+    this.pendingImportData = [];
+    this.fileName = '';
+  }
+
+  cancelImport() {
+    this.pendingImportData = [];
+    this.importErrors = [];
+    this.fileName = '';
   }
 }

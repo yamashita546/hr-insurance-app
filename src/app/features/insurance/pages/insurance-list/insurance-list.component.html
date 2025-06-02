@@ -24,7 +24,7 @@
       <select [(ngModel)]="selectedMonth" name="month" (ngModelChange)="updateResultList()">
         <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
       </select>
-      <button type="button" routerLink="/insurance-form">計算</button>
+      <button type="button" routerLink="/insurance-form">社会保険料登録</button>
     </div>
   </form>
 

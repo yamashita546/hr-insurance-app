@@ -11,6 +11,43 @@
     <li *ngFor="let err of validationErrors">{{ err }}</li>
   </ul>
 </div>
+<!-- CSV追加UIここから -->
+<div class="csv-toolbar" style="margin-bottom: 24px; display: flex; gap: 16px; align-items: center;">
+  <button class="csv-btn" type="button" (click)="onExportCsv()">CSVひな型出力</button>
+  <label class="file-label" style="margin-bottom: 0;">
+    ファイルを選択
+    <input type="file" (change)="onImportCsv($event)" accept=".csv" style="display: none;" #fileInput />
+  </label>
+  <span class="file-name">{{ fileName || '選択されていません' }}</span>
+</div>
+<div *ngIf="pendingImportData.length > 0">
+  <h3>インポート予定データ</h3>
+  <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px;">
+    <button (click)="confirmImport()" [disabled]="importErrors.length > 0">保存</button>
+    <button (click)="cancelImport()" class="cancel-btn">キャンセル</button>
+  </div>
+  <div style="max-width:100%;overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th *ngFor="let key of previewKeys">{{ EMPLOYEE_CSV_FIELD_LABELS[key] || key }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of pendingImportData">
+          <td *ngFor="let key of previewKeys">{{ row[key] }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div *ngIf="importErrors.length > 0" style="color:red;">
+  <h3>エラー一覧</h3>
+  <ul>
+    <li *ngFor="let err of importErrors">{{ err }}</li>
+  </ul>
+</div>
+<!-- CSV追加UIここまで -->
 <form [formGroup]="form" (ngSubmit)="onSubmit()" class="employee-form">
   <mat-tab-group [(selectedIndex)]="selectedTabIndex" (selectedIndexChange)="onTabChange($event)">
     <!-- 基本情報 -->
@@ -83,7 +120,10 @@
         <div class="form-row" formGroupName="address">
           <div class="form-item">
             <label>都道府県</label>
-            <input formControlName="prefecture" />
+            <select formControlName="prefecture">
+              <option value="">選択してください</option>
+              <option *ngFor="let p of prefectures" [value]="p.code">{{ p.name }}</option>
+            </select>
           </div>
         </div>
         <div class="form-row" formGroupName="address">
@@ -253,127 +293,79 @@
           </div>
         </div>
         <div *ngIf="form.get('hasDependents')?.value">
-          <div formArrayName="dependents">
-            <div *ngFor="let dep of dependents.controls; let i = index" [formGroupName]="i" class="dependent-block">
-              <div class="form-row">
-                <div class="form-item">
-                  <label>姓</label>
-                  <input formControlName="lastName" />
-                </div>
-                <div class="form-item">
-                  <label>名</label>
-                  <input formControlName="firstName" />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label>姓（カナ）</label>
-                  <input formControlName="lastNameKana" />
-                </div>
-                <div class="form-item">
-                  <label>名（カナ）</label>
-                  <input formControlName="firstNameKana" />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label>続柄</label>
-                  <input formControlName="relationship" />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label>続柄コード</label>
+          <table class="dependents-table">
+            <thead>
+              <tr>
+                <th>氏名</th>
+                <th>カナ</th>
+                <th>続柄</th>
+                <th>生年月日</th>
+                <th>性別</th>
+                <th>年収</th>
+                <th>同居</th>
+                <th>学生</th>
+                <th>障害者</th>
+                <th>現役</th>
+                <th>認定日</th>
+                <th>認定区分</th>
+                <th>資格喪失日</th>
+                <th>備考</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody formArrayName="dependents">
+              <tr *ngFor="let dep of dependents.controls; let i = index" [formGroupName]="i">
+                <td>
+                  <input formControlName="lastName" placeholder="姓" style="width: 3.5em;" />
+                  <input formControlName="firstName" placeholder="名" style="width: 3.5em;" />
+                </td>
+                <td>
+                  <input formControlName="lastNameKana" placeholder="姓カナ" style="width: 3.5em;" />
+                  <input formControlName="firstNameKana" placeholder="名カナ" style="width: 3.5em;" />
+                </td>
+                <td>
                   <select formControlName="relationshipCode">
-                    <option value="">選択してください</option>
+                    <option value="">選択</option>
                     <option value="01">配偶者</option>
                     <option value="02">子</option>
                     <option value="03">父母</option>
                     <option value="04">その他</option>
                   </select>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label>生年月日</label>
-                  <input type="date" formControlName="birthday" />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label>マイナンバー</label>
-                  <input formControlName="myNumber" maxlength="12" />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label><input type="checkbox" formControlName="isSpouse" /> 配偶者</label>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label><input type="checkbox" formControlName="isChild" /> 子供</label>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label><input type="checkbox" formControlName="isDisabled" /> 障害者</label>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label><input type="checkbox" formControlName="isStudent" /> 学生</label>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label><input type="checkbox" formControlName="isLivingTogether" /> 同居</label>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label>年収</label>
-                  <input type="number" formControlName="income" />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label>被扶養者認定日</label>
-                  <input type="date" formControlName="certificationDate" />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label>認定区分</label>
+                </td>
+                <td><input type="date" formControlName="birthday" style="width: 8em;" /></td>
+                <td>
+                  <select formControlName="gender">
+                    <option value="">選択</option>
+                    <option value="M">男</option>
+                    <option value="F">女</option>
+                  </select>
+                </td>
+                <td><input type="number" formControlName="income" style="width: 6em;" /></td>
+                <td><input type="checkbox" formControlName="isLivingTogether" /></td>
+                <td><input type="checkbox" formControlName="isStudent" /></td>
+                <td><input type="checkbox" formControlName="isDisabled" /></td>
+                <td>
+                  <span *ngIf="!dep.get('lossDate')?.value">現役</span>
+                  <span *ngIf="dep.get('lossDate')?.value">-</span>
+                </td>
+                <td><input type="date" formControlName="certificationDate" style="width: 8em;" /></td>
+                <td>
                   <select formControlName="certificationType">
-                    <option value="">選択してください</option>
+                    <option value="">選択</option>
                     <option value="A">A区分</option>
                     <option value="B">B区分</option>
                     <option value="C">C区分</option>
                   </select>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label>資格喪失日</label>
-                  <input type="date" formControlName="lossDate" />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label>備考</label>
-                  <input formControlName="remarks" />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-item">
-                  <label><input type="checkbox" formControlName="isActive" /> 現役</label>
-                </div>
-                <button type="button" (click)="removeDependent(i)">削除</button>
-              </div>
-            </div>
-            <button type="button" (click)="addDependent()">扶養家族を追加</button>
-          </div>
+                </td>
+                <td><input type="date" formControlName="lossDate" style="width: 8em;" /></td>
+                <td><input formControlName="remarks" style="width: 8em;" /></td>
+                <td>
+                  <button type="button" (click)="removeDependent(i)">削除</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <button type="button" (click)="addDependent()">扶養家族を追加</button>
         </div>
       </div>
       <div class="form-actions">
@@ -389,105 +381,87 @@
             <label><input type="checkbox" formControlName="isForeignWorker" /> 外国人労働者</label>
           </div>
         </div>
-        <div *ngIf="form.get('isForeignWorker')?.value" [formGroup]="foreignWorker">
+        <div *ngIf="form.get('isForeignWorker')?.value" [formGroup]="foreignWorker" class="foreign-worker-section">
+          <h3>外国人労働者情報</h3>
           <div class="form-row">
-            <div class="form-item">
-              <label>氏名（ローマ字）</label>
-              <input formControlName="romanName" />
-            </div>
+            <label>氏名（ローマ字）<span class="required">*</span></label>
+            <input formControlName="romanName" />
           </div>
           <div class="form-row">
-            <div class="form-item">
-              <label>国籍</label>
-              <input formControlName="nationality" />
-            </div>
+            <label>国籍<span class="required">*</span></label>
+            <select formControlName="nationality">
+              <option value="">選択してください</option>
+              <option *ngFor="let n of nationalities" [value]="n">{{ n }}</option>
+            </select>
+            <input *ngIf="foreignWorker.get('nationality')?.value === 'その他'" formControlName="nationalityOther" placeholder="国名を入力" />
           </div>
           <div class="form-row">
-            <div class="form-item">
-              <label>在留資格</label>
-              <input formControlName="residenceStatus" />
-            </div>
+            <label>在留資格<span class="required">*</span></label>
+            <select formControlName="residenceStatus">
+              <option value="">選択してください</option>
+              <option *ngFor="let s of residenceStatusList" [value]="s">{{ s }}</option>
+            </select>
+            <input *ngIf="foreignWorker.get('residenceStatus')?.value === 'その他'" formControlName="residenceStatusOther" placeholder="在留資格を入力" />
           </div>
           <div class="form-row">
-            <div class="form-item">
-              <label>在留資格の種類</label>
-              <input formControlName="residenceStatusType" />
-            </div>
+            <label>在留資格の種類</label>
+            <select formControlName="residenceStatusType">
+              <option value="">選択してください</option>
+              <option *ngFor="let t of residenceStatusTypeList" [value]="t">{{ t }}</option>
+            </select>
+            <input *ngIf="foreignWorker.get('residenceStatusType')?.value === 'その他'" formControlName="residenceStatusTypeOther" placeholder="種類を入力" />
           </div>
           <div class="form-row">
-            <div class="form-item">
-              <label>在留カード番号</label>
-              <input formControlName="residenceCardNumber" />
-            </div>
+            <label>在留カード番号</label>
+            <input formControlName="residenceCardNumber" />
           </div>
           <div class="form-row">
-            <div class="form-item">
-              <label>在留資格の有効期限</label>
-              <input type="date" formControlName="residenceCardExpiry" />
-            </div>
+            <label>在留資格の有効期限</label>
+            <input type="date" formControlName="residenceCardExpiry" />
           </div>
           <div class="form-row">
-            <div class="form-item">
-              <label>在留資格の更新履歴</label>
-              <input formControlName="residenceStatusHistory" />
-            </div>
+            <label>在留資格の更新履歴</label>
+            <input formControlName="residenceStatusHistory" />
           </div>
           <div class="form-row">
-            <div class="form-item">
-              <label>パスポート番号</label>
-              <input formControlName="passportNumber" />
-            </div>
+            <label>パスポート番号</label>
+            <input formControlName="passportNumber" />
           </div>
           <div class="form-row">
-            <div class="form-item">
-              <label>パスポート有効期限</label>
-              <input type="date" formControlName="passportExpiry" />
-            </div>
+            <label>パスポート有効期限</label>
+            <input type="date" formControlName="passportExpiry" />
           </div>
           <div class="form-row">
-            <div class="form-item">
-              <label><input type="checkbox" formControlName="hasResidenceCardCopy" /> 在留カード写しの有無</label>
-            </div>
+            <label>在留カード写しの有無</label>
+            <input type="checkbox" formControlName="hasResidenceCardCopy" />
           </div>
           <div class="form-row">
-            <div class="form-item">
-              <label><input type="checkbox" formControlName="hasSpecialExemption" /> 社会保険の免除特例の有無</label>
-            </div>
+            <label>社会保険免除特例の有無</label>
+            <input type="checkbox" formControlName="hasSpecialExemption" />
+          </div>
+          <div class="form-row" *ngIf="foreignWorker.get('hasSpecialExemption')?.value">
+            <label>免除特例の理由</label>
+            <input formControlName="exemptionReason" />
           </div>
           <div class="form-row">
-            <div class="form-item">
-              <label>免除特例の理由</label>
-              <input formControlName="exemptionReason" />
-            </div>
+            <label>雇用開始日</label>
+            <input type="date" formControlName="employmentStartDate" />
           </div>
           <div class="form-row">
-            <div class="form-item">
-              <label>雇用開始日</label>
-              <input type="date" formControlName="employmentStartDate" />
-            </div>
+            <label>雇用契約終了日</label>
+            <input type="date" formControlName="employmentEndDate" />
           </div>
           <div class="form-row">
-            <div class="form-item">
-              <label>雇用契約終了日</label>
-              <input type="date" formControlName="employmentEndDate" />
-            </div>
+            <label>特定活動の有無</label>
+            <input type="checkbox" formControlName="hasSpecificActivity" />
           </div>
           <div class="form-row">
-            <div class="form-item">
-              <label><input type="checkbox" formControlName="hasSpecificActivity" /> 特定活動の有無</label>
-            </div>
+            <label>帰国予定日</label>
+            <input type="date" formControlName="returnPlannedDate" />
           </div>
           <div class="form-row">
-            <div class="form-item">
-              <label>帰国予定日</label>
-              <input type="date" formControlName="returnPlannedDate" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-item">
-              <label>備考</label>
-              <input formControlName="remarks" />
-            </div>
+            <label>備考</label>
+            <input formControlName="remarks" />
           </div>
         </div>
         <div class="form-row">
@@ -495,63 +469,61 @@
             <label><input type="checkbox" formControlName="isExtraordinaryLeave" /> 休職特例（産休・育休・介護等）</label>
           </div>
         </div>
-        <div *ngIf="form.get('isExtraordinaryLeave')?.value" [formGroup]="extraordinaryLeave">
-          <div class="form-row">
-            <div class="form-item">
+        <div formArrayName="extraordinaryLeaves" class="extraordinary-leave-section">
+          <h3>休職特例情報</h3>
+          <div *ngFor="let leave of extraordinaryLeaves.controls; let i = index" [formGroupName]="i" class="form-array-row">
+            <div class="form-row">
               <label>休職区分</label>
               <select formControlName="leaveTypeCode">
                 <option value="">選択してください</option>
                 <option *ngFor="let t of extraordinaryLeaveTypes" [value]="t.code">{{ t.label }}</option>
               </select>
             </div>
-          </div>
-          <div class="form-row">
-            <div class="form-item">
+            <div class="form-row">
               <label>休職開始日</label>
               <input type="date" formControlName="leaveStartDate" />
             </div>
-            <div class="form-item">
+            <div class="form-row">
               <label>休職終了日</label>
               <input type="date" formControlName="leaveEndDate" />
             </div>
-          </div>
-          <div class="form-row">
-            <div class="form-item">
+            <div class="form-row">
               <label>復職予定日</label>
               <input type="date" formControlName="returnPlanDate" />
             </div>
-          </div>
-          <div class="form-row">
-            <div class="form-item">
+            <div class="form-row">
               <label>休職理由</label>
               <input formControlName="leaveReason" />
             </div>
+            <div class="form-row">
+              <label>社会保険料免除対象</label>
+              <input type="checkbox" formControlName="isHealthInsuranceExempted" />
+            </div>
+            <div class="form-row">
+              <label>雇用保険給付対象</label>
+              <input type="checkbox" formControlName="isPensionExempted" />
+            </div>
+            <div class="form-row">
+              <label>給与支給有無</label>
+              <input type="checkbox" formControlName="isEmploymentInsuranceExempted" />
+            </div>
+            <div class="form-row">
+              <label>就労制限有無</label>
+              <input type="checkbox" formControlName="isCareInsuranceExempted" />
+            </div>
+            <div class="form-row">
+              <label>医師の診断書有無</label>
+              <input type="checkbox" formControlName="isChildcareLeave" />
+            </div>
+            <div class="form-row">
+              <label>特例適用有無</label>
+              <input type="checkbox" formControlName="isNursingCareLeave" />
+            </div>
+            <div class="form-row">
+              <button type="button" (click)="removeExtraordinaryLeave(i)">削除</button>
+            </div>
           </div>
-          <div class="form-row">
-            <div class="form-item">
-              <label><input type="checkbox" formControlName="isInsuranceExempted" /> 社会保険料免除対象</label>
-            </div>
-            <div class="form-item">
-              <label><input type="checkbox" formControlName="isEmploymentBenefit" /> 雇用保険給付対象</label>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-item">
-              <label><input type="checkbox" formControlName="isSalaryPaid" /> 給与支給有無</label>
-            </div>
-            <div class="form-item">
-              <label><input type="checkbox" formControlName="hasWorkRestriction" /> 就労制限有無</label>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-item">
-              <label><input type="checkbox" formControlName="hasMedicalCertificate" /> 医師の診断書有無</label>
-            </div>
-            <div class="form-item">
-              <label><input type="checkbox" formControlName="hasSpecialExemption" /> 特例適用有無</label>
-            </div>
-          </div>
-          
+          <button type="button" (click)="addExtraordinaryLeave()">休職特例を追加</button>
         </div>
         <div class="form-row">
           <div class="form-item">

@@ -8,22 +8,33 @@
     <div class="csv-toolbar">
       <button class="add-btn" routerLink="/employee-form">従業員を追加</button>
     </div>
+    <div style="margin-top: 12px; display: flex; gap: 12px; align-items: center;">
+      <input type="text" [(ngModel)]="searchText" placeholder="従業員ID・氏名・事業所名・部署で検索" style="width: 260px; padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;" />
+      <select [(ngModel)]="selectedOffice" style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;">
+        <option value="">全事業所</option>
+        <option *ngFor="let o of officeList" [value]="o">{{ o }}</option>
+      </select>
+      <select [(ngModel)]="selectedDepartment" style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;">
+        <option value="">全部署</option>
+        <option *ngFor="let d of departmentList" [value]="d">{{ d }}</option>
+      </select>
+    </div>
   </div>
   <div class="employee-list">
     <table>
       <thead>
         <tr>
-          <th>従業員ID</th>
-          <th>氏名</th>
-          <th>事業所名</th>
-          <th>部署</th>
+          <th (click)="changeSort('employeeId')" style="cursor:pointer;">従業員ID <span *ngIf="sortKey==='employeeId'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th (click)="changeSort('lastName')" style="cursor:pointer;">氏名 <span *ngIf="sortKey==='lastName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th (click)="changeSort('officeName')" style="cursor:pointer;">事業所名 <span *ngIf="sortKey==='officeName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th (click)="changeSort('department')" style="cursor:pointer;">部署 <span *ngIf="sortKey==='department'">{{ sortAsc ? '▲' : '▼' }}</span></th>
           <th>扶養家族人数</th>
           <th>適用中休職特例</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let employee of employees">
+        <tr *ngFor="let employee of filteredEmployees">
           <td>{{ employee.employeeId }}</td>
           <td>{{ employee.lastName }} {{ employee.firstName }}</td>
           <td>{{ employee.officeName }}</td>

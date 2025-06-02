@@ -42,6 +42,8 @@ export interface InsuranceBonusCalculation {
   deductionTotal: number;
   childcare: number;
   companyShare: number;
+  standardBonus: number;
+  annualBonusTotal: number;
   createdAt: Date;
   updatedAt: Date;
 }

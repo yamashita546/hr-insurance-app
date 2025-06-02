@@ -302,8 +302,10 @@ export class InsuranceFormComponent implements OnInit {
           bonus: bonusDisplay,
           grade: std ? `${std.healthGrade}（${std.pensionGrade}）` : 'ー',
           monthly: std ? Number(std.healthMonthly).toLocaleString() : 'ー',
-          standardBonus: standardBonusDisplay,
-          annualBonusTotal: annualBonusTotalDisplay,
+          standardBonus,
+          annualBonusTotal,
+          standardBonusDisplay,
+          annualBonusTotalDisplay,
           healthInsurance,
           healthInsuranceDeduction,
           pension,
@@ -378,6 +380,8 @@ export class InsuranceFormComponent implements OnInit {
           deductionTotal: Number(row.deductionTotal.toString().replace(/,/g, '')),
           childcare: Number(row.childcare.toString().replace(/,/g, '')),
           companyShare: Number(row.companyShare.toString().replace(/,/g, '')),
+          standardBonus: row.standardBonus ?? 0,
+          annualBonusTotal: row.annualBonusTotal ?? 0
         };
         await this.firestoreService.addInsuranceBonusCalculation(calculation);
       });

@@ -70,8 +70,18 @@ export class InsuranceListComponent implements OnInit {
       const ymMatch = !row.applyYearMonth || row.applyYearMonth === ym;
       return officeMatch && empMatch && ymMatch;
     });
+    // 同じ従業員・支社・年月の組み合わせで最新の1件だけ残す
+    const uniqueMap = new Map<string, any>();
+    for (const row of filtered) {
+      const key = `${row.employeeId}_${row.officeId}_${row.applyYearMonth}`;
+      const prev = uniqueMap.get(key);
+      if (!prev || new Date(row.updatedAt).getTime() > new Date(prev.updatedAt).getTime()) {
+        uniqueMap.set(key, row);
+      }
+    }
+    const uniqueList = Array.from(uniqueMap.values());
     // 支社名→従業員名の昇順でソート
-    const sorted = [...filtered].sort((a, b) => {
+    const sorted = [...uniqueList].sort((a, b) => {
       const officeA = this.offices.find(o => o.id === a.officeId)?.name || '';
       const officeB = this.offices.find(o => o.id === b.officeId)?.name || '';
       if (officeA !== officeB) return officeA.localeCompare(officeB, 'ja');
@@ -105,15 +115,20 @@ export class InsuranceListComponent implements OnInit {
           companyShare: format((row as any).companyShare)
         };
       } else {
+        // ボーナス用: 標準賞与額・年度賞与合計の値をログ出力
+        const bonusTotal = (row as any).bonusTotal;
+        const standardBonus = (row as any).standardBonus;
+        const annualBonusTotal = (row as any).annualBonusTotal;
+        console.log('bonus row:', { employeeName, bonusTotal, standardBonus, annualBonusTotal, row });
         return {
           officeName,
           employeeName,
           careInsurance,
-          bonus: format((row as any).bonusTotal),
+          bonus: format(bonusTotal),
           grade: (row as any).healthGrade || 'ー',
           monthly: format((row as any).healthMonthly),
-          standardBonus: format((row as any).standardBonus),
-          annualBonusTotal: format((row as any).annualBonusTotal),
+          standardBonus: format(standardBonus),
+          annualBonusTotal: format(annualBonusTotal),
           healthInsurance: format((row as any).healthInsurance),
           healthInsuranceDeduction: format((row as any).healthInsuranceDeduction),
           pension: format((row as any).pension),

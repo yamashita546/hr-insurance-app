@@ -152,6 +152,7 @@ export const EMPLOYEE_CSV_FIELD_LABELS: { [key: string]: string } = {
   dependentsCount: '扶養人数',
   isHealthInsuranceApplicable: '健康保険適用',
   isPensionApplicable: '厚生年金適用',
+  isEmploymentInsuranceApplicable: '雇用保険適用',
   isCareInsuranceApplicable: '介護保険適用',
   remarks: '備考',
   isActive: '有効',

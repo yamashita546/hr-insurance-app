@@ -480,6 +480,11 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
               return emp['extraordinaryLeaves']?.[idx]?.[key] ?? '';
             }
           }
+          // 保険適用フラット→ネスト変換
+          if (h === 'isHealthInsuranceApplicable') return emp['healthInsuranceStatus']?.isApplicable ?? '';
+          if (h === 'isPensionApplicable') return emp['pensionStatus']?.isApplicable ?? '';
+          if (h === 'isEmploymentInsuranceApplicable') return emp['employmentInsuranceStatus']?.isApplicable ?? '';
+          if (h === 'isCareInsuranceApplicable') return emp['isCareInsuranceApplicable'] ?? '';
           return emp[h] ?? '';
         });
         rows.push(row.join(','));
@@ -536,6 +541,22 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       for (let j = 0; j < keys.length; j++) {
         row[keys[j]] = cols[j];
       }
+      // 保険適用フラット→ネスト変換
+      if ('isHealthInsuranceApplicable' in row) {
+        row.healthInsuranceStatus = row.healthInsuranceStatus || {};
+        row.healthInsuranceStatus.isApplicable = row.isHealthInsuranceApplicable === 'true' || row.isHealthInsuranceApplicable === true;
+      }
+      if ('isPensionApplicable' in row) {
+        row.pensionStatus = row.pensionStatus || {};
+        row.pensionStatus.isApplicable = row.isPensionApplicable === 'true' || row.isPensionApplicable === true;
+      }
+      if ('isEmploymentInsuranceApplicable' in row) {
+        row.employmentInsuranceStatus = row.employmentInsuranceStatus || {};
+        row.employmentInsuranceStatus.isApplicable = row.isEmploymentInsuranceApplicable === 'true' || row.isEmploymentInsuranceApplicable === true;
+      }
+      if ('isCareInsuranceApplicable' in row) {
+        row.isCareInsuranceApplicable = row.isCareInsuranceApplicable === 'true' || row.isCareInsuranceApplicable === true;
+      }
       if (!row['employeeId']) {
         errors.push(`${i+1}行目: employeeIdが未入力です`);
         continue;
@@ -573,6 +594,22 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       } else {
         emp.officeId = '';
         console.warn(`displayOfficeId「${emp.displayOfficeId}」に一致する事業所がありません`);
+      }
+      // 保険適用フラット→ネスト変換
+      if ('isHealthInsuranceApplicable' in emp) {
+        emp.healthInsuranceStatus = emp.healthInsuranceStatus || {};
+        emp.healthInsuranceStatus.isApplicable = emp.isHealthInsuranceApplicable === 'true' || emp.isHealthInsuranceApplicable === true;
+      }
+      if ('isPensionApplicable' in emp) {
+        emp.pensionStatus = emp.pensionStatus || {};
+        emp.pensionStatus.isApplicable = emp.isPensionApplicable === 'true' || emp.isPensionApplicable === true;
+      }
+      if ('isEmploymentInsuranceApplicable' in emp) {
+        emp.employmentInsuranceStatus = emp.employmentInsuranceStatus || {};
+        emp.employmentInsuranceStatus.isApplicable = emp.isEmploymentInsuranceApplicable === 'true' || emp.isEmploymentInsuranceApplicable === true;
+      }
+      if ('isCareInsuranceApplicable' in emp) {
+        emp.isCareInsuranceApplicable = emp.isCareInsuranceApplicable === 'true' || emp.isCareInsuranceApplicable === true;
       }
       await addDoc(collection(this.firestore, 'employees'), emp);
     }

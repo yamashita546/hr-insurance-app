@@ -36,6 +36,9 @@ export class AttendanceListComponent {
   selectedEmployeeType: string = '';
   employees: any[] = [];
   alertTargets: any[] = [];
+  showHistoryIndex: number | null = null;
+  showHistoryBlock: boolean = false;
+  
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -212,10 +215,23 @@ export class AttendanceListComponent {
         employeeName: att.employeeName,
         officeName: att.officeName,
         employeeType: emp?.employeeType,
-        actualWorkHours: att.actualWorkHours,
-        actualWorkDays: att.actualWorkDays,
+        scheduledWorkHours: att.scheduledWorkHours,
+        scheduledWorkDays: att.scheduledWorkDays,
         employeeId: att.employeeId
       };
     });
+  }
+
+  onHandleAlert(alert: any) {
+    // 対応ボタン押下時の処理（後で実装）
+    alert('対応処理の実装予定');
+  }
+
+  toggleHistory(index: number) {
+    this.showHistoryIndex = this.showHistoryIndex === index ? null : index;
+  }
+
+  toggleHistoryBlock() {
+    this.showHistoryBlock = !this.showHistoryBlock;
   }
 }

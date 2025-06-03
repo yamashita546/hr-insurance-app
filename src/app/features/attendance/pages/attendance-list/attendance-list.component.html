@@ -7,13 +7,28 @@
   <div *ngIf="alertTargets.length > 0" style="background:#fff3cd; color:#856404; border:1px solid #ffeeba; border-radius:6px; padding:16px; margin-bottom:18px;">
     <strong>社会保険加入推奨判定アラート</strong>
     <ul style="margin: 8px 0 0 0; padding-left: 1.2em;">
-      <li *ngFor="let alert of alertTargets">
+      <li *ngFor="let alert of alertTargets; let i = index">
         <span style="font-weight:bold;">{{ alert.employeeName }}</span>（{{ alert.officeName }}・{{ alert.employeeType }}）
         ：所定労働時間 {{ alert.scheduledWorkHours }}h／勤務日数 {{ alert.scheduledWorkDays }}日
         <span style="color:#d9534f; font-weight:bold;">→ 社会保険未加入</span>
+        <button style="margin-left:12px;" (click)="onHandleAlert(alert)">対応</button>
       </li>
     </ul>
-    <div style="font-size:0.95em; color:#856404; margin-top:8px;">※週20時間以上勤務の学生を除くパート・アルバイトで社会保険未加入の従業員が対象です。</div>
+    <div style="font-size:0.95em; color:#856404; margin-top:8px;">※週20時間以上相当勤務の学生を除くパート・アルバイトで社会保険未加入の従業員が対象です。</div>
+    <button style="margin-top:12px;" (click)="toggleHistoryBlock()">{{ showHistoryBlock ? '履歴を閉じる' : 'アラート対応履歴を見る' }}</button>
+    <div *ngIf="showHistoryBlock" style="background:#f8f9fa; border:1px solid #e2e3e5; border-radius:4px; margin:8px 0 0 0; padding:10px 16px;">
+      <div style="font-weight:bold; margin-bottom:4px;">対応履歴</div>
+      <ul style="margin:0; padding-left:1.2em;">
+        <li>
+          <span style="font-weight:bold;">2024-06-10 10:00</span>：対応済み（山田太郎）<br>
+          コメント：社会保険加入手続き済み
+        </li>
+        <li>
+          <span style="font-weight:bold;">2024-06-09 15:30</span>：保留（佐藤花子）<br>
+          コメント：本人に確認中
+        </li>
+      </ul>
+    </div>
   </div>
   <div class="attendance-actions">
     <div class="csv-toolbar">

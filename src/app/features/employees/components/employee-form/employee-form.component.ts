@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray, AbstractControl, ValidationErrors } from '@angular/forms';
 import { EMPLOYEE_TYPES, WORK_STYLE_TYPES } from '../../../../core/models/employee.type';
 import { GENDER_TYPES } from '../../../../core/models/gender.type';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -182,7 +182,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
         remarks: [''],
       }),
       extraordinaryLeaves: this.fb.array([]),
-    });
+    }, { validators: fullTimeInsuranceValidator });
 
     // localStorageからフォーム内容を復元
     const savedForm = localStorage.getItem(EmployeeFormComponent.FORM_STORAGE_KEY);
@@ -336,6 +336,18 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
 
   getFormValidationErrors(formGroup: FormGroup, parentKey: string = ''): string[] {
     const errors: string[] = [];
+    // formGroupレベルのエラーも取得
+    if (formGroup.errors) {
+      if (formGroup.errors['healthInsuranceRequired']) {
+        errors.push('正社員の場合、健康保険適用は必須です');
+      }
+      if (formGroup.errors['pensionRequired']) {
+        errors.push('正社員の場合、厚生年金適用は必須です');
+      }
+      if (formGroup.errors['employmentInsuranceRequired']) {
+        errors.push('正社員の場合、雇用保険適用は必須です');
+      }
+    }
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);
       const label = this.getLabelForControl(key);
@@ -623,4 +635,18 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     this.importErrors = [];
     this.fileName = '';
   }
+}
+
+function fullTimeInsuranceValidator(control: AbstractControl): ValidationErrors | null {
+  const employeeType = control.get('employeeType')?.value;
+  const isFullTime = employeeType === 'fulltime'; // 正社員のコードに合わせて必要なら修正
+  if (!isFullTime) return null;
+  const health = control.get('healthInsuranceStatus.isApplicable')?.value;
+  const pension = control.get('pensionStatus.isApplicable')?.value;
+  const employment = control.get('employmentInsuranceStatus.isApplicable')?.value;
+  const errors: any = {};
+  if (!health) errors.healthInsuranceRequired = true;
+  if (!pension) errors.pensionRequired = true;
+  if (!employment) errors.employmentInsuranceRequired = true;
+  return Object.keys(errors).length ? errors : null;
 }

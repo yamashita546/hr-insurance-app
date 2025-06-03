@@ -43,6 +43,7 @@ export type Employee = {
     email?: string;
     phoneNumber?: string;
     address?: Address;
+    isForeignWorker?: boolean; // 外国人かどうか
     nationality?: string; // 国籍
     residenceStatus?: string; // 在留資格
     emergencyContactName?: string; // 緊急連絡先氏名

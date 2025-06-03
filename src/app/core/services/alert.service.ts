@@ -79,7 +79,7 @@ export class AlertService {
       // 給与データ取得
       const salary = salaries.find(s => String(s.employeeId) === String((att as any).employeeId) && String(s.year) === String((att as any).year) && String(s.month) === String((att as any).month));
       const basicSalary = salary?.basicSalary ?? 0;
-      const isNotJoined = !emp.healthInsuranceStatus.isApplicable && !emp.pensionStatus.isApplicable;
+      const isNotJoined = !emp.healthInsuranceStatus?.isApplicable && !emp.pensionStatus?.isApplicable;
       const enoughHours = Number((att as any).scheduledWorkHours) >= thresholdHours;
       const enoughSalary = basicSalary >= thresholdSalary;
       // どちらかが基準を満たせばOK

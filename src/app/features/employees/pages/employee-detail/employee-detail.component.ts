@@ -33,6 +33,8 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   companyKey = '';
   prefectures = PREFECTURES;
   private companySub?: Subscription;
+  validationErrors: string[] = [];
+  saveMessage: string = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -103,6 +105,9 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     if (!this.editEmployee.foreignWorker) this.editEmployee.foreignWorker = {};
     if (!this.editEmployee.extraordinaryLeaves) this.editEmployee.extraordinaryLeaves = [];
     if (!this.editEmployee.dependents) this.editEmployee.dependents = [];
+    if (!this.editEmployee.healthInsuranceStatus) this.editEmployee.healthInsuranceStatus = {};
+    if (!this.editEmployee.pensionStatus) this.editEmployee.pensionStatus = {};
+    if (!this.editEmployee.employmentInsuranceStatus) this.editEmployee.employmentInsuranceStatus = {};
   }
 
   cancelEdit() {
@@ -111,11 +116,47 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   }
 
   async saveEdit() {
+    this.validationErrors = [];
+    this.saveMessage = '';
     if (!this.docId) return;
+    // 介護保険適用の自動判定
+    const health = this.editEmployee.healthInsuranceStatus?.isApplicable;
+    const birthday = this.editEmployee.birthday;
+    let isCare = false;
+    if (health && birthday) {
+      const birthDate = new Date(birthday);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      if (age >= 40 && age < 65) {
+        isCare = true;
+      }
+    }
+    this.editEmployee.isCareInsuranceApplicable = isCare;
+    // バリデーション: 正社員なら社会保険3種のisApplicableがすべてtrueでなければならない
+    if (this.editEmployee.employeeType === '正社員') {
+      if (!this.editEmployee.healthInsuranceStatus?.isApplicable) {
+        this.validationErrors.push('正社員の場合、健康保険適用は必須です');
+      }
+      if (!this.editEmployee.pensionStatus?.isApplicable) {
+        this.validationErrors.push('正社員の場合、厚生年金適用は必須です');
+      }
+      if (!this.editEmployee.employmentInsuranceStatus?.isApplicable) {
+        this.validationErrors.push('正社員の場合、雇用保険適用は必須です');
+      }
+    }
+    if (this.validationErrors.length > 0) {
+      // エラーがあれば編集モードを終了しない
+      return;
+    }
     await this.firestoreService.updateEmployee(this.docId, this.editEmployee);
     this.employee = JSON.parse(JSON.stringify(this.editEmployee));
     this.isEditMode = false;
     this.editEmployee = null;
+    this.saveMessage = '保存が完了しました';
   }
 
   canDeactivate(): boolean {

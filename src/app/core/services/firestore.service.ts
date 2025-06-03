@@ -326,4 +326,12 @@ export class FirestoreService {
     const snap = await getDocs(colRef);
     return snap.docs.map(doc => ({ ...(doc.data() as InsuranceBonusCalculation) }));
   }
+
+  // 出勤データ一覧取得
+  async getAttendancesByCompanyKey(companyKey: string): Promise<Attendance[]> {
+    const attendancesCol = collection(this.firestore, 'attendances');
+    const q = query(attendancesCol, where('companyKey', '==', companyKey));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ ...(doc.data() as Attendance) }));
+  }
 }

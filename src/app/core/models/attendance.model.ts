@@ -1,3 +1,5 @@
+import { Timestamp } from '@angular/fire/firestore';
+
 // 勤怠情報モデル
 export interface Attendance {
   companyKey: string;
@@ -20,6 +22,8 @@ export interface Attendance {
   injuryOrSicknessLeaveEndDate?: Date | null; // 傷病による休業終了日
   isOnFullLeaveThisMonth?: boolean; // 月全体で無給休業中か（報酬ゼロの判定用）
 
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
 }
 
 // 英語カラム名→日本語ラベルのマッピング辞書

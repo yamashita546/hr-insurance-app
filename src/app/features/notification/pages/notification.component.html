@@ -1,1 +1,20 @@
-<p>pages works!</p>
+<div *ngIf="loading">読み込み中...</div>
+<div *ngIf="!loading">
+  <!-- 社会保険加入推奨アラートブロック -->
+  <div class="notification-section">
+    <h2>社会保険加入推奨アラート</h2>
+    <div *ngIf="alerts.length === 0">アラートはありません。</div>
+    <ul *ngIf="alerts.length > 0" class="alert-list">
+      <li *ngFor="let alert of alerts">
+        <div class="alert-info">
+          <span style="font-weight:bold;">{{ alert.employeeName }}</span>
+          <span>（{{ alert.officeName }}・{{ alert.employeeType }}）</span>
+          <span>所定労働時間 {{ alert.scheduledWorkHours }}h／基本給 {{ alert.basicSalary | number }}円／勤務日数 {{ alert.scheduledWorkDays }}日</span>
+          <span style="color:#d9534f; font-weight:bold;">→ 社会保険未加入</span>
+        </div>
+        <button class="alert-action-btn" (click)="onHandleAlert(alert)">対応を記録</button>
+      </li>
+    </ul>
+  </div>
+  <!-- 今後他のアラート種類もここに追加可能 -->
+</div>

@@ -225,37 +225,110 @@
     <!-- 社会保険情報 -->
     <mat-tab label="社会保険情報">
       <div class="form-grid insurance-grid">
-        <div class="form-row">
-          <div class="form-item" style="align-items: center;">
-            <label><input type="checkbox" formControlName="isHealthInsuranceApplicable" /> 健康保険適用</label>
+        <!-- 健康保険 -->
+        <div formGroupName="healthInsuranceStatus" class="insurance-block">
+          <div class="form-row">
+            <div class="form-label"><label for="healthApplicable">健康保険適用</label></div>
+            <div class="form-input"><input id="healthApplicable" type="checkbox" formControlName="isApplicable" /></div>
           </div>
-          <div class="form-item">
-            <label>健康保険被保険者番号</label>
-            <input formControlName="healthInsuranceNumber" />
+          <div class="form-row" *ngIf="form.get('healthInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="healthNumber">被保険者番号</label></div>
+            <div class="form-input"><input id="healthNumber" formControlName="insuranceNumber" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('healthInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="healthAcq">資格取得日</label></div>
+            <div class="form-input"><input id="healthAcq" type="date" formControlName="acquisitionDate" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('healthInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="healthAcqRep">取得手続き済み</label></div>
+            <div class="form-input"><input id="healthAcqRep" type="checkbox" formControlName="acquisitionReported" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('healthInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="healthLoss">資格喪失日</label></div>
+            <div class="form-input"><input id="healthLoss" type="date" formControlName="lossDate" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('healthInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="healthLossRep">喪失届提出済み</label></div>
+            <div class="form-input"><input id="healthLossRep" type="checkbox" formControlName="lossReported" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('healthInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="healthCertIssued">保険証発行済み</label></div>
+            <div class="form-input"><input id="healthCertIssued" type="checkbox" formControlName="certificateIssued" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('healthInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="healthCertCollected">保険証回収済み</label></div>
+            <div class="form-input"><input id="healthCertCollected" type="checkbox" formControlName="certificateCollected" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('healthInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="healthRemarks">備考</label></div>
+            <div class="form-input"><input id="healthRemarks" formControlName="remarks" /></div>
+          </div>
+        </div>
+        <!-- 厚生年金 -->
+        <div formGroupName="pensionStatus" class="insurance-block">
+          <div class="form-row">
+            <div class="form-label"><label for="pensionApplicable">厚生年金適用</label></div>
+            <div class="form-input"><input id="pensionApplicable" type="checkbox" formControlName="isApplicable" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('pensionStatus.isApplicable')?.value">
+            <div class="form-label"><label for="pensionNumber">被保険者番号</label></div>
+            <div class="form-input"><input id="pensionNumber" formControlName="insuranceNumber" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('pensionStatus.isApplicable')?.value">
+            <div class="form-label"><label for="pensionAcq">資格取得日</label></div>
+            <div class="form-input"><input id="pensionAcq" type="date" formControlName="acquisitionDate" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('pensionStatus.isApplicable')?.value">
+            <div class="form-label"><label for="pensionAcqRep">取得手続き済み</label></div>
+            <div class="form-input"><input id="pensionAcqRep" type="checkbox" formControlName="acquisitionReported" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('pensionStatus.isApplicable')?.value">
+            <div class="form-label"><label for="pensionLoss">資格喪失日</label></div>
+            <div class="form-input"><input id="pensionLoss" type="date" formControlName="lossDate" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('pensionStatus.isApplicable')?.value">
+            <div class="form-label"><label for="pensionLossRep">喪失届提出済み</label></div>
+            <div class="form-input"><input id="pensionLossRep" type="checkbox" formControlName="lossReported" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('pensionStatus.isApplicable')?.value">
+            <div class="form-label"><label for="pensionRemarks">備考</label></div>
+            <div class="form-input"><input id="pensionRemarks" formControlName="remarks" /></div>
+          </div>
+        </div>
+        <!-- 雇用保険 -->
+        <div formGroupName="employmentInsuranceStatus" class="insurance-block">
+          <div class="form-row">
+            <div class="form-label"><label for="empApplicable">雇用保険適用</label></div>
+            <div class="form-input"><input id="empApplicable" type="checkbox" formControlName="isApplicable" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('employmentInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="empNumber">被保険者番号</label></div>
+            <div class="form-input"><input id="empNumber" formControlName="insuranceNumber" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('employmentInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="empAcq">資格取得日</label></div>
+            <div class="form-input"><input id="empAcq" type="date" formControlName="acquisitionDate" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('employmentInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="empAcqRep">取得手続き済み</label></div>
+            <div class="form-input"><input id="empAcqRep" type="checkbox" formControlName="acquisitionReported" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('employmentInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="empLoss">資格喪失日</label></div>
+            <div class="form-input"><input id="empLoss" type="date" formControlName="lossDate" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('employmentInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="empLossRep">喪失届提出済み</label></div>
+            <div class="form-input"><input id="empLossRep" type="checkbox" formControlName="lossReported" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('employmentInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="empRemarks">備考</label></div>
+            <div class="form-input"><input id="empRemarks" formControlName="remarks" /></div>
           </div>
         </div>
         <div class="form-row">
-          <div class="form-item" style="align-items: center;">
-            <label><input type="checkbox" formControlName="isPensionApplicable" /> 厚生年金適用</label>
-          </div>
-          <div class="form-item">
-            <label>厚生年金被保険者番号</label>
-            <input formControlName="pensionNumber" />
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-item" style="align-items: center;">
-            <label><input type="checkbox" formControlName="isEmploymentInsuranceApplicable" /> 雇用保険適用</label>
-          </div>
-          <div class="form-item">
-            <label>雇用保険被保険者番号</label>
-            <input formControlName="employmentInsuranceNumber" />
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-item">
-            <label><input type="checkbox" formControlName="isCareInsuranceApplicable" readonly /> 介護保険適用（自動判定）</label>
-          </div>
+          <div class="form-label"><label for="careApplicable">介護保険適用（自動判定）</label></div>
+          <div class="form-input"><input id="careApplicable" type="checkbox" formControlName="isCareInsuranceApplicable" readonly /></div>
         </div>
       </div>
       <div class="form-actions">

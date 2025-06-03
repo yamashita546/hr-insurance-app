@@ -3,6 +3,18 @@
 import { Timestamp } from '@angular/fire/firestore';
 import { Address } from './address.model';
 
+export type InsuranceStatus = {
+  isApplicable: boolean;              // 適用対象か
+  insuranceNumber?: string;           // 保険者番号（適用時のみ有効）
+  acquisitionDate?: Date;            // 資格取得日
+  acquisitionReported?: boolean;     // 取得手続き済みか
+  lossDate?: Date;                   // 喪失日
+  lossReported?: boolean;            // 喪失届提出済みか
+  certificateIssued?: boolean;       // 保険証発行済み（健康保険用）
+  certificateCollected?: boolean;     // 保険証回収済み（健康保険用）
+  remarks?: string;
+};
+
 export type Employee = {
     companyKey: string;
     displayCompanyKey: string;
@@ -33,16 +45,14 @@ export type Employee = {
     address?: Address;
     nationality?: string; // 国籍
     residenceStatus?: string; // 在留資格
-    employmentInsuranceNumber?: string; // 雇用保険被保険者番号
-    healthInsuranceNumber?: string; // 社会保険被保険者番号
-    pensionNumber?: string; // 年金被保険者番号
     emergencyContactName?: string; // 緊急連絡先氏名
     emergencyContactPhone?: string; // 緊急連絡先電話番号
     hasDependents?: boolean;
     dependentsCount?: number; // 扶養人数
 
-    isHealthInsuranceApplicable: boolean;    //健康保険の適用対象か
-    isPensionApplicable: boolean;            //厚生年金保険の適用対象か
+    healthInsuranceStatus: InsuranceStatus;
+    pensionStatus: InsuranceStatus;
+    employmentInsuranceStatus: InsuranceStatus;
     isCareInsuranceApplicable?: boolean;     //介護保険の適用対象か
     remarks?: string;                       // 備考欄
 
@@ -136,9 +146,6 @@ export const EMPLOYEE_CSV_FIELD_LABELS: { [key: string]: string } = {
   'address.streetAddress': '建物名',
   nationality: '国籍',
   residenceStatus: '在留資格',
-  employmentInsuranceNumber: '雇用保険番号',
-  healthInsuranceNumber: '健康保険番号',
-  pensionNumber: '年金番号',
   emergencyContactName: '緊急連絡先氏名',
   emergencyContactPhone: '緊急連絡先電話番号',
   hasDependents: '扶養家族あり',

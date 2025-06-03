@@ -123,12 +123,36 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
         town: [''],
         streetAddress: ['']
       }),
-      healthInsuranceNumber: [''],
-      pensionNumber: [''],
-      employmentInsuranceNumber: [''],
-      isHealthInsuranceApplicable: [false],
-      isPensionApplicable: [false],
-      isEmploymentInsuranceApplicable: [false],
+      // 保険情報をInsuranceStatus型で管理
+      healthInsuranceStatus: this.fb.group({
+        isApplicable: [false],
+        insuranceNumber: [''],
+        acquisitionDate: [''],
+        acquisitionReported: [false],
+        lossDate: [''],
+        lossReported: [false],
+        certificateIssued: [false],
+        certificateCollected: [false],
+        remarks: ['']
+      }),
+      pensionStatus: this.fb.group({
+        isApplicable: [false],
+        insuranceNumber: [''],
+        acquisitionDate: [''],
+        acquisitionReported: [false],
+        lossDate: [''],
+        lossReported: [false],
+        remarks: ['']
+      }),
+      employmentInsuranceStatus: this.fb.group({
+        isApplicable: [false],
+        insuranceNumber: [''],
+        acquisitionDate: [''],
+        acquisitionReported: [false],
+        lossDate: [''],
+        lossReported: [false],
+        remarks: ['']
+      }),
       isCareInsuranceApplicable: [false],
       emergencyContactName: [''],
       emergencyContactRelationship: [''],
@@ -180,7 +204,8 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
 
     // 介護保険適用の自動判定
     this.autoCareInsuranceSub = this.form.valueChanges.subscribe(val => {
-      const health = val.isHealthInsuranceApplicable;
+      // 健康保険適用の取得方法を修正
+      const health = val.healthInsuranceStatus?.isApplicable;
       const birthday = val.birthday;
       let isCare = false;
       if (health && birthday) {
@@ -191,7 +216,8 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
         if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
           age--;
         }
-        if (age >= 40) {
+        // 40歳以上65歳未満
+        if (age >= 40 && age < 65) {
           isCare = true;
         }
       }

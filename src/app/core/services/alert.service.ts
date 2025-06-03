@@ -20,6 +20,7 @@ export interface Salary {
   year: string;
   month: string;
   basicSalary: number;
+  targetYearMonth: string;
   [key: string]: any;
 }
 
@@ -77,16 +78,18 @@ export class AlertService {
       const type = (emp.employeeType || '').toLowerCase();
       const isPartOrBaito = type.includes('パート') || type.includes('ｱﾙﾊﾞｲﾄ') || type.includes('アルバイト');
       // 給与データ取得
-      const salary = salaries.find(s => String(s.employeeId) === String((att as any).employeeId) && String(s.year) === String((att as any).year) && String(s.month) === String((att as any).month));
-      const basicSalary = salary?.basicSalary ?? 0;
+      const targetYearMonth = `${(att as any).year}-${String((att as any).month).padStart(2, '0')}`;
+      const salary = salaries.find(s => String(s.employeeId) === String((att as any).employeeId) && s.targetYearMonth === targetYearMonth);
+      const basicSalary = Number(salary?.basicSalary) || 0;
       const isNotJoined = !emp.healthInsuranceStatus?.isApplicable && !emp.pensionStatus?.isApplicable;
       const enoughHours = Number((att as any).scheduledWorkHours) >= thresholdHours;
       const enoughSalary = basicSalary >= thresholdSalary;
-      // どちらかが基準を満たせばOK
-      return isPartOrBaito && isNotJoined && (enoughHours || enoughSalary);
+      // 両方の基準を満たす場合のみアラート
+      return isPartOrBaito && isNotJoined && (enoughHours && enoughSalary);
     }).map(att => {
       const emp = employees.find(e => e.employeeId === String((att as any).employeeId ?? ''));
-      const salary = salaries.find(s => String(s.employeeId) === String((att as any).employeeId) && String(s.year) === String((att as any).year) && String(s.month) === String((att as any).month));
+      const targetYearMonth = `${(att as any).year}-${String((att as any).month).padStart(2, '0')}`;
+      const salary = salaries.find(s => String(s.employeeId) === String((att as any).employeeId) && s.targetYearMonth === targetYearMonth);
       return {
         employeeName: (att as any).employeeName,
         officeName: (att as any).officeName,
@@ -97,7 +100,7 @@ export class AlertService {
         year: (att as any).year,
         month: (att as any).month,
         companyId: (att as any).companyId,
-        basicSalary: salary?.basicSalary
+        basicSalary: Number(salary?.basicSalary) || 0
       };
     });
   }

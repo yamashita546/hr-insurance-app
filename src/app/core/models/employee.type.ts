@@ -9,6 +9,7 @@ export interface EmployeeType {
     { code: 'regular', name: '正社員' },
     { code: 'contract', name: '契約社員' },
     { code: 'parttime', name: 'パート' },
+    { code: 'parttimejob', name: 'アルバイト' },
   ]
 
   // 勤務形態区分

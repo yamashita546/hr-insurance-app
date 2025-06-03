@@ -134,6 +134,11 @@
         </td>
       </tr>
       <tr>
+        <th>学生</th>
+        <td *ngIf="!isEditMode">{{ employee.isStudent ? '○' : '×' }}</td>
+        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.isStudent"></td>
+      </tr>
+      <tr>
         <th>契約開始日</th>
         <td *ngIf="!isEditMode">{{ employee.contractStartDate || '未入力' }}</td>
         <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.contractStartDate"></td>

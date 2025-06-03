@@ -200,10 +200,11 @@ export class AttendanceListComponent {
     this.alertTargets = latestList.filter(att => {
       const emp = this.employees.find(e => e.employeeId === String((att as any).employeeId ?? ''));
       if (!emp) return false;
+      if (emp.isStudent) return false;
       const type = (emp.employeeType || '').toLowerCase();
       const isPartOrBaito = type.includes('パート') || type.includes('ｱﾙﾊﾞｲﾄ') || type.includes('アルバイト');
       const isNotJoined = !emp.isHealthInsuranceApplicable && !emp.isPensionApplicable;
-      const enoughHours = Number(att.actualWorkHours) >= thresholdHours;
+      const enoughHours = Number(att.scheduledWorkHours) >= thresholdHours;
       return isPartOrBaito && isNotJoined && enoughHours;
     }).map(att => {
       const emp = this.employees.find(e => e.employeeId === String((att as any).employeeId ?? ''));

@@ -5,15 +5,15 @@
   </div>
   <h1>勤怠情報管理</h1>
   <div *ngIf="alertTargets.length > 0" style="background:#fff3cd; color:#856404; border:1px solid #ffeeba; border-radius:6px; padding:16px; margin-bottom:18px;">
-    <strong>社会保険加入判定アラート</strong>
+    <strong>社会保険加入推奨判定アラート</strong>
     <ul style="margin: 8px 0 0 0; padding-left: 1.2em;">
       <li *ngFor="let alert of alertTargets">
         <span style="font-weight:bold;">{{ alert.employeeName }}</span>（{{ alert.officeName }}・{{ alert.employeeType }}）
-        ：勤務時間 {{ alert.actualWorkHours }}h／勤務日数 {{ alert.actualWorkDays }}日
+        ：所定労働時間 {{ alert.scheduledWorkHours }}h／勤務日数 {{ alert.scheduledWorkDays }}日
         <span style="color:#d9534f; font-weight:bold;">→ 社会保険未加入</span>
       </li>
     </ul>
-    <div style="font-size:0.95em; color:#856404; margin-top:8px;">※週20時間以上勤務のパート・アルバイトで社会保険未加入の従業員が対象です。</div>
+    <div style="font-size:0.95em; color:#856404; margin-top:8px;">※週20時間以上勤務の学生を除くパート・アルバイトで社会保険未加入の従業員が対象です。</div>
   </div>
   <div class="attendance-actions">
     <div class="csv-toolbar">
@@ -46,7 +46,7 @@
           <th (click)="changeSort('employeeId')" style="cursor:pointer;">ID <span *ngIf="sortKey==='employeeId'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span></th>
           <th (click)="changeSort('employeeName')" style="cursor:pointer;">氏名 <span *ngIf="sortKey==='employeeName'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span></th>
           <th (click)="changeSort('officeName')" style="cursor:pointer;">事業所 <span *ngIf="sortKey==='officeName'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span></th>
-          <th (click)="changeSort('employeeType')" style="cursor:pointer;">勤務形態 <span *ngIf="sortKey==='employeeType'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span></th>
+          <th (click)="changeSort('employeeType')" style="cursor:pointer;">雇用形態 <span *ngIf="sortKey==='employeeType'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span></th>
           <th (click)="changeSort('year')" style="cursor:pointer;">年度 <span *ngIf="sortKey==='year'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span></th>
           <th (click)="changeSort('month')" style="cursor:pointer;">月 <span *ngIf="sortKey==='month'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span></th>
           <th>所定労働日数</th>

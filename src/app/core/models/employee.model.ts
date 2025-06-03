@@ -13,6 +13,7 @@ export type Employee = {
     department?: string;        // 所属部署（任意）
     position?: string;          // 役職（任意）
     employeeType?: string; // 雇用形態
+    isStudent?: boolean; // 学生かどうか
 
     lastName: string;
     firstName: string;

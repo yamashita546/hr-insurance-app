@@ -5,7 +5,7 @@
     <div>企業ID：{{ companyId }}</div>
     <div>企業名：{{ companyName }}</div>
   </div>
-  <h2>給与・賞与登録</h2>
+  <h2>給与・賞与一覧</h2>
   <div class="filter-bar">
     <select [(ngModel)]="selectedYear" (change)="onYearChange()">
       <option *ngFor="let year of years" [value]="year">{{ year }}年度</option>
@@ -32,7 +32,6 @@
           <th>その他手当</th>
           <th>賞与</th>
           <th>総支給額</th>
-          <th>登録状態</th>
           <th>編集</th>
         </tr>
       </thead>
@@ -45,89 +44,11 @@
           <td>{{ employee.allowance | currency:'JPY':'symbol' }}</td>
           <td>{{ employee.bonus | currency:'JPY':'symbol' }}</td>
           <td>{{ employee.totalSalary | currency:'JPY':'symbol' }}</td>
-          <td>{{ employee.status }}</td>
           <td>
-            <button (click)="onRegisterSalary(employee)">編集</button>
+            <button [routerLink]="['/detail-salary']" [queryParams]="{ employeeId: employee.employeeId, year: selectedYear, month: selectedMonth }">詳細</button>
           </td>
         </tr>
       </tbody>
     </table>
-  </div>
-  <div *ngIf="showEditTypeDialog" class="edit-modal-backdrop">
-    <div class="edit-modal-dialog">
-      <h3>編集種別を選択</h3>
-      <div class="edit-type-actions">
-        <button (click)="onEditTypeSelect('salary')">給与を修正</button>
-        <button (click)="onEditTypeSelect('bonus')">賞与を修正</button>
-        <button (click)="onEditCancel()">キャンセル</button>
-      </div>
-    </div>
-  </div>
-  <div *ngIf="editMode === 'salary'" class="edit-modal-backdrop">
-    <div class="edit-modal-dialog">
-      <h3>給与情報編集</h3>
-      <form (ngSubmit)="onEditSave()">
-        <div class="edit-form-row">
-          <label>基本給</label>
-          <input type="number" [(ngModel)]="editSalaryForm.basicSalary" name="basicSalary" required>
-        </div>
-        <div class="edit-form-row">
-          <label>時間外手当</label>
-          <input type="number" [(ngModel)]="editSalaryForm.overtimeSalary" name="overtimeSalary">
-        </div>
-        <div class="edit-form-row">
-          <label>通勤手当</label>
-          <input type="number" [(ngModel)]="editSalaryForm.commuteAllowance" name="commuteAllowance">
-        </div>
-        <div class="edit-form-row">
-          <label>役職手当</label>
-          <input type="number" [(ngModel)]="editSalaryForm.positionAllowance" name="positionAllowance">
-        </div>
-        <div class="edit-form-row">
-          <label>その他手当</label>
-          <input type="number" [(ngModel)]="editSalaryForm.otherAllowance" name="otherAllowance">
-        </div>
-        <div class="edit-form-row">
-          <label>備考</label>
-          <input type="text" [(ngModel)]="editSalaryForm.remarks" name="remarks">
-        </div>
-        <div class="edit-form-actions">
-          <button type="submit">保存</button>
-          <button type="button" (click)="onEditCancel()">キャンセル</button>
-        </div>
-      </form>
-    </div>
-  </div>
-  <div *ngIf="editMode === 'bonus'" class="edit-modal-backdrop">
-    <div class="edit-modal-dialog">
-      <h3>賞与情報編集</h3>
-      <form (ngSubmit)="onEditSave()">
-        <div *ngFor="let bonus of editBonusForms; let i = index" class="edit-form-row">
-          <label>賞与種類</label>
-          <select [(ngModel)]="bonus.bonusType" name="bonusType{{i}}" required>
-            <option value="">選択してください</option>
-            <option value="年間賞与">年間賞与</option>
-            <option value="半年賞与">半年賞与</option>
-            <option value="四半期賞与">四半期賞与</option>
-            <option value="月次賞与">月次賞与</option>
-            <option value="その他賞与">その他賞与</option>
-          </select>
-          <ng-container *ngIf="bonus.bonusType === 'その他賞与'">
-            <label>賞与名</label>
-            <input type="text" [(ngModel)]="bonus.bonusName" name="bonusName{{i}}" required>
-          </ng-container>
-          <label>賞与金額</label>
-          <input type="number" [(ngModel)]="bonus.bonus" name="bonus{{i}}">
-        </div>
-        <div class="edit-form-row">
-          <label>備考</label>
-          <input type="text" [(ngModel)]="editBonusRemark" name="bonusRemark">
-        </div>
-        <div class="edit-form-actions">
-          <button type="submit">保存</button>
-          <button type="button" (click)="onEditCancel()">キャンセル</button>
-        </div>
-      </form>
-    </div>
   </div>
 </div>

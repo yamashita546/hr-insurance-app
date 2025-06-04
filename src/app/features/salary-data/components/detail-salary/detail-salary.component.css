@@ -1,0 +1,81 @@
+.salary-title {
+  text-align: center;
+  margin-top: 16px;
+  margin-bottom: 6px;
+}
+.salary-title h1 {
+  font-size: 1.4rem;
+  color: #1976d2;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+.detail-salary-container {
+  max-width: 600px;
+  margin: 0 auto 16px auto;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 16px 16px 12px 16px;
+}
+.year-month-bar {
+  margin-bottom: 8px;
+  text-align: right;
+}
+.year-month-bar label {
+  font-weight: bold;
+  font-size: 1em;
+}
+.year-month-bar select {
+  margin-left: 4px;
+  margin-right: 8px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #b0b0b0;
+  font-size: 1em;
+}
+.tab-bar {
+  margin-bottom: 8px;
+  text-align: left;
+}
+.tab-bar label {
+  font-weight: bold;
+  font-size: 1em;
+  cursor: pointer;
+}
+.tab-bar input[type="radio"] {
+  margin-right: 2px;
+}
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+  background: #fafcff;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+.detail-table th, .detail-table td {
+  border: 1px solid #e0e0e0;
+  padding: 6px 8px;
+  text-align: left;
+  font-size: 1em;
+}
+.detail-table th {
+  background: #f0f7ff;
+  width: 140px;
+  font-weight: bold;
+}
+.detail-table tr:last-child td {
+  border-bottom: none;
+}
+.detail-table tr:last-child th {
+  border-bottom: none;
+}
+@media (max-width: 700px) {
+  .detail-salary-container {
+    padding: 8px 2vw 6px 2vw;
+  }
+  .salary-title h1 {
+    font-size: 1rem;
+  }
+}

@@ -1,0 +1,56 @@
+<div class="salary-title">
+  <h1>給与詳細</h1>
+</div>
+<div class="detail-salary-container" *ngIf="employee">
+  <h2>従業員詳細：{{ employee.lastName }} {{ employee.firstName }}</h2>
+  <div class="year-month-bar">
+    <label>表示年月：
+      <select [(ngModel)]="selectedYear" (change)="onYearMonthChange()">
+        <option *ngFor="let y of years" [value]="y">{{ y }}年</option>
+      </select>
+      <select [(ngModel)]="selectedMonth" (change)="onYearMonthChange()">
+        <option *ngFor="let m of months" [value]="m">{{ m }}月</option>
+      </select>
+    </label>
+  </div>
+  <div class="tab-bar">
+    <label><input type="radio" [(ngModel)]="activeTab" value="salary"> 給与</label>
+    <label style="margin-left: 1em;"><input type="radio" [(ngModel)]="activeTab" value="bonus"> 賞与</label>
+  </div>
+  <div *ngIf="activeTab === 'salary'">
+    <h3>給与情報</h3>
+    <table class="detail-table">
+      <tr><th>基本給</th><td>{{ salary?.basicSalary | number }} 円</td></tr>
+      <tr><th>時間外手当</th><td>{{ salary?.overtimeSalary | number }} 円</td></tr>
+      <tr><th>通勤手当</th><td>{{ salary?.commuteAllowance | number }} 円</td></tr>
+      <tr><th>役職手当</th><td>{{ salary?.positionAllowance | number }} 円</td></tr>
+      <tr><th>その他手当</th><td>{{ salary?.otherAllowance | number }} 円</td></tr>
+      <tr><th>総支給額</th><td>{{ salary?.totalSalary | number }} 円</td></tr>
+      <tr><th>備考</th><td>{{ salary?.remarks }}</td></tr>
+    </table>
+    <div *ngIf="!salary" style="color: #d9534f; margin-top: 1em;">該当月の給与データがありません。</div>
+  </div>
+  <div *ngIf="activeTab === 'bonus'">
+    <h3>賞与情報</h3>
+    <table class="detail-table" *ngIf="bonuses.length > 0">
+      <thead>
+        <tr>
+          <th>賞与種類</th>
+          <th>賞与名</th>
+          <th>金額</th>
+          <th>備考</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let bonus of bonuses">
+          <td>{{ bonus.bonusType }}</td>
+          <td>{{ bonus.bonusName }}</td>
+          <td>{{ bonus.bonus | number }} 円</td>
+          <td>{{ bonus.remarks }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div *ngIf="bonuses.length === 0" style="color: #d9534f; margin-top: 1em;">該当月の賞与データがありません。</div>
+  </div>
+</div>
+<div *ngIf="!employee" style="color: #d9534f;">従業員情報が取得できませんでした。</div>

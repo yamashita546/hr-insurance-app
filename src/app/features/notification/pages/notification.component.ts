@@ -5,6 +5,10 @@ import { AlertService, SocialInsuranceAlert } from '../../../core/services/alert
 import { Company } from '../../../core/models/company.model';
 import { Subscription } from 'rxjs';
 import { UserCompanyService } from '../../../core/services/user-company.service';
+import { StandardMonthlyDecision } from '../../../core/models/standard-monthly-decision .model';
+import { HealthInsuranceGrade, PensionInsuranceGrade } from '../../../core/models/standard-manthly.model';
+import { StandardMonthlyRevisionAlert } from '../../../core/services/alert.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-notification',
@@ -18,6 +22,7 @@ export class NotificationComponent implements OnInit, OnDestroy {
   alerts: SocialInsuranceAlert[] = [];
   loading = true;
   private companySub?: Subscription;
+  standardMonthlyRevisionAlerts: StandardMonthlyRevisionAlert[] = [];
 
   constructor(
     private firestoreService: FirestoreService,
@@ -25,17 +30,19 @@ export class NotificationComponent implements OnInit, OnDestroy {
     private userCompanyService: UserCompanyService
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     // company$を購読し、値がnullでなければ初期化処理を実行
     this.companySub = this.userCompanyService.company$.subscribe(async company => {
       if (!company) return;
       this.company = company;
       const companyKey = company.companyKey;
       // データ取得
-      const [attendances, employees, salaries] = await Promise.all([
+      const [attendances, employees, salaries, standardMonthlyDecisions, gradeMaster] = await Promise.all([
         this.firestoreService.getAttendancesByCompanyKey(companyKey),
         this.firestoreService.getEmployeesByCompanyKey(companyKey),
-        this.firestoreService.getSalariesByCompanyKey(companyKey)
+        this.firestoreService.getSalariesByCompanyKey(companyKey),
+        this.firestoreService.getStandardMonthlyDecisionsByCompanyKey(companyKey),
+        firstValueFrom(this.firestoreService.getStandardMonthlyGrades())
       ]);
       // デバッグ用ログ出力
       console.log('【DEBUG】取得した勤怠データ:', attendances);
@@ -43,11 +50,16 @@ export class NotificationComponent implements OnInit, OnDestroy {
       console.log('【DEBUG】取得した給与データ:', salaries);
       console.log('【DEBUG】取得したcompanyKey:', companyKey);
       // アラート生成
-      this.alerts = this.alertService.getSocialInsuranceRecommendationAlerts(
+      this.alerts = await this.alertService.getSocialInsuranceRecommendationAlerts(
         attendances,
         employees,
         salaries,
         companyKey
+      );
+      // 随時改定アラート
+      const now = new Date();
+      this.standardMonthlyRevisionAlerts = await this.alertService.getStandardMonthlyRevisionAlerts(
+        employees, salaries, standardMonthlyDecisions, gradeMaster as (HealthInsuranceGrade | PensionInsuranceGrade)[], now.getFullYear(), now.getMonth() + 1
       );
       // アラート判定結果のデバッグ出力
       console.log('【DEBUG】アラート判定結果:', this.alerts);

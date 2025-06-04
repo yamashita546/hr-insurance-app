@@ -16,5 +16,25 @@
       </li>
     </ul>
   </div>
+  <!-- 随時改定アラートブロック -->
+  <div class="notification-section">
+    <h2>標準報酬月額 随時改定アラート</h2>
+    <div *ngIf="standardMonthlyRevisionAlerts.length === 0">アラートはありません。</div>
+    <ul *ngIf="standardMonthlyRevisionAlerts.length > 0" class="alert-list">
+      <li *ngFor="let alert of standardMonthlyRevisionAlerts">
+        <div class="alert-info">
+          <span style="font-weight:bold;">{{ alert.employeeName }}</span>
+          <span>（{{ alert.officeName }}）</span>
+          <span>
+            直近3ヶ月平均 {{ alert.avgSalary | number }}円／
+            現行等級 {{ alert.currentGrade }}（{{ alert.currentMonthly | number }}円）→
+            新等級候補 {{ alert.newGrade }}（{{ alert.newMonthly | number }}円）
+          </span>
+          <span style="color:#d9534f; font-weight:bold;">→ 随時改定（月額変更届）の申請推奨</span>
+        </div>
+        <a class="alert-action-btn" href="/manage-standard-monthly">標準報酬月額を確認・修正</a>
+      </li>
+    </ul>
+  </div>
   <!-- 今後他のアラート種類もここに追加可能 -->
 </div>

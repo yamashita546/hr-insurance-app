@@ -63,7 +63,16 @@
         </div>
         <div class="salary-input-row">
           <label>通勤手当</label>
-          <span>¥ <input type="number" [(ngModel)]="salaryForm.commuteAllowance" (ngModelChange)="calculateTotalSalary()"></span>
+          <span>¥ <input type="number" [(ngModel)]="salaryForm.commuteAllowance"></span>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div><label>対象期間</label></div>
+            <div>
+              <input type="month" [(ngModel)]="salaryForm.commuteAllowancePeriodFrom" (change)="onCommutePeriodChange()">
+              ～
+              <input type="month" [(ngModel)]="salaryForm.commuteAllowancePeriodTo" (change)="onCommutePeriodChange()">
+            </div>
+            <div style="margin-top: 2px;"><label>何か月分</label> <input type="number" [value]="salaryForm.commuteAllowanceMonths" readonly style="width: 60px; background: #f0f0f0;"></div>
+          </div>
         </div>
         <div class="salary-input-row">
           <label>役職手当</label>
@@ -119,7 +128,6 @@
     <div class="form-action-bar">
       <button (click)="onSave()">保存</button>
       <button (click)="onClear()">クリア</button>
-      <button (click)="onShowHistory()">履歴を見る</button>
     </div>
   </div>
 

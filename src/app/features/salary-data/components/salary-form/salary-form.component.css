@@ -86,24 +86,30 @@
 .salary-input-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 10px;
   background: #f7fafd;
   border-radius: 6px;
   padding: 8px 12px;
+  flex-wrap: wrap;
 }
 .salary-input-row label {
   font-weight: 500;
   color: #1976d2;
+  min-width: 60px;
+  margin-right: 2px;
 }
-.salary-input-row input[type="number"] {
+.salary-input-row input[type="number"],
+.salary-input-row input[type="month"] {
   width: 110px;
+  min-width: 80px;
   padding: 5px 8px;
   border: 1px solid #bdbdbd;
   border-radius: 6px;
   font-size: 1rem;
   background: #fff;
   text-align: right;
+  margin-right: 4px;
 }
 .salary-total-row {
   margin-top: 10px;
@@ -143,6 +149,22 @@
   .employee-select-area label {
     min-width: 0;
     width: 100%;
+  }
+  .salary-input-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .salary-input-row label {
+    min-width: 0;
+    width: 100%;
+    margin-right: 0;
+  }
+  .salary-input-row input[type="number"],
+  .salary-input-row input[type="month"] {
+    width: 100%;
+    min-width: 0;
+    margin-right: 0;
   }
 }
 .loading {

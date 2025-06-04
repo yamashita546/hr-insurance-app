@@ -584,5 +584,18 @@ export class SalaryFormComponent implements OnInit {
     this.editTarget = null;
     this.onClear();
   }
+
+  onCommutePeriodChange() {
+    const from = this.salaryForm.commuteAllowancePeriodFrom;
+    const to = this.salaryForm.commuteAllowancePeriodTo;
+    if (from && to) {
+      const fromDate = new Date(from + '-01');
+      const toDate = new Date(to + '-01');
+      const months = (toDate.getFullYear() - fromDate.getFullYear()) * 12 + (toDate.getMonth() - fromDate.getMonth()) + 1;
+      this.salaryForm.commuteAllowanceMonths = months > 0 ? months : 1;
+    } else {
+      this.salaryForm.commuteAllowanceMonths = 1;
+    }
+  }
 }
 

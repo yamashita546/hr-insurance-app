@@ -6,6 +6,11 @@ export interface Salary {
     overtimeSalary: number; // 残業手当
     otherAllowanceName?: string; // その他手当名
     otherAllowance?: number; // その他手当
+    // 通勤手当関連
+    commuteAllowance?: number;
+    commuteAllowanceMonths?: number; // 何か月分か
+    commuteAllowancePeriodFrom?: string; // 対象期間開始（YYYY-MM）
+    commuteAllowancePeriodTo?: string;   // 対象期間終了（YYYY-MM）
     totalAllowance: number; // 総手当
     totalSalary: number; // 総支給額
     remarks?: string; // 備考

@@ -144,26 +144,15 @@ export class SalaryFormComponent implements OnInit {
         alert('既に給与が登録されています。');
         return;
       }
+      // otherAllowances配列は「その他手当」のみ格納
       const otherAllowances = [];
-      if (this.salaryForm.commuteAllowance) {
-        otherAllowances.push({
-          otherAllowanceName: '通勤手当',
-          otherAllowance: Number(this.salaryForm.commuteAllowance) || 0
-        });
-      }
-      if (this.salaryForm.positionAllowance) {
-        otherAllowances.push({
-          otherAllowanceName: '役職手当',
-          otherAllowance: Number(this.salaryForm.positionAllowance) || 0
-        });
-      }
       if (this.salaryForm.otherAllowance) {
         otherAllowances.push({
           otherAllowanceName: 'その他手当',
           otherAllowance: Number(this.salaryForm.otherAllowance) || 0
         });
       }
-      const totalAllowance = otherAllowances.reduce((sum, a) => sum + (a.otherAllowance || 0), 0);
+      const totalAllowance = (Number(this.salaryForm.commuteAllowance) || 0) + (Number(this.salaryForm.positionAllowance) || 0) + (Number(this.salaryForm.otherAllowance) || 0);
       const totalSalary = (Number(this.salaryForm.basicSalary) || 0) + (Number(this.salaryForm.overtimeSalary) || 0) + totalAllowance;
       const salary = {
         companyKey: this.companyKey,
@@ -171,10 +160,16 @@ export class SalaryFormComponent implements OnInit {
         targetYearMonth: ym,
         basicSalary: Number(this.salaryForm.basicSalary) || 0,
         overtimeSalary: Number(this.salaryForm.overtimeSalary) || 0,
+        commuteAllowance: Number(this.salaryForm.commuteAllowance) || 0,
+        positionAllowance: Number(this.salaryForm.positionAllowance) || 0,
+        otherAllowance: Number(this.salaryForm.otherAllowance) || 0,
         otherAllowances: otherAllowances,
         totalAllowance,
         totalSalary,
         remarks: this.salaryForm.remarks || '',
+        commuteAllowancePeriodFrom: this.salaryForm.commuteAllowancePeriodFrom || '',
+        commuteAllowancePeriodTo: this.salaryForm.commuteAllowancePeriodTo || '',
+        commuteAllowanceMonths: this.salaryForm.commuteAllowanceMonths || 1,
       };
       try {
         await this.firestoreService.addSalary(salary);
@@ -338,9 +333,13 @@ export class SalaryFormComponent implements OnInit {
           commuteAllowance: Number(row.commuteAllowance) || 0,
           positionAllowance: Number(row.positionAllowance) || 0,
           otherAllowance: Number(row.otherAllowance) || 0,
+          otherAllowances: [],
           totalAllowance,
           totalSalary,
           remarks: row.remarks || '',
+          commuteAllowancePeriodFrom: row.commuteAllowancePeriodFrom || '',
+          commuteAllowancePeriodTo: row.commuteAllowancePeriodTo || '',
+          commuteAllowanceMonths: Number(row.commuteAllowanceMonths) || 1,
         };
         console.log('import salary:', salary);
         const isOverwrite = overwriteRows.some(orow => orow.employeeId === row.employeeId && orow.targetYear === row.targetYear && orow.targetMonth === row.targetMonth);
@@ -361,6 +360,10 @@ export class SalaryFormComponent implements OnInit {
           bonus: Number(row.bonus) || 0,
           bonusTotal: Number(row.bonus) || 0, // 単一行の場合は同額
           remarks: row.remarks || '',
+          commuteAllowance: Number(row.commuteAllowance) || 0,
+          commuteAllowancePeriodFrom: row.commuteAllowancePeriodFrom || '',
+          commuteAllowancePeriodTo: row.commuteAllowancePeriodTo || '',
+          commuteAllowanceMonths: Number(row.commuteAllowanceMonths) || 1,
         };
         console.log('import bonus:', bonusData);
         const isOverwrite = overwriteRows.some(orow => orow.employeeId === row.employeeId && orow.targetYear === row.targetYear && orow.targetMonth === row.targetMonth);
@@ -493,7 +496,10 @@ export class SalaryFormComponent implements OnInit {
         commuteAllowance: salary.commuteAllowance ?? (salary.otherAllowances?.find((a: any) => a.otherAllowanceName === '通勤手当')?.otherAllowance || 0),
         positionAllowance: salary.positionAllowance ?? (salary.otherAllowances?.find((a: any) => a.otherAllowanceName === '役職手当')?.otherAllowance || 0),
         otherAllowance: salary.otherAllowance ?? (salary.otherAllowances?.find((a: any) => a.otherAllowanceName === 'その他手当')?.otherAllowance || 0),
-        remarks: salary.remarks || ''
+        remarks: salary.remarks || '',
+        commuteAllowancePeriodFrom: salary.commuteAllowancePeriodFrom || '',
+        commuteAllowancePeriodTo: salary.commuteAllowancePeriodTo || '',
+        commuteAllowanceMonths: salary.commuteAllowanceMonths || 1,
       };
       this.calculateTotalSalary();
     }
@@ -521,26 +527,15 @@ export class SalaryFormComponent implements OnInit {
   async onEditSave() {
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
     if (this.editMode === 'salary' && this.selectedEmployeeObj) {
+      // otherAllowances配列は「その他手当」のみ格納
       const otherAllowances = [];
-      if (this.salaryForm.commuteAllowance) {
-        otherAllowances.push({
-          otherAllowanceName: '通勤手当',
-          otherAllowance: Number(this.salaryForm.commuteAllowance) || 0
-        });
-      }
-      if (this.salaryForm.positionAllowance) {
-        otherAllowances.push({
-          otherAllowanceName: '役職手当',
-          otherAllowance: Number(this.salaryForm.positionAllowance) || 0
-        });
-      }
       if (this.salaryForm.otherAllowance) {
         otherAllowances.push({
           otherAllowanceName: 'その他手当',
           otherAllowance: Number(this.salaryForm.otherAllowance) || 0
         });
       }
-      const totalAllowance = otherAllowances.reduce((sum, a) => sum + (a.otherAllowance || 0), 0);
+      const totalAllowance = (Number(this.salaryForm.commuteAllowance) || 0) + (Number(this.salaryForm.positionAllowance) || 0) + (Number(this.salaryForm.otherAllowance) || 0);
       const totalSalary = (Number(this.salaryForm.basicSalary) || 0) + (Number(this.salaryForm.overtimeSalary) || 0) + totalAllowance;
       const salary = {
         companyKey: this.companyKey,
@@ -548,10 +543,16 @@ export class SalaryFormComponent implements OnInit {
         targetYearMonth: ym,
         basicSalary: Number(this.salaryForm.basicSalary) || 0,
         overtimeSalary: Number(this.salaryForm.overtimeSalary) || 0,
+        commuteAllowance: Number(this.salaryForm.commuteAllowance) || 0,
+        positionAllowance: Number(this.salaryForm.positionAllowance) || 0,
+        otherAllowance: Number(this.salaryForm.otherAllowance) || 0,
         otherAllowances: otherAllowances,
         totalAllowance,
         totalSalary,
         remarks: this.salaryForm.remarks || '',
+        commuteAllowancePeriodFrom: this.salaryForm.commuteAllowancePeriodFrom || '',
+        commuteAllowancePeriodTo: this.salaryForm.commuteAllowancePeriodTo || '',
+        commuteAllowanceMonths: this.salaryForm.commuteAllowanceMonths || 1,
       };
       await this.firestoreService.updateSalary(salary.companyKey!, salary.employeeId, salary.targetYearMonth, salary);
       alert('給与情報を更新しました');
@@ -569,6 +570,10 @@ export class SalaryFormComponent implements OnInit {
           bonus: Number(bonus.bonus) || 0,
           bonusTotal: this.bonusTotal,
           remarks: this.bonusRemark || '',
+          commuteAllowance: Number(this.salaryForm.commuteAllowance) || 0,
+          commuteAllowancePeriodFrom: this.salaryForm.commuteAllowancePeriodFrom || '',
+          commuteAllowancePeriodTo: this.salaryForm.commuteAllowancePeriodTo || '',
+          commuteAllowanceMonths: this.salaryForm.commuteAllowanceMonths || 1,
         };
         await this.firestoreService.updateBonus(bonusData.companyKey!, bonusData.employeeId, bonusData.targetYearMonth, bonusData);
       }

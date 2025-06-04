@@ -96,7 +96,10 @@ export class DetailSalaryComponent implements OnInit {
         commuteAllowance: this.salary.commuteAllowance ?? 0,
         positionAllowance: this.salary.positionAllowance ?? 0,
         otherAllowance: this.salary.otherAllowance ?? 0,
-        remarks: this.salary.remarks || ''
+        remarks: this.salary.remarks || '',
+        commuteAllowancePeriodFrom: this.salary.commuteAllowancePeriodFrom || '',
+        commuteAllowancePeriodTo: this.salary.commuteAllowancePeriodTo || '',
+        commuteAllowanceMonths: this.salary.commuteAllowanceMonths || 1
       };
     } else if (type === 'bonus') {
       this.editBonusForms = this.bonuses.length > 0 ? this.bonuses.map(b => ({
@@ -133,15 +136,16 @@ export class DetailSalaryComponent implements OnInit {
   async onSaveSalaryEdit() {
     if (!this.salary || !this.employee) return;
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
-    // 時間外手当を除く手当合計
-    const totalAllowance =
-      (Number(this.editSalaryForm.commuteAllowance) || 0) +
-      (Number(this.editSalaryForm.positionAllowance) || 0) +
-      (Number(this.editSalaryForm.otherAllowance) || 0);
-    const totalSalary =
-      (Number(this.editSalaryForm.basicSalary) || 0) +
-      (Number(this.editSalaryForm.overtimeSalary) || 0) +
-      totalAllowance;
+    // otherAllowances配列は「その他手当」のみ格納
+    const otherAllowances = [];
+    if (this.editSalaryForm.otherAllowance) {
+      otherAllowances.push({
+        otherAllowanceName: 'その他手当',
+        otherAllowance: Number(this.editSalaryForm.otherAllowance) || 0
+      });
+    }
+    const totalAllowance = (Number(this.editSalaryForm.commuteAllowance) || 0) + (Number(this.editSalaryForm.positionAllowance) || 0) + (Number(this.editSalaryForm.otherAllowance) || 0);
+    const totalSalary = (Number(this.editSalaryForm.basicSalary) || 0) + (Number(this.editSalaryForm.overtimeSalary) || 0) + totalAllowance;
     const newSalary = {
       ...this.salary,
       basicSalary: Number(this.editSalaryForm.basicSalary) || 0,
@@ -149,9 +153,13 @@ export class DetailSalaryComponent implements OnInit {
       commuteAllowance: Number(this.editSalaryForm.commuteAllowance) || 0,
       positionAllowance: Number(this.editSalaryForm.positionAllowance) || 0,
       otherAllowance: Number(this.editSalaryForm.otherAllowance) || 0,
+      otherAllowances: otherAllowances,
       totalAllowance,
       totalSalary,
       remarks: this.editSalaryForm.remarks || '',
+      commuteAllowancePeriodFrom: this.editSalaryForm.commuteAllowancePeriodFrom || '',
+      commuteAllowancePeriodTo: this.editSalaryForm.commuteAllowancePeriodTo || '',
+      commuteAllowanceMonths: this.editSalaryForm.commuteAllowanceMonths || 1,
     };
     await this.firestoreService.updateSalary(this.companyKey, this.employee.employeeId, ym, newSalary);
     await this.saveHistory('salary', this.salary, newSalary);
@@ -201,7 +209,7 @@ export class DetailSalaryComponent implements OnInit {
     const date = new Date();
     const targetYearMonth = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
     if (type === 'salary') {
-      for (const key of ['basicSalary','overtimeSalary','commuteAllowance','positionAllowance','otherAllowance','totalSalary','remarks']) {
+      for (const key of ['basicSalary','overtimeSalary','commuteAllowance','positionAllowance','otherAllowance','totalSalary','remarks','commuteAllowancePeriodFrom','commuteAllowancePeriodTo','commuteAllowanceMonths']) {
         const fieldName = SalaryFieldNameMap[key] || key;
         if ((before?.[key] ?? '') !== (after?.[key] ?? '')) {
           await this.firestoreService.addSalaryHistory(this.companyKey, this.employeeId, {
@@ -237,5 +245,18 @@ export class DetailSalaryComponent implements OnInit {
 
   isNumber(val: any): boolean {
     return typeof val === 'number' && !isNaN(val);
+  }
+
+  onEditCommutePeriodChange() {
+    const from = this.editSalaryForm.commuteAllowancePeriodFrom;
+    const to = this.editSalaryForm.commuteAllowancePeriodTo;
+    if (from && to) {
+      const fromDate = new Date(from + '-01');
+      const toDate = new Date(to + '-01');
+      const months = (toDate.getFullYear() - fromDate.getFullYear()) * 12 + (toDate.getMonth() - fromDate.getMonth()) + 1;
+      this.editSalaryForm.commuteAllowanceMonths = months > 0 ? months : 1;
+    } else {
+      this.editSalaryForm.commuteAllowanceMonths = 1;
+    }
   }
 }

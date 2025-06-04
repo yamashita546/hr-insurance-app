@@ -89,7 +89,8 @@
 }
 .salary-detail-history {
   width: 100%;
-  margin-top: 24px;
+  max-width: 900px;
+  margin: 0 auto 24px auto;
   background: #f8fafc;
   border-radius: 8px;
   box-shadow: 0 1px 6px rgba(0,0,0,0.06);
@@ -169,4 +170,12 @@
     width: 100%;
     margin-top: 12px;
   }
+}
+.detail-salary-main-container {
+  max-width: 600px;
+  margin: 0 auto 24px auto;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 16px 16px 12px 16px;
 }

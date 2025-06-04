@@ -334,4 +334,37 @@ export class FirestoreService {
     const snap = await getDocs(q);
     return snap.docs.map(doc => ({ ...(doc.data() as Attendance) }));
   }
+
+  // --- 修正履歴 ---
+  async addSalaryHistory(companyKey: string, employeeId: string, history: any) {
+    const col = collection(this.firestore, `salaryHistory`);
+    await addDoc(col, {
+      companyKey,
+      employeeId,
+      ...history
+    });
+  }
+
+  async addBonusHistory(companyKey: string, employeeId: string, history: any) {
+    const col = collection(this.firestore, `bonusHistory`);
+    await addDoc(col, {
+      companyKey,
+      employeeId,
+      ...history
+    });
+  }
+
+  async getSalaryHistory(companyKey: string, employeeId: string): Promise<any[]> {
+    const colRef = collection(this.firestore, `salaryHistory`);
+    const q_ = query(colRef, where('companyKey', '==', companyKey), where('employeeId', '==', employeeId));
+    const snap = await getDocs(q_);
+    return snap.docs.map(doc => doc.data());
+  }
+
+  async getBonusHistory(companyKey: string, employeeId: string): Promise<any[]> {
+    const colRef = collection(this.firestore, `bonusHistory`);
+    const q_ = query(colRef, where('companyKey', '==', companyKey), where('employeeId', '==', employeeId));
+    const snap = await getDocs(q_);
+    return snap.docs.map(doc => doc.data());
+  }
 }

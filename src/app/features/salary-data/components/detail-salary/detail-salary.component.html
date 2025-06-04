@@ -2,7 +2,7 @@
   <h1>給与詳細</h1>
 </div>
 <div class="detail-salary-container" *ngIf="employee">
-  <h2>従業員詳細：{{ employee.lastName }} {{ employee.firstName }}</h2>
+  <h2>従業員詳細：<span>{{ employee.employeeId }}</span> {{ employee.lastName }} {{ employee.firstName }} </h2>
   <div class="year-month-bar">
     <label>表示年月：
       <select [(ngModel)]="selectedYear" (change)="onYearMonthChange()">
@@ -19,7 +19,21 @@
   </div>
   <div *ngIf="activeTab === 'salary'">
     <h3>給与情報</h3>
-    <table class="detail-table">
+    <button class="edit-btn" (click)="onEdit('salary')" *ngIf="!editMode">修正</button>
+    <form *ngIf="editMode === 'salary'" (ngSubmit)="onSaveSalaryEdit()" class="edit-form">
+      <table class="detail-table">
+        <tr><th>基本給</th><td><input type="number" [(ngModel)]="editSalaryForm.basicSalary" name="basicSalary" required></td></tr>
+        <tr><th>時間外手当</th><td><input type="number" [(ngModel)]="editSalaryForm.overtimeSalary" name="overtimeSalary"></td></tr>
+        <tr><th>通勤手当</th><td><input type="number" [(ngModel)]="editSalaryForm.commuteAllowance" name="commuteAllowance"></td></tr>
+        <tr><th>役職手当</th><td><input type="number" [(ngModel)]="editSalaryForm.positionAllowance" name="positionAllowance"></td></tr>
+        <tr><th>その他手当</th><td><input type="number" [(ngModel)]="editSalaryForm.otherAllowance" name="otherAllowance"></td></tr>
+        <tr><th>総支給額</th><td>{{ calcEditTotalSalary() | number }} 円</td></tr>
+        <tr><th>備考</th><td><input type="text" [(ngModel)]="editSalaryForm.remarks" name="remarks"></td></tr>
+      </table>
+      <button type="submit">保存</button>
+      <button type="button" (click)="onCancelEdit()">キャンセル</button>
+    </form>
+    <table class="detail-table" *ngIf="!editMode">
       <tr><th>基本給</th><td>{{ salary?.basicSalary | number }} 円</td></tr>
       <tr><th>時間外手当</th><td>{{ salary?.overtimeSalary | number }} 円</td></tr>
       <tr><th>通勤手当</th><td>{{ salary?.commuteAllowance | number }} 円</td></tr>
@@ -28,11 +42,48 @@
       <tr><th>総支給額</th><td>{{ salary?.totalSalary | number }} 円</td></tr>
       <tr><th>備考</th><td>{{ salary?.remarks }}</td></tr>
     </table>
-    <div *ngIf="!salary" style="color: #d9534f; margin-top: 1em;">該当月の給与データがありません。</div>
+    <div *ngIf="!salary && !editMode" style="color: #d9534f; margin-top: 1em;">該当月の給与データがありません。</div>
   </div>
   <div *ngIf="activeTab === 'bonus'">
     <h3>賞与情報</h3>
-    <table class="detail-table" *ngIf="bonuses.length > 0">
+    <button class="edit-btn" (click)="onEdit('bonus')" *ngIf="!editMode">修正</button>
+    <form *ngIf="editMode === 'bonus'" (ngSubmit)="onSaveBonusEdit()" class="edit-form">
+      <table class="detail-table">
+        <thead>
+          <tr>
+            <th>賞与種類</th>
+            <th>賞与名</th>
+            <th>金額</th>
+            <th>備考</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let bonus of editBonusForms; let i = index">
+            <td>
+              <select [(ngModel)]="bonus.bonusType" name="bonusType{{i}}" required>
+                <option value="">選択</option>
+                <option value="年間賞与">年間賞与</option>
+                <option value="半年賞与">半年賞与</option>
+                <option value="四半期賞与">四半期賞与</option>
+                <option value="月次賞与">月次賞与</option>
+                <option value="その他賞与">その他賞与</option>
+              </select>
+            </td>
+            <td>
+              <input type="text" [(ngModel)]="bonus.bonusName" name="bonusName{{i}}" *ngIf="bonus.bonusType === 'その他賞与'">
+            </td>
+            <td><input type="number" [(ngModel)]="bonus.bonus" name="bonus{{i}}"></td>
+            <td><input type="text" [(ngModel)]="bonus.remarks" name="remarks{{i}}"></td>
+            <td><button type="button" (click)="removeBonusRow(i)" *ngIf="editBonusForms.length > 1">削除</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button type="button" (click)="addBonusRow()">入力欄を追加</button>
+      <button type="submit">保存</button>
+      <button type="button" (click)="onCancelEdit()">キャンセル</button>
+    </form>
+    <table class="detail-table" *ngIf="!editMode && bonuses.length > 0">
       <thead>
         <tr>
           <th>賞与種類</th>
@@ -50,7 +101,39 @@
         </tr>
       </tbody>
     </table>
-    <div *ngIf="bonuses.length === 0" style="color: #d9534f; margin-top: 1em;">該当月の賞与データがありません。</div>
+    <div *ngIf="bonuses.length === 0 && !editMode" style="color: #d9534f; margin-top: 1em;">該当月の賞与データがありません。</div>
+  </div>
+  <div class="salary-detail-history">
+    <h3>修正履歴</h3>
+    <table class="history-table" *ngIf="historyList.length > 0">
+      <thead>
+        <tr>
+          <th>変更項目</th>
+          <th>対象年月</th>
+          <th>変更前</th>
+          <th>変更後</th>
+          <th>変更日</th>
+          <th>変更ユーザー</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let h of historyList | slice:0:10">
+          <td>{{ h.field }}</td>
+          <td>{{ h.targetYearMonth }}</td>
+          <td>
+            <ng-container *ngIf="isNumber(h.before); else textBefore">{{ h.before | number }} 円</ng-container>
+            <ng-template #textBefore>{{ h.before }}</ng-template>
+          </td>
+          <td>
+            <ng-container *ngIf="isNumber(h.after); else textAfter">{{ h.after | number }} 円</ng-container>
+            <ng-template #textAfter>{{ h.after }}</ng-template>
+          </td>
+          <td>{{ h.date | date:'yyyy/MM/dd HH:mm' }}</td>
+          <td>{{ h.user }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div *ngIf="historyList.length === 0" style="color: #888;">履歴はありません。</div>
   </div>
 </div>
 <div *ngIf="!employee" style="color: #d9534f;">従業員情報が取得できませんでした。</div>

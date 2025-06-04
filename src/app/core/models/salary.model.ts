@@ -1,4 +1,3 @@
-
 // 基本給与モデル
 export interface Salary {
     employeeId: string;
@@ -47,4 +46,32 @@ export enum BonusType {
     MonthlyBonus = '月次賞与',
     OtherBonus = 'その他賞与',
 }
+
+// プロパティ名→日本語名変換用辞書
+export const SalaryFieldNameMap: Record<string, string> = {
+  basicSalary: '基本給',
+  overtimeSalary: '時間外手当',
+  commuteAllowance: '通勤手当',
+  positionAllowance: '役職手当',
+  otherAllowanceName: 'その他手当名',
+  otherAllowance: 'その他手当',
+  totalAllowance: '総手当',
+  totalSalary: '総支給額',
+  remarks: '備考',
+};
+
+export const BonusFieldNameMap: Record<string, string> = {
+  bonusName: '賞与名',
+  bonusType: '賞与種類',
+  bonus: '金額',
+  bonusTotal: '合計金額',
+  remarks: '備考',
+};
+
+export const AllowanceFieldNameMap: Record<string, string> = {
+  allowanceName: '手当名',
+  allowanceType: '手当種類',
+  allowance: '手当額',
+  remarks: '備考',
+};
 

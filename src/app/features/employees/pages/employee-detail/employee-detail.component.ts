@@ -12,6 +12,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { firstValueFrom, Subscription } from 'rxjs';
 import { PREFECTURES } from '../../../../core/models/prefecture.model';
+import { RELATIONSHIP_TYPES, CERTIFICATION_TYPES } from '../../../../core/models/dependents.relationship.model';
 
 @Component({
   selector: 'app-employee-detail',
@@ -35,6 +36,8 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   private companySub?: Subscription;
   validationErrors: string[] = [];
   saveMessage: string = '';
+  relationshipTypes = RELATIONSHIP_TYPES;
+  certificationTypes = CERTIFICATION_TYPES;
 
   constructor(
     private route: ActivatedRoute,
@@ -136,6 +139,45 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
       }
     }
     this.editEmployee.isCareInsuranceApplicable = isCare;
+
+    // コード値で保存するための変換処理
+    // 雇用形態
+    if (this.editEmployee.employeeType) {
+      const found = this.employeeTypes.find(t => t.code === this.editEmployee.employeeType || t.name === this.editEmployee.employeeType);
+      this.editEmployee.employeeType = found ? found.code : this.editEmployee.employeeType;
+    }
+    // 勤務形態
+    if (this.editEmployee.workStyle) {
+      const found = this.workStyleTypes.find(t => t.code === this.editEmployee.workStyle || t.name === this.editEmployee.workStyle);
+      this.editEmployee.workStyle = found ? found.code : this.editEmployee.workStyle;
+    }
+    // 性別
+    if (this.editEmployee.gender) {
+      const found = this.genderTypes.find(g => g.code === this.editEmployee.gender || g.name === this.editEmployee.gender);
+      this.editEmployee.gender = found ? found.code : this.editEmployee.gender;
+    }
+    // 都道府県
+    if (this.editEmployee.address && this.editEmployee.address.prefecture) {
+      const found = this.prefectures.find(p => p.code === this.editEmployee.address.prefecture || p.name === this.editEmployee.address.prefecture);
+      this.editEmployee.address.prefecture = found ? found.code : this.editEmployee.address.prefecture;
+    }
+    // 扶養家族の続柄コード
+    if (Array.isArray(this.editEmployee.dependents)) {
+      this.editEmployee.dependents = this.editEmployee.dependents.map((dep: any) => {
+        if (dep.relationshipCode) {
+          const rels = [
+            { code: '01', name: '配偶者' },
+            { code: '02', name: '子' },
+            { code: '03', name: '父母' },
+            { code: '04', name: 'その他' }
+          ];
+          const found = rels.find(r => r.code === dep.relationshipCode || r.name === dep.relationshipCode);
+          dep.relationshipCode = found ? found.code : dep.relationshipCode;
+        }
+        return dep;
+      });
+    }
+
     // バリデーション: 正社員なら社会保険3種のisApplicableがすべてtrueでなければならない
     if (this.editEmployee.employeeType === '正社員') {
       if (!this.editEmployee.healthInsuranceStatus?.isApplicable) {
@@ -181,5 +223,36 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
       isChildcareLeave: false,
       isNursingCareLeave: false
     });
+  }
+
+  // コード値→名称変換メソッド
+  getGenderName(code: string): string {
+    const found = this.genderTypes.find(g => g.code === code);
+    return found ? found.name : code || '未入力';
+  }
+
+  getPrefectureName(code: string): string {
+    const found = this.prefectures.find(p => p.code === code || p.name === code);
+    return found ? found.name : code || '未入力';
+  }
+
+  getEmployeeTypeName(code: string): string {
+    const found = this.employeeTypes.find(t => t.code === code || t.name === code);
+    return found ? found.name : code || '未入力';
+  }
+
+  getWorkStyleName(code: string): string {
+    const found = this.workStyleTypes.find(t => t.code === code || t.name === code);
+    return found ? found.name : code || '未入力';
+  }
+
+  getRelationshipName(code: string): string {
+    const found = this.relationshipTypes.find(r => r.code === code);
+    return found ? found.name : code || '未入力';
+  }
+
+  getCertificationTypeName(code: string): string {
+    const found = this.certificationTypes.find(c => c.code === code);
+    return found ? found.name : code || '未入力';
   }
 }

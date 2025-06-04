@@ -352,7 +352,10 @@
         <div class="form-row">
           <div class="form-item">
             <label>続柄</label>
-            <input formControlName="emergencyContactRelationship" />
+            <select formControlName="emergencyContactRelationship">
+              <option value="">選択</option>
+              <option *ngFor="let r of relationshipTypes" [value]="r.code">{{ r.name }}</option>
+            </select>
           </div>
         </div>
         <div class="form-row">
@@ -405,10 +408,7 @@
                 <td>
                   <select formControlName="relationshipCode">
                     <option value="">選択</option>
-                    <option value="01">配偶者</option>
-                    <option value="02">子</option>
-                    <option value="03">父母</option>
-                    <option value="04">その他</option>
+                    <option *ngFor="let r of relationshipTypes" [value]="r.code">{{ r.name }}</option>
                   </select>
                 </td>
                 <td><input type="date" formControlName="birthday" style="width: 8em;" /></td>
@@ -431,9 +431,7 @@
                 <td>
                   <select formControlName="certificationType">
                     <option value="">選択</option>
-                    <option value="A">A区分</option>
-                    <option value="B">B区分</option>
-                    <option value="C">C区分</option>
+                    <option *ngFor="let c of certificationTypes" [value]="c.code">{{ c.name }}</option>
                   </select>
                 </td>
                 <td><input type="date" formControlName="lossDate" style="width: 8em;" /></td>

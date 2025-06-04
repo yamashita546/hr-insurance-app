@@ -6,46 +6,93 @@
   </div>
   <form (ngSubmit)="$event.preventDefault()">
     <div class="form-row">
-      <label>支社</label>
-      <select [(ngModel)]="selectedOfficeId" name="office">
-        <option value="">全支社</option>
-        <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
-      </select>
-      <label>従業員区分</label>
-      <select [(ngModel)]="selectedEmployeeType" name="employeeType">
-        <option value="">全従業員</option>
-        <option value="regular">正社員</option>
-        <option value="part">パート</option>
+      <label>決定種別</label>
+      <select [(ngModel)]="decisionType" name="decisionType" (change)="onDecisionTypeChange()">
+        <option *ngFor="let t of decisionTypes" [value]="t">{{ decisionTypeLabels[t] }}</option>
       </select>
     </div>
-    <div class="form-row">
-      <label>適用開始年</label>
-      <select [(ngModel)]="startYear" name="startYear">
-        <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
-      </select>
-      <label>適用開始月</label>
-      <select [(ngModel)]="startMonth" name="startMonth">
-        <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
-      </select>
+    <div *ngIf="decisionType === 'fixed'">
+      <div class="form-row">
+        <label>支社</label>
+        <select [(ngModel)]="selectedOfficeId" name="office">
+          <option value="">全支社</option>
+          <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
+        </select>
+        <label>従業員区分</label>
+        <select [(ngModel)]="selectedEmployeeType" name="employeeType">
+          <option value="">全従業員</option>
+          <option *ngFor="let t of employeeTypes" [value]="t.code">{{ t.name }}</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>適用開始年</label>
+        <select [(ngModel)]="startYear" name="startYear">
+          <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
+        </select>
+        <label>適用開始月</label>
+        <select [(ngModel)]="startMonth" name="startMonth">
+          <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>算出根拠：支給年月（開始）</label>
+        <select [(ngModel)]="salaryFromYear" name="salaryFromYear">
+          <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
+        </select>
+        <select [(ngModel)]="salaryFromMonth" name="salaryFromMonth">
+          <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
+        </select>
+        <span>～</span>
+        <select [(ngModel)]="salaryToYear" name="salaryToYear">
+          <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
+        </select>
+        <select [(ngModel)]="salaryToMonth" name="salaryToMonth">
+          <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button type="button" (click)="onDecision()">決定</button>
+      </div>
     </div>
-    <div class="form-row">
-      <label>算出根拠：支給年月（開始）</label>
-      <select [(ngModel)]="salaryFromYear" name="salaryFromYear">
-        <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
-      </select>
-      <select [(ngModel)]="salaryFromMonth" name="salaryFromMonth">
-        <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
-      </select>
-      <span>～</span>
-      <select [(ngModel)]="salaryToYear" name="salaryToYear">
-        <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
-      </select>
-      <select [(ngModel)]="salaryToMonth" name="salaryToMonth">
-        <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
-      </select>
+    <div *ngIf="decisionType === 'occasional'">
+      <!-- 随時改定用フォーム（今後調整） -->
+      <div style="color:#1976d2;">随時改定用フォーム（今後調整）</div>
     </div>
-    <div class="form-actions">
-      <button type="button" (click)="onDecision()">決定</button>
+    <div *ngIf="decisionType === 'entry'">
+      <div class="form-row">
+        <label>支社</label>
+        <select [(ngModel)]="selectedOfficeId" name="office_entry">
+          <option value="">全支社</option>
+          <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
+        </select>
+        <label>従業員区分</label>
+        <select [(ngModel)]="selectedEmployeeType" name="employeeType_entry">
+          <option value="">全従業員</option>
+          <option value="regular">正社員</option>
+          <option value="part">パート</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>適用開始年</label>
+        <select [(ngModel)]="startYear" name="startYear_entry">
+          <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
+        </select>
+        <label>適用開始月</label>
+        <select [(ngModel)]="startMonth" name="startMonth_entry">
+          <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button type="button" (click)="onDecision()">決定</button>
+      </div>
+    </div>
+    <div *ngIf="decisionType === 're'">
+      <!-- 再決定用フォーム（今後調整） -->
+      <div style="color:#1976d2;">再決定用フォーム（今後調整）</div>
+    </div>
+    <div *ngIf="decisionType === 'other'">
+      <!-- その他用フォーム（今後調整） -->
+      <div style="color:#1976d2;">その他用フォーム（今後調整）</div>
     </div>
   </form>
 

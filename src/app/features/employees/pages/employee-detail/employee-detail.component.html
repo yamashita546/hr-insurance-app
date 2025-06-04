@@ -49,7 +49,7 @@
       </tr>
       <tr>
         <th>性別</th>
-        <td *ngIf="!isEditMode">{{ employee.gender || '未入力' }}</td>
+        <td *ngIf="!isEditMode">{{ getGenderName(employee.gender) }}</td>
         <td *ngIf="isEditMode">
           <select [(ngModel)]="editEmployee.gender">
             <option value="">選択してください</option>
@@ -77,7 +77,7 @@
         <td *ngIf="!isEditMode">
           <div *ngIf="employee.address">
             〒{{ employee.address.postalCode || '' }}<br>
-            {{ employee.address.prefecture || '' }}{{ employee.address.city || '' }}{{ employee.address.town || '' }}{{ employee.address.streetAddress || '' }}{{ employee.address.buildingName || '' }}
+            {{ getPrefectureName(employee.address.prefecture) }}{{ employee.address.city || '' }}{{ employee.address.town || '' }}{{ employee.address.streetAddress || '' }}{{ employee.address.buildingName || '' }}
           </div>
           <div *ngIf="!employee.address">未入力</div>
         </td>
@@ -85,7 +85,7 @@
           <input placeholder="郵便番号" [(ngModel)]="editEmployee.address.postalCode" style="width: 80px;"> <br>
           <select [(ngModel)]="editEmployee.address.prefecture" style="width: 120px;">
             <option value="">都道府県を選択</option>
-            <option *ngFor="let p of prefectures" [value]="p.name">{{ p.name }}</option>
+            <option *ngFor="let p of prefectures" [value]="p.code">{{ p.name }}</option>
           </select>
           <input placeholder="市区町村" [(ngModel)]="editEmployee.address.city" style="width: 100px;">
           <input placeholder="町域・番地" [(ngModel)]="editEmployee.address.town" style="width: 100px;">
@@ -121,21 +121,21 @@
       </tr>
       <tr>
         <th>雇用形態</th>
-        <td *ngIf="!isEditMode">{{ employee.employeeType || '未入力' }}</td>
+        <td *ngIf="!isEditMode">{{ getEmployeeTypeName(employee.employeeType) }}</td>
         <td *ngIf="isEditMode">
           <select [(ngModel)]="editEmployee.employeeType">
             <option value="">選択してください</option>
-            <option *ngFor="let t of employeeTypes" [value]="t.name">{{ t.name }}</option>
+            <option *ngFor="let t of employeeTypes" [value]="t.code">{{ t.name }}</option>
           </select>
         </td>
       </tr>
       <tr>
         <th>勤務形態</th>
-        <td *ngIf="!isEditMode">{{ employee.workStyle || '未入力' }}</td>
+        <td *ngIf="!isEditMode">{{ getWorkStyleName(employee.workStyle) }}</td>
         <td *ngIf="isEditMode">
           <select [(ngModel)]="editEmployee.workStyle">
             <option value="">選択してください</option>
-            <option *ngFor="let t of workStyleTypes" [value]="t.name">{{ t.name }}</option>
+            <option *ngFor="let t of workStyleTypes" [value]="t.code">{{ t.name }}</option>
           </select>
         </td>
       </tr>
@@ -335,18 +335,16 @@
             <tr><th>姓カナ</th><td>{{ dep.lastNameKana || '未入力' }}</td></tr>
             <tr><th>名カナ</th><td>{{ dep.firstNameKana || '未入力' }}</td></tr>
             <tr><th>続柄</th><td>{{ dep.relationship || '未入力' }}</td></tr>
-            <tr><th>続柄コード</th><td>{{ dep.relationshipCode || '未入力' }}</td></tr>
+            <tr><th>続柄コード</th><td>{{ getRelationshipName(dep.relationshipCode) }}</td></tr>
+            <tr><th>認定区分</th><td>{{ getCertificationTypeName(dep.certificationType) }}</td></tr>
             <tr><th>生年月日</th><td>{{ dep.birthday || '未入力' }}</td></tr>
-            <tr><th>性別</th><td>{{ dep.gender || '未入力' }}</td></tr>
+            <tr><th>性別</th><td>{{ getGenderName(dep.gender) }}</td></tr>
             <tr><th>マイナンバー</th><td>{{ dep.myNumber || '未入力' }}</td></tr>
-            <tr><th>配偶者</th><td>{{ dep.isSpouse ? '○' : '×' }}</td></tr>
-            <tr><th>子供</th><td>{{ dep.isChild ? '○' : '×' }}</td></tr>
             <tr><th>障害者</th><td>{{ dep.isDisabled ? '○' : '×' }}</td></tr>
             <tr><th>学生</th><td>{{ dep.isStudent ? '○' : '×' }}</td></tr>
             <tr><th>同居</th><td>{{ dep.isLivingTogether ? '○' : '×' }}</td></tr>
             <tr><th>年収</th><td>{{ dep.income || '未入力' }}</td></tr>
             <tr><th>被扶養者認定日</th><td>{{ dep.certificationDate || '未入力' }}</td></tr>
-            <tr><th>認定区分</th><td>{{ dep.certificationType || '未入力' }}</td></tr>
             <tr><th>資格喪失日</th><td>{{ dep.lossDate || '未入力' }}</td></tr>
             <tr><th>備考</th><td>{{ dep.remarks || '未入力' }}</td></tr>
           </table>
@@ -364,27 +362,37 @@
           <tr><th>名</th><td><input [(ngModel)]="dep.firstName"></td></tr>
           <tr><th>姓カナ</th><td><input [(ngModel)]="dep.lastNameKana"></td></tr>
           <tr><th>名カナ</th><td><input [(ngModel)]="dep.firstNameKana"></td></tr>
-          <tr><th>続柄</th><td><input [(ngModel)]="dep.relationship"></td></tr>
-          <tr><th>続柄コード</th><td><input [(ngModel)]="dep.relationshipCode"></td></tr>
+          <tr><th>続柄</th>
+            <td>
+              <select [(ngModel)]="dep.relationshipCode">
+                <option value="">選択</option>
+                <option *ngFor="let r of relationshipTypes" [value]="r.code">{{ r.name }}</option>
+              </select>
+            </td>
+          </tr>
+          <tr><th>認定区分</th>
+            <td>
+              <select [(ngModel)]="dep.certificationType">
+                <option value="">選択</option>
+                <option *ngFor="let c of certificationTypes" [value]="c.code">{{ c.name }}</option>
+              </select>
+            </td>
+          </tr>
           <tr><th>生年月日</th><td><input type="date" [(ngModel)]="dep.birthday"></td></tr>
           <tr><th>性別</th>
             <td>
               <select [(ngModel)]="dep.gender">
                 <option value="">選択</option>
-                <option value="M">男</option>
-                <option value="F">女</option>
+                <option *ngFor="let g of genderTypes" [value]="g.code">{{ g.name }}</option>
               </select>
             </td>
           </tr>
           <tr><th>マイナンバー</th><td><input [(ngModel)]="dep.myNumber"></td></tr>
-          <tr><th>配偶者</th><td><input type="checkbox" [(ngModel)]="dep.isSpouse"></td></tr>
-          <tr><th>子供</th><td><input type="checkbox" [(ngModel)]="dep.isChild"></td></tr>
           <tr><th>障害者</th><td><input type="checkbox" [(ngModel)]="dep.isDisabled"></td></tr>
           <tr><th>学生</th><td><input type="checkbox" [(ngModel)]="dep.isStudent"></td></tr>
           <tr><th>同居</th><td><input type="checkbox" [(ngModel)]="dep.isLivingTogether"></td></tr>
           <tr><th>年収</th><td><input type="number" [(ngModel)]="dep.income"></td></tr>
           <tr><th>被扶養者認定日</th><td><input type="date" [(ngModel)]="dep.certificationDate"></td></tr>
-          <tr><th>認定区分</th><td><input [(ngModel)]="dep.certificationType"></td></tr>
           <tr><th>資格喪失日</th><td><input type="date" [(ngModel)]="dep.lossDate"></td></tr>
           <tr><th>備考</th><td><input [(ngModel)]="dep.remarks"></td></tr>
         </table>

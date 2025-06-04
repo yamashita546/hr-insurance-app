@@ -7,8 +7,9 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
-import { StandardMonthlyDecision, StandardMonthlyDecisionType } from '../../../../core/models/standard-monthly-decision .model';
+import { StandardMonthlyDecision, StandardMonthlyDecisionType, STANDARD_MONTHLY_DECISION_TYPES, STANDARD_MONTHLY_DECISION_TYPE_LABELS } from '../../../../core/models/standard-monthly-decision .model';
 import { Router ,RouterModule } from '@angular/router';
+import { EMPLOYEE_TYPES, EmployeeType } from '../../../../core/models/employee.type';
 
 @Component({
   selector: 'app-standard-monthly-form',
@@ -39,6 +40,13 @@ export class StandardMonthlyFormComponent implements OnInit {
 
   // 判定結果リスト
   resultList: any[] = [];
+
+  // 決定種別選択用
+  decisionTypes = STANDARD_MONTHLY_DECISION_TYPES;
+  decisionType: StandardMonthlyDecisionType = 'fixed';
+  decisionTypeLabels = STANDARD_MONTHLY_DECISION_TYPE_LABELS;
+
+  employeeTypes: EmployeeType[] = EMPLOYEE_TYPES;
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -92,6 +100,38 @@ export class StandardMonthlyFormComponent implements OnInit {
     }
     if (this.selectedEmployeeType) {
       filteredEmployees = filteredEmployees.filter(emp => emp.type === this.selectedEmployeeType);
+    }
+    // 入社時決定の場合は契約開始日でフィルタ
+    if (this.decisionType === 'entry') {
+      const applyYm = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
+      // 1ヶ月前の年月を計算
+      const applyDate = new Date(this.startYear, this.startMonth - 1, 1);
+      const prevMonthDate = new Date(applyDate);
+      prevMonthDate.setMonth(applyDate.getMonth() - 1);
+      const prevYm = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
+      const today = new Date();
+      const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+      filteredEmployees = filteredEmployees.filter(emp => {
+        const acqDate: Date | undefined = emp.healthInsuranceStatus?.acquisitionDate;
+        if (!acqDate) return false;
+        // Date型→YYYY-MM形式へ
+        const acqYm = `${acqDate.getFullYear()}-${String(acqDate.getMonth() + 1).padStart(2, '0')}`;
+        const isTargetYm = acqYm === applyYm || acqYm === prevYm;
+        if (!isTargetYm) return false;
+        // 今日現在有効な標準報酬月額が未登録
+        const hasCurrentDecision = this.standardMonthlyDecisions.some(dec =>
+          dec.employeeId === emp.employeeId &&
+          dec.officeId === emp.officeId &&
+          dec.applyYearMonth <= currentYm
+        );
+        return !hasCurrentDecision;
+      });
+    }
+    // 対象従業員がいなければアラート
+    if (filteredEmployees.length === 0) {
+      alert('対象の従業員がいません。');
+      this.resultList = [];
+      return;
     }
 
     // 2. 期間指定（YYYY-MM形式の文字列で比較）
@@ -203,5 +243,9 @@ export class StandardMonthlyFormComponent implements OnInit {
     await Promise.all(promises);
     alert(`${this.resultList.length}件の標準報酬月額データを保存しました。`);
     this.router.navigate(['/manage-standard-monthly']);
+  }
+
+  onDecisionTypeChange() {
+    // 今後、typeごとの初期化やバリデーション切り替えなどをここで実装
   }
 }

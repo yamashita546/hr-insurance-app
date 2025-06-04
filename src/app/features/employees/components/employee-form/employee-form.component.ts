@@ -20,6 +20,7 @@ import { UserCompanyService } from '../../../../core/services/user-company.servi
 import { Company, Office } from '../../../../core/models/company.model';
 import { Prefecture, PREFECTURES } from '../../../../core/models/prefecture.model';
 import { EMPLOYEE_CSV_FIELD_LABELS } from '../../../../core/models/employee.model';
+import { RELATIONSHIP_TYPES, CERTIFICATION_TYPES } from '../../../../core/models/dependents.relationship.model';
 
 @Component({
   selector: 'app-employee-form',
@@ -67,6 +68,9 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
 
   public EMPLOYEE_CSV_FIELD_LABELS = EMPLOYEE_CSV_FIELD_LABELS;
 
+  relationshipTypes = RELATIONSHIP_TYPES;
+  certificationTypes = CERTIFICATION_TYPES;
+
   get dependents(): FormArray {
     return this.form.get('dependents') as FormArray;
   }
@@ -109,6 +113,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       position: [''],
       employeeType: [''],
       workStyle: [''],
+      isStudent: [false],
       hireDate: [''],
       contractStartDate: [''],
       contractEndDate: [''],
@@ -182,6 +187,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
         remarks: [''],
       }),
       extraordinaryLeaves: this.fb.array([]),
+      isExtraordinaryLeave: [false],
     }, { validators: fullTimeInsuranceValidator });
 
     // localStorageからフォーム内容を復元
@@ -265,8 +271,8 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       firstName: ['', Validators.required],
       lastNameKana: [''],
       firstNameKana: [''],
-      relationship: ['', Validators.required],
-      relationshipCode: [''],
+      relationship: [''],
+      relationshipCode: ['', Validators.required],
       birthday: ['', Validators.required],
       myNumber: [''],
       isSpouse: [false],
@@ -279,7 +285,8 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       certificationType: [''],
       lossDate: [''],
       remarks: [''],
-      isActive: [true]
+      isActive: [true],
+      gender: [''],
     }));
   }
 
@@ -320,13 +327,43 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       companyKey: this.companyKey,
       officeId: this.form.get('officeId')!.value
     };
+    // genderをコード値に変換
+    if (employee.gender) {
+      if (employee.gender === 'M') employee.gender = 'male';
+      else if (employee.gender === 'F') employee.gender = 'female';
+      else if (!['male','female','other'].includes(employee.gender)) employee.gender = 'other';
+    }
+    // dependentsのgenderも変換
+    if (Array.isArray(employee.dependents)) {
+      employee.dependents = employee.dependents.map((dep: any) => {
+        if (dep.gender === 'M') dep.gender = 'male';
+        else if (dep.gender === 'F') dep.gender = 'female';
+        else if (dep.gender && !['male','female','other'].includes(dep.gender)) dep.gender = 'other';
+        return dep;
+      });
+    }
+    // 既存従業員チェック
+    const employeesCollection = collection(this.firestore, 'employees');
+    const snap = await getDocs(employeesCollection);
+    const exists = snap.docs.find(doc => {
+      const data = doc.data();
+      return data['companyKey'] === this.companyKey && data['employeeId'] === employee.employeeId;
+    });
+    if (exists) {
+      const data = exists.data();
+      const officeName = data['officeName'] || '';
+      const lastName = data['lastName'] || '';
+      const firstName = data['firstName'] || '';
+      alert(`従業員番号${employee.employeeId}はすでに登録されています。（${officeName} ${lastName} ${firstName}）`);
+      return;
+    }
     try {
       // Firestoreへ保存
-      const employeesCollection = collection(this.firestore, 'employees');
       await addDoc(employeesCollection, employee);
       // 保存完了時にlocalStorageをクリア
       localStorage.removeItem(EmployeeFormComponent.FORM_STORAGE_KEY);
       localStorage.removeItem(EmployeeFormComponent.TAB_STORAGE_KEY);
+      this.form.markAsPristine(); // dirtyフラグをリセット
       // 一覧画面へ遷移
       this.router.navigate(['/employee']);
     } catch (error) {

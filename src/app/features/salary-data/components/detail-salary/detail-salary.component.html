@@ -1,9 +1,31 @@
+<button (click)="onBack()" style="margin-right: 1em;">← 戻る</button>
 <div class="salary-title">
   <h1>給与詳細</h1>
 </div>
 <div class="detail-salary-main-container">
-  <div class="detail-salary-container" *ngIf="employee">
-    <h2>従業員詳細：<span>{{ employee.employeeId }}</span> {{ employee.lastName }} {{ employee.firstName }} </h2>
+  <div class="detail-salary-container">
+    <div class="employee-selector-bar">
+      
+      <label>事業所：
+        <select [(ngModel)]="selectedOfficeId" (change)="onOfficeChange()">
+          <option value="ALL">全事業所</option>
+          <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
+        </select>
+      </label>
+      <label style="margin-left: 1em;">従業員番号：
+        <select [(ngModel)]="selectedEmployeeId" (change)="onEmployeeChange()">
+          <option *ngFor="let emp of filteredEmployees" [value]="emp.employeeId">{{ emp.employeeId }}</option>
+        </select>
+      </label>
+      <label style="margin-left: 1em;">名前：
+        <select [(ngModel)]="selectedEmployeeId" (change)="onEmployeeChange()">
+          <option *ngFor="let emp of filteredEmployees" [value]="emp.employeeId">{{ emp.lastName }} {{ emp.firstName }}</option>
+        </select>
+      </label>
+      <button (click)="onPrevEmployee()" style="margin-left: 1em;">←</button>
+      <button (click)="onNextEmployee()" style="margin-left: 1em;">→</button>
+    </div>
+    <h2 *ngIf="employee">従業員詳細：<span>{{ employee.employeeId }}</span> {{ employee.lastName }} {{ employee.firstName }} </h2>
     <div class="year-month-bar">
       <label>表示年月：
         <select [(ngModel)]="selectedYear" (change)="onYearMonthChange()">
@@ -138,12 +160,22 @@
         <td>{{ h.field }}</td>
         <td>{{ h.targetYearMonth }}</td>
         <td>
-          <ng-container *ngIf="isNumber(h.before); else textBefore">{{ h.before | number }} 円</ng-container>
-          <ng-template #textBefore>{{ h.before }}</ng-template>
+          <ng-container *ngIf="h.field === '通勤手当月数'">
+            <ng-container *ngIf="h.before !== ''">{{ h.before }}か月</ng-container>
+          </ng-container>
+          <ng-container *ngIf="h.field !== '通勤手当月数'">
+            <ng-container *ngIf="isNumber(h.before); else textBefore">{{ h.before | number }} 円</ng-container>
+            <ng-template #textBefore>{{ h.before }}</ng-template>
+          </ng-container>
         </td>
         <td>
-          <ng-container *ngIf="isNumber(h.after); else textAfter">{{ h.after | number }} 円</ng-container>
-          <ng-template #textAfter>{{ h.after }}</ng-template>
+          <ng-container *ngIf="h.field === '通勤手当月数'">
+            <ng-container *ngIf="h.after !== ''">{{ h.after }}か月</ng-container>
+          </ng-container>
+          <ng-container *ngIf="h.field !== '通勤手当月数'">
+            <ng-container *ngIf="isNumber(h.after); else textAfter">{{ h.after | number }} 円</ng-container>
+            <ng-template #textAfter>{{ h.after }}</ng-template>
+          </ng-container>
         </td>
         <td>{{ h.date | date:'yyyy/MM/dd HH:mm' }}</td>
         <td>{{ h.user }}</td>

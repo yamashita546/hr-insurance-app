@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SalaryFieldNameMap, BonusFieldNameMap } from '../../../../core/models/salary.model';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-detail-salary',
@@ -32,10 +33,19 @@ export class DetailSalaryComponent implements OnInit {
   historyList: any[] = [];
   currentUser: any = null;
 
+  // 追加: 事業所・従業員セレクト用
+  offices: any[] = [];
+  selectedOfficeId: string = '';
+  allEmployees: any[] = [];
+  filteredEmployees: any[] = [];
+  selectedEmployeeId: string = '';
+
   constructor(
     private route: ActivatedRoute,
     private firestoreService: FirestoreService,
-    private userCompanyService: UserCompanyService
+    private userCompanyService: UserCompanyService,
+    private location: Location,
+    private router: Router
   ) {
     // ユーザー情報を購読して保持
     this.userCompanyService.user$.subscribe(user => {
@@ -49,6 +59,8 @@ export class DetailSalaryComponent implements OnInit {
     this.targetMonth = this.route.snapshot.queryParamMap.get('month') || '';
     this.selectedYear = Number(this.targetYear) || new Date().getFullYear();
     this.selectedMonth = Number(this.targetMonth) || (new Date().getMonth() + 1);
+    this.selectedEmployeeId = this.route.snapshot.queryParamMap.get('selectedEmployeeId') || this.employeeId;
+    this.selectedOfficeId = this.route.snapshot.queryParamMap.get('selectedOfficeId') || '';
     const now = new Date();
     for (let y = now.getFullYear() - 1; y <= now.getFullYear() + 2; y++) {
       this.years.push(y);
@@ -56,18 +68,99 @@ export class DetailSalaryComponent implements OnInit {
     for (let m = 1; m <= 12; m++) {
       this.months.push(m);
     }
-    if (!this.employeeId) return;
     // companyKeyをUserCompanyServiceから取得
     this.userCompanyService.company$.subscribe(async company => {
       if (!company || !company.companyKey) return;
       this.companyKey = company.companyKey;
-      // 従業員情報取得
-      const allEmployees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
-      this.employee = allEmployees.find(e => e.employeeId === this.employeeId);
-      await this.loadSalaryAndBonus();
+      // 事業所一覧取得
+      this.offices = await this.firestoreService.getOffices(this.companyKey) || [];
+      // 従業員一覧取得
+      this.allEmployees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey) || [];
+      // 初期選択値
+      if (!this.selectedOfficeId) {
+        // employeeIdから事業所を特定
+        if (this.employeeId) {
+          const emp = this.allEmployees.find(e => e.employeeId === this.employeeId);
+          if (emp) {
+            this.selectedOfficeId = emp.officeId;
+            this.selectedEmployeeId = emp.employeeId;
+          }
+        }
+        if (!this.selectedOfficeId && this.offices.length > 0) {
+          this.selectedOfficeId = this.offices[0].officeId;
+        }
+      }
+      this.updateFilteredEmployees();
+      if (!this.selectedEmployeeId && this.filteredEmployees.length > 0) {
+        this.selectedEmployeeId = this.filteredEmployees[0].employeeId;
+      }
+      await this.onEmployeeChange();
     });
     // 履歴も初期取得
     await this.loadHistory();
+  }
+
+  updateFilteredEmployees() {
+    if (this.selectedOfficeId === 'ALL') {
+      this.filteredEmployees = [...this.allEmployees];
+    } else {
+      this.filteredEmployees = this.allEmployees.filter(e => e.officeId === this.selectedOfficeId);
+    }
+    // ソート（従業員番号順）
+    this.filteredEmployees.sort((a, b) => (a.employeeId > b.employeeId ? 1 : -1));
+  }
+
+  async onOfficeChange() {
+    this.updateFilteredEmployees();
+    if (this.filteredEmployees.length > 0) {
+      this.selectedEmployeeId = this.filteredEmployees[0].employeeId;
+      await this.onEmployeeChange();
+    }
+    // クエリパラメータ更新
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        ...this.route.snapshot.queryParams,
+        selectedOfficeId: this.selectedOfficeId,
+        selectedEmployeeId: this.selectedEmployeeId
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+  }
+
+  async onEmployeeChange() {
+    this.employeeId = this.selectedEmployeeId;
+    this.employee = this.filteredEmployees.find(e => e.employeeId === this.employeeId) || null;
+    await this.loadSalaryAndBonus();
+    await this.loadHistory();
+    // クエリパラメータ更新
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        ...this.route.snapshot.queryParams,
+        selectedOfficeId: this.selectedOfficeId,
+        selectedEmployeeId: this.selectedEmployeeId
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+  }
+
+  onNextEmployee() {
+    if (!this.filteredEmployees.length) return;
+    const idx = this.filteredEmployees.findIndex(e => e.employeeId === this.selectedEmployeeId);
+    const nextIdx = (idx + 1) % this.filteredEmployees.length;
+    this.selectedEmployeeId = this.filteredEmployees[nextIdx].employeeId;
+    this.onEmployeeChange();
+  }
+
+  onPrevEmployee() {
+    if (!this.filteredEmployees.length) return;
+    const idx = this.filteredEmployees.findIndex(e => e.employeeId === this.selectedEmployeeId);
+    const prevIdx = (idx - 1 + this.filteredEmployees.length) % this.filteredEmployees.length;
+    this.selectedEmployeeId = this.filteredEmployees[prevIdx].employeeId;
+    this.onEmployeeChange();
   }
 
   async onYearMonthChange() {
@@ -258,5 +351,9 @@ export class DetailSalaryComponent implements OnInit {
     } else {
       this.editSalaryForm.commuteAllowanceMonths = 1;
     }
+  }
+
+  onBack() {
+    this.location.back();
   }
 }

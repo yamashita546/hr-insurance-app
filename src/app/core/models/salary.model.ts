@@ -63,6 +63,9 @@ export const SalaryFieldNameMap: Record<string, string> = {
   totalAllowance: '総手当',
   totalSalary: '総支給額',
   remarks: '備考',
+  commuteAllowancePeriodFrom: '通勤手当期間開始',
+  commuteAllowancePeriodTo: '通勤手当期間終了',
+  commuteAllowanceMonths: '通勤手当月数',
 };
 
 export const BonusFieldNameMap: Record<string, string> = {

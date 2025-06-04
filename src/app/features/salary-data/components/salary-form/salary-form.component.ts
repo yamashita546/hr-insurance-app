@@ -410,22 +410,23 @@ export class SalaryFormComponent implements OnInit {
     if (this.csvTemplateType === 'salary') {
       // 給与CSVひな型
       const header = [
-        'companyKey', 'employeeId', 'lastName', 'firstName', 'officeId', 'officeName',
-        'targetYear', 'targetMonth', 'basicSalary', 'overtimeSalary', 'commuteAllowance', 'positionAllowance', 'otherAllowance', 'remarks'
+        'companyKey', 'employeeId', 'lastName', 'firstName', 'officeId',
+        'targetYear', 'targetMonth',
+        'basicSalary', 'overtimeSalary', 'commuteAllowance',
+        'commuteAllowancePeriodFrom', 'commuteAllowancePeriodTo', 'commuteAllowanceMonths',
+        'positionAllowance', 'otherAllowance',
+        'totalAllowance', 'totalSalary', 'remarks'
       ];
-      const rows = targetEmployees.map(emp => {
-        return [
-          emp.companyKey || this.companyKey,
-          emp.employeeId || '',
-          emp.lastName || '',
-          emp.firstName || '',
-          emp.officeId || '',
-          emp.officeName || '',
-          this.csvYear,
-          this.csvMonth,
-          '', '', '', '', '', '' // 空欄（入力用）
-        ];
-      });
+      const rows = targetEmployees.map(emp => [
+        emp.companyKey || this.companyKey,
+        emp.employeeId || '',
+        emp.lastName || '',
+        emp.firstName || '',
+        emp.officeId || '',
+        this.csvYear,
+        this.csvMonth,
+        '', '', '', '', '', '', '', '', '', '', '' // 空欄（入力用）
+      ]);
       const csv = [header.join(','), ...rows.map(r => r.join(','))].join('\r\n');
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
@@ -438,22 +439,21 @@ export class SalaryFormComponent implements OnInit {
     } else if (this.csvTemplateType === 'bonus') {
       // 賞与CSVひな型
       const header = [
-        'companyKey', 'employeeId', 'lastName', 'firstName', 'officeId', 'officeName',
-        'targetYear', 'targetMonth', 'bonusType', 'bonusName', 'bonus', 'remarks'
+        'companyKey', 'employeeId', 'lastName', 'firstName', 'officeId',
+        'targetYear', 'targetMonth',
+        'bonusType', 'bonusName', 'bonus', 'bonusTotal', 'remarks',
+        'commuteAllowance', 'commuteAllowancePeriodFrom', 'commuteAllowancePeriodTo', 'commuteAllowanceMonths'
       ];
-      const rows = targetEmployees.map(emp => {
-        return [
-          emp.companyKey || this.companyKey,
-          emp.employeeId || '',
-          emp.lastName || '',
-          emp.firstName || '',
-          emp.officeId || '',
-          emp.officeName || '',
-          this.csvYear,
-          this.csvMonth,
-          '', '', '', '' // 空欄（入力用）
-        ];
-      });
+      const rows = targetEmployees.map(emp => [
+        emp.companyKey || this.companyKey,
+        emp.employeeId || '',
+        emp.lastName || '',
+        emp.firstName || '',
+        emp.officeId || '',
+        this.csvYear,
+        this.csvMonth,
+        '', '', '', '', '', '', '', '', '', '' // 空欄（入力用）
+      ]);
       const csv = [header.join(','), ...rows.map(r => r.join(','))].join('\r\n');
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);

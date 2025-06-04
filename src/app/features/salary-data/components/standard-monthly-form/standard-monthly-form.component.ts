@@ -7,9 +7,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
-import { StandardMonthlyDecision } from '../../../../core/models/standard-monthly-decision .model';
+import { StandardMonthlyDecision, StandardMonthlyDecisionType } from '../../../../core/models/standard-monthly-decision .model';
 import { Router ,RouterModule } from '@angular/router';
-
 
 @Component({
   selector: 'app-standard-monthly-form',
@@ -196,7 +195,8 @@ export class StandardMonthlyFormComponent implements OnInit {
         pensionGrade: row.pensionJudgedGrade,
         pensionMonthly: row.pensionJudgedMonthly,
         salaryTotal: row.salaryTotal,
-        salaryAvg: row.salaryAvg
+        salaryAvg: row.salaryAvg,
+        type: 'fixed' as StandardMonthlyDecisionType
       };
       await this.firestoreService.addStandardMonthlyDecision(decision);
     });

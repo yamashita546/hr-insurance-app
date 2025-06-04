@@ -110,6 +110,18 @@
                 </tr>
             </tbody>
         </table>
+        <div *ngIf="missingStandardMonthlyEmployees.length > 0" class="alert alert-warning" style="margin-bottom: 1em;">
+          <div>
+            <strong>標準報酬月額未登録の従業員:</strong>
+            <ul style="margin: 0 0 0 1.5em;">
+              <li *ngFor="let emp of missingStandardMonthlyEmployees">{{ emp.lastName }} {{ emp.firstName }}</li>
+            </ul>
+          </div>
+          <div style="margin-top: 0.5em; color: #b85c00;">有効な標準報酬月額が登録されていません</div>
+          <div style="margin-top: 0.5em;">
+            <a class="btn btn-primary" href="/manage-standard-monthly" style="background: #1976d2; color: #fff; padding: 6px 16px; border-radius: 4px; text-decoration: none;">標準報酬月額を登録する</a>
+          </div>
+        </div>
         <div class="form-actions">
             <button type="button" (click)="onSave()">保存</button>
         </div>

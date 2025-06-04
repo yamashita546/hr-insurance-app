@@ -30,6 +30,7 @@ export class InsuranceFormComponent implements OnInit {
   bonuses: any[] = [];
   selectedType: 'salary' | 'bonus' = 'salary';
   insuranceRates: any[] = [];
+  missingStandardMonthlyEmployees: any[] = [];
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -127,6 +128,8 @@ export class InsuranceFormComponent implements OnInit {
     if (this.selectedEmployeeId) {
       targetEmployees = targetEmployees.filter(emp => emp.employeeId === this.selectedEmployeeId);
     }
+    // 標準報酬月額未登録従業員リストを初期化
+    this.missingStandardMonthlyEmployees = [];
     if (this.selectedType === 'salary') {
       this.previewList = targetEmployees.map(emp => {
         // 対象年月の1日
@@ -169,9 +172,13 @@ export class InsuranceFormComponent implements OnInit {
             }
           }
         }
+        // 標準報酬月額の有効性チェック
+        const std = this.getStandardMonthlyForEmployee(emp.employeeId, emp.officeId);
+        if ((healthApplicable || pensionApplicable) && !std) {
+          this.missingStandardMonthlyEmployees.push(emp);
+        }
         // 調査用ログ
         console.log('emp:', emp);
-        const std = this.getStandardMonthlyForEmployee(emp.employeeId, emp.officeId);
         console.log('std:', std);
         const salary = this.getSalaryForEmployee(emp.employeeId);
         console.log('salary:', salary);

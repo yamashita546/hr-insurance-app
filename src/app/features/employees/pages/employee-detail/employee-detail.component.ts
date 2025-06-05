@@ -131,14 +131,14 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
       }
     }
 
-    // 健康保険がfalseなのに介護保険がtrueの場合はエラー
+    // 1. 健康保険がfalseなのに介護保険がtrue → エラー
     if (!health && this.editEmployee.isCareInsuranceApplicable) {
       alert('健康保険が適用されていない場合、介護保険も適用できません。');
       return;
     }
 
-    // 健康保険がtrueかつ年齢が40歳以上65歳未満なら確認
-    if (health && age >= 40 && age < 65) {
+    // 2. 健康保険がtrue かつ 40歳以上65歳未満なのに介護保険がfalse → アラートで自動修正
+    if (health && age >= 40 && age < 65 && !this.editEmployee.isCareInsuranceApplicable) {
       const ok = confirm('この従業員は年齢が40歳以上65歳未満かつ健康保険適用のため、介護保険適用が必要です。\n介護保険を適用して保存してよろしいですか？');
       if (!ok) {
         return;
@@ -146,10 +146,12 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
       this.editEmployee.isCareInsuranceApplicable = true;
     }
 
-    // 健康保険がfalseなら介護保険もfalseに自動修正
+    // 3. 健康保険がfalseなら介護保険もfalse（自動修正、アラート不要）
     if (!health) {
       this.editEmployee.isCareInsuranceApplicable = false;
     }
+
+    // 4. それ以外（条件に合致している場合）はアラートなしで保存
 
     // コード値で保存するための変換処理
     // 雇用形態

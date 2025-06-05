@@ -68,8 +68,7 @@
         <label>従業員区分</label>
         <select [(ngModel)]="selectedEmployeeType" name="employeeType_entry">
           <option value="">全従業員</option>
-          <option value="regular">正社員</option>
-          <option value="part">パート</option>
+          <option *ngFor="let t of employeeTypes" [value]="t.code">{{ t.name }}</option>
         </select>
       </div>
       <div class="form-row">
@@ -83,7 +82,47 @@
         </select>
       </div>
       <div class="form-actions">
-        <button type="button" (click)="onDecision()">決定</button>
+        <button type="button" (click)="onEntryDecision()">決定</button>
+      </div>
+      <div *ngIf="resultList && resultList.length > 0" class="result-table-block">
+        <h3>見込み報酬額入力</h3>
+        <table class="result-table">
+          <thead>
+            <tr>
+              <th>従業員名</th>
+              <th>基本給</th>
+              <th>残業代</th>
+              <th>通勤費</th>
+              <th>役職手当</th>
+              <th>その他手当</th>
+              <th>現物支給</th>
+              <th>支給総額</th>
+              <th>健康保険等級</th>
+              <th>健康保険月額</th>
+              <th>厚生年金等級</th>
+              <th>厚生年金月額</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of resultList; let i = index">
+              <td>{{ row.employeeName }}</td>
+              <td><input type="number" [(ngModel)]="row.estimatedBaseSalary" name="baseSalary{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
+              <td><input type="number" [(ngModel)]="row.estimatedOvertime" name="overtime{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
+              <td><input type="number" [(ngModel)]="row.estimatedCommute" name="commute{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
+              <td><input type="number" [(ngModel)]="row.estimatedPositionAllowance" name="positionAllowance{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
+              <td><input type="number" [(ngModel)]="row.estimatedOtherAllowance" name="otherAllowance{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
+              <td><input type="number" [(ngModel)]="row.estimatedInKind" name="inKind{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
+              <td>{{ row.estimatedTotal | currency:'JPY':'symbol':'1.0-0' }}</td>
+              <td>{{ row.judgedGrade }}</td>
+              <td>{{ row.judgedMonthly | currency:'JPY':'symbol':'1.0-0' }}</td>
+              <td>{{ row.pensionJudgedGrade }}</td>
+              <td>{{ row.pensionJudgedMonthly | currency:'JPY':'symbol':'1.0-0' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="form-actions">
+          <button type="button" (click)="onSave()">保存</button>
+        </div>
       </div>
     </div>
     <div *ngIf="decisionType === 're'">

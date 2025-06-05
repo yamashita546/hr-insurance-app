@@ -23,6 +23,14 @@ export interface StandardMonthlyDecision {
   createdAt: Date;
   updatedAt: Date;
   type: StandardMonthlyDecisionType;
+  // 見込み報酬内訳（入社時決定用）
+  estimatedBaseSalary?: number;      // 基本給
+  estimatedOvertime?: number;        // 残業代
+  estimatedCommute?: number;         // 通勤費
+  estimatedPositionAllowance?: number; // 役職手当
+  estimatedOtherAllowance?: number;  // その他手当
+  estimatedInKind?: number;          // 現物支給
+  estimatedTotal?: number;           // 支給総額（自動計算）
 }
 
 export interface StandardBonusDecision {

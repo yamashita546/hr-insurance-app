@@ -63,6 +63,7 @@ export class StandardMonthlyFormComponent implements OnInit {
         this.companyName = company!.name;
         this.offices = await this.firestoreService.getOffices(this.companyKey);
         this.employees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
+        console.log('従業員データ:', this.employees);
         this.salaries = await this.firestoreService.getSalariesByCompanyKey(this.companyKey);
         console.log('取得した給与データ:', this.salaries);
         const grades = await firstValueFrom(this.firestoreService.getStandardMonthlyGrades());
@@ -99,7 +100,7 @@ export class StandardMonthlyFormComponent implements OnInit {
       filteredEmployees = filteredEmployees.filter(emp => emp.officeId === this.selectedOfficeId);
     }
     if (this.selectedEmployeeType) {
-      filteredEmployees = filteredEmployees.filter(emp => emp.type === this.selectedEmployeeType);
+      filteredEmployees = filteredEmployees.filter(emp => emp.employeeType === this.selectedEmployeeType);
     }
     // 入社時決定の場合は契約開始日でフィルタ
     if (this.decisionType === 'entry') {
@@ -112,8 +113,10 @@ export class StandardMonthlyFormComponent implements OnInit {
       const today = new Date();
       const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
       filteredEmployees = filteredEmployees.filter(emp => {
-        const acqDate: Date | undefined = emp.healthInsuranceStatus?.acquisitionDate;
-        if (!acqDate) return false;
+        const acqDateRaw = emp.healthInsuranceStatus?.acquisitionDate;
+        if (!acqDateRaw) return false;
+        const acqDate = new Date(acqDateRaw);
+        if (isNaN(acqDate.getTime())) return false; // 無効な日付は除外
         // Date型→YYYY-MM形式へ
         const acqYm = `${acqDate.getFullYear()}-${String(acqDate.getMonth() + 1).padStart(2, '0')}`;
         const isTargetYm = acqYm === applyYm || acqYm === prevYm;
@@ -247,5 +250,107 @@ export class StandardMonthlyFormComponent implements OnInit {
 
   onDecisionTypeChange() {
     // 今後、typeごとの初期化やバリデーション切り替えなどをここで実装
+  }
+
+  // 入社時決定用：見込み報酬入力リスト生成
+  onEntryDecision() {
+    // 1. 事業所・従業員区分でフィルタ
+    let filteredEmployees = this.employees;
+    if (this.selectedOfficeId) {
+      filteredEmployees = filteredEmployees.filter(emp => emp.officeId === this.selectedOfficeId);
+    }
+    if (this.selectedEmployeeType) {
+      filteredEmployees = filteredEmployees.filter(emp => emp.employeeType === this.selectedEmployeeType);
+    }
+
+    // 2. 資格取得日の年月（YYYY-MM）と適用開始年月が一致する従業員のみ
+    const applyYm = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
+    filteredEmployees = filteredEmployees.filter(emp => {
+      const acqDateRaw = emp.healthInsuranceStatus?.acquisitionDate;
+      if (!acqDateRaw) return false;
+      const acqDate = new Date(acqDateRaw);
+      if (isNaN(acqDate.getTime())) return false;
+      const acqYm = `${acqDate.getFullYear()}-${String(acqDate.getMonth() + 1).padStart(2, '0')}`;
+      return acqYm === applyYm;
+    });
+
+    // 3. 現在有効な標準報酬月額が未登録の従業員のみ
+    const today = new Date();
+    const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    filteredEmployees = filteredEmployees.filter(emp => {
+      const hasCurrentDecision = this.standardMonthlyDecisions.some(dec =>
+        dec.employeeId === emp.employeeId &&
+        dec.officeId === emp.officeId &&
+        dec.applyYearMonth <= currentYm
+      );
+      return !hasCurrentDecision;
+    });
+
+    // 4. リスト生成
+    this.resultList = filteredEmployees.map(emp => ({
+      employeeId: emp.employeeId,
+      officeId: emp.officeId,
+      employeeName: emp.lastName + ' ' + emp.firstName,
+      estimatedBaseSalary: 0,
+      estimatedOvertime: 0,
+      estimatedCommute: 0,
+      estimatedPositionAllowance: 0,
+      estimatedOtherAllowance: 0,
+      estimatedInKind: 0,
+      estimatedTotal: 0,
+      judgedGrade: '',
+      judgedMonthly: 0,
+      pensionJudgedGrade: '',
+      pensionJudgedMonthly: 0
+    }));
+  }
+
+  // 入力値変更時：合計・等級自動判定
+  onEstimatedSalaryChange(row: any, i: number) {
+    // 合計計算
+    const total =
+      Number(row.estimatedBaseSalary || 0) +
+      Number(row.estimatedOvertime || 0) +
+      Number(row.estimatedCommute || 0) +
+      Number(row.estimatedPositionAllowance || 0) +
+      Number(row.estimatedOtherAllowance || 0) +
+      Number(row.estimatedInKind || 0);
+    row.estimatedTotal = total;
+    // 等級自動判定
+    const applyYm = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
+    const office = this.offices.find((o: any) => o.id === row.officeId);
+    const insuranceType = office && office.insuranceType ? office.insuranceType : '1';
+    // 健康保険等級
+    const healthGrades = this.standardMonthlyGrades.filter((grade: any) => {
+      return grade.gradeType === 'health' &&
+        grade.insuranceType === insuranceType &&
+        grade.validFrom <= applyYm &&
+        (!grade.validTo || grade.validTo >= applyYm);
+    });
+    const matchedHealthGrade = healthGrades.find((grade: any) => {
+      if (grade.upperLimit == null || grade.upperLimit === '') {
+        return grade.lowerLimit <= total;
+      }
+      return grade.lowerLimit <= total && total < grade.upperLimit;
+    });
+    row.judgedGrade = matchedHealthGrade ? matchedHealthGrade.grade : '';
+    row.judgedMonthly = matchedHealthGrade ? matchedHealthGrade.compensation : 0;
+    // 厚生年金等級
+    const pensionGrades = this.standardMonthlyGrades.filter((grade: any) => {
+      return grade.gradeType === 'pension' &&
+        grade.insuranceType === insuranceType &&
+        grade.validFrom <= applyYm &&
+        (!grade.validTo || grade.validTo >= applyYm);
+    });
+    const matchedPensionGrade = pensionGrades.find((grade: any) => {
+      if (grade.upperLimit == null || grade.upperLimit === '') {
+        return grade.lowerLimit <= total;
+      }
+      return grade.lowerLimit <= total && total < grade.upperLimit;
+    });
+    row.pensionJudgedGrade = matchedPensionGrade ? matchedPensionGrade.grade : '';
+    row.pensionJudgedMonthly = matchedPensionGrade ? matchedPensionGrade.compensation : 0;
+    // 反映
+    this.resultList[i] = { ...row };
   }
 }

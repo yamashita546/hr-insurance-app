@@ -6,6 +6,7 @@ import { Company } from '../../../../core/models/company.model';
 import { collection, query, where, getDocs, addDoc, doc, setDoc } from '@angular/fire/firestore';
 import { Firestore } from '@angular/fire/firestore';
 import { FormsModule } from '@angular/forms';
+import { EMPLOYEE_TYPES } from '../../../../core/models/employee.type';
 
 @Component({
   selector: 'app-employee-list',
@@ -103,5 +104,10 @@ export class EmployeeListComponent {
       this.sortKey = key;
       this.sortAsc = true;
     }
+  }
+
+  getEmployeeTypeName(code: string): string {
+    const type = EMPLOYEE_TYPES.find(t => t.code === code);
+    return type ? type.name : code || '';
   }
 }

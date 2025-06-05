@@ -44,7 +44,7 @@
           <td>{{ employee.lastName }} {{ employee.firstName }}</td>
           <td>{{ employee.officeName }}</td>
           <td>{{ employee.department }}</td>
-          <td>{{ employee.employeeType }}</td>
+          <td>{{ getEmployeeTypeName(employee.employeeType) }}</td>
           <td>{{ employee.dependents?.length || 0 }}</td>
           <td>
             <ng-container *ngIf="employee.extraordinaryLeaves?.length">
@@ -56,7 +56,7 @@
             </ng-container>
             <ng-container *ngIf="!employee.extraordinaryLeaves?.length">-</ng-container>
           </td>
-          <td><button class="detail-btn" [routerLink]="['/employee-detail', employee.id]">詳細</button></td>
+          <td><button class="detail-btn" [routerLink]="['/employee-detail', employee.id]" [queryParams]="{ selectedEmployeeId: employee.employeeId, selectedOfficeId: employee.officeId }">詳細</button></td>
         </tr>
       </tbody>
     </table>

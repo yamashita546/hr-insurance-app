@@ -195,7 +195,7 @@ export class FirestoreService {
     const employeesCol = collection(this.firestore, 'employees');
     const q = query(employeesCol, where('companyKey', '==', companyKey));
     const snap = await getDocs(q);
-    return snap.docs.map(doc => ({ ...(doc.data() as Employee)}));
+    return snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as Employee)}));
   }
 
   async addAttendance(attendance: Omit<Attendance, 'createdAt' | 'updatedAt'>) {

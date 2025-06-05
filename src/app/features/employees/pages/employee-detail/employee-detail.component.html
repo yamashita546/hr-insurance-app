@@ -1,3 +1,26 @@
+<button routerLink="/employee">← 戻る</button>
+
+<div class="employee-selector-bar" style="margin-bottom: 1.5em; display: flex; justify-content: center; align-items: center;">
+  <label>事業所：
+    <select [(ngModel)]="selectedOfficeId" (change)="onOfficeChange()">
+      <option value="ALL">全事業所</option>
+      <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
+    </select>
+  </label>
+  <label style="margin-left: 1em;">従業員番号：
+    <select [(ngModel)]="selectedEmployeeId" (change)="onEmployeeChange()">
+      <option *ngFor="let emp of filteredEmployees; trackBy: trackByEmployeeId" [value]="emp.employeeId">{{ emp.employeeId }}</option>
+    </select>
+  </label>
+  <label style="margin-left: 1em;">名前：
+    <select [(ngModel)]="selectedEmployeeId" (change)="onEmployeeChange()">
+      <option *ngFor="let emp of filteredEmployees; trackBy: trackByEmployeeId" [value]="emp.employeeId">{{ emp.lastName }} {{ emp.firstName }}</option>
+    </select>
+  </label>
+  <button (click)="onPrevEmployee()" style="margin-left: 1em;">←</button>
+  <button (click)="onNextEmployee()" style="margin-left: 1em;">→</button>
+</div>
+
 <div class="employee-detail-container" *ngIf="employee">
   <h2>従業員詳細</h2>
 

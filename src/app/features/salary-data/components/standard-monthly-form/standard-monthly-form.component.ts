@@ -536,4 +536,144 @@ export class StandardMonthlyFormComponent implements OnInit {
     }
     this.resultList.splice(index, 1);
   }
+
+  // 随時改定用：判定処理
+  async onOccasionalDecision() {
+    // 定時決定と同様のロジックを流用
+    let filteredEmployees = this.employees;
+    if (this.selectedOfficeId) {
+      filteredEmployees = filteredEmployees.filter(emp => emp.officeId === this.selectedOfficeId);
+    }
+    if (this.selectedEmployeeId) {
+      filteredEmployees = filteredEmployees.filter(emp => emp.employeeId === this.selectedEmployeeId);
+    }
+    // 社会保険適用者のみ対象
+    filteredEmployees = filteredEmployees.filter(emp => emp.healthInsuranceStatus?.isApplicable);
+    // 期間指定
+    const fromYm = `${this.salaryFromYear}-${String(this.salaryFromMonth).padStart(2, '0')}`;
+    const toYm = `${this.salaryToYear}-${String(this.salaryToMonth).padStart(2, '0')}`;
+    this.resultList = filteredEmployees.map(emp => {
+      let salaryList = this.salaries.filter((sal: any) => {
+        return sal.employeeId === emp.employeeId &&
+          sal.targetYearMonth >= fromYm &&
+          sal.targetYearMonth <= toYm;
+      });
+      // 4月・5月・6月の給与金額
+      const aprilYm = `${this.salaryFromYear}-04`;
+      const mayYm = `${this.salaryFromYear}-05`;
+      const juneYm = `${this.salaryFromYear}-06`;
+      const aprilSalary = salaryList.find(s => s.targetYearMonth === aprilYm)?.totalSalary ?? null;
+      const maySalary = salaryList.find(s => s.targetYearMonth === mayYm)?.totalSalary ?? null;
+      const juneSalary = salaryList.find(s => s.targetYearMonth === juneYm)?.totalSalary ?? null;
+      // 算定に利用した月
+      const usedMonthsArr: string[] = [];
+      if (salaryList.find(s => s.targetYearMonth === aprilYm)) usedMonthsArr.push('4');
+      if (salaryList.find(s => s.targetYearMonth === mayYm)) usedMonthsArr.push('5');
+      if (salaryList.find(s => s.targetYearMonth === juneYm)) usedMonthsArr.push('6');
+      const usedMonths = usedMonthsArr.join(',');
+      // 合計・平均
+      const salaryTotal = salaryList.reduce((sum: number, s: any) => sum + (s.totalSalary || 0), 0);
+      const salaryAvg = salaryList.length > 0 ? Math.round(salaryTotal / salaryList.length) : 0;
+      const office = this.offices.find((o: any) => o.id === emp.officeId);
+      const insuranceType = office && office.insuranceType ? office.insuranceType : '1';
+      const applyYm = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
+      const healthGrades = this.standardMonthlyGrades.filter((grade: any) => {
+        return grade.gradeType === 'health' &&
+          grade.insuranceType === insuranceType &&
+          grade.validFrom <= applyYm &&
+          (!grade.validTo || grade.validTo >= applyYm);
+      });
+      const matchedHealthGrade = healthGrades.find((grade: any) => {
+        if (grade.upperLimit == null || grade.upperLimit === '') {
+          return grade.lowerLimit <= salaryAvg;
+        }
+        return grade.lowerLimit <= salaryAvg && salaryAvg < grade.upperLimit;
+      });
+      const judgedGrade = matchedHealthGrade ? matchedHealthGrade.grade : '';
+      const judgedMonthly = matchedHealthGrade ? matchedHealthGrade.compensation : 0;
+      const pensionGrades = this.standardMonthlyGrades.filter((grade: any) => {
+        return grade.gradeType === 'pension' &&
+          grade.insuranceType === insuranceType &&
+          grade.validFrom <= applyYm &&
+          (!grade.validTo || grade.validTo >= applyYm);
+      });
+      const matchedPensionGrade = pensionGrades.find((grade: any) => {
+        if (grade.upperLimit == null || grade.upperLimit === '') {
+          return grade.lowerLimit <= salaryAvg;
+        }
+        return grade.lowerLimit <= salaryAvg && salaryAvg < grade.upperLimit;
+      });
+      const pensionJudgedGrade = matchedPensionGrade ? matchedPensionGrade.grade : '';
+      const pensionJudgedMonthly = matchedPensionGrade ? matchedPensionGrade.compensation : 0;
+      return {
+        employeeId: emp.employeeId,
+        officeId: emp.officeId,
+        employeeName: emp.lastName + ' ' + emp.firstName,
+        currentGrade: emp.grade || '',
+        currentMonthly: emp.monthly || 0,
+        aprilSalary,
+        maySalary,
+        juneSalary,
+        usedMonths,
+        salaryTotal,
+        salaryAvg,
+        judgedGrade,
+        judgedMonthly,
+        pensionJudgedGrade,
+        pensionJudgedMonthly
+      };
+    });
+    this.isConfirmed = true;
+  }
+
+  // 随時改定用：保存処理
+  async onSaveOccasional() {
+    const applyYearMonth = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
+    try {
+      const alreadyRegistered: string[] = [];
+      for (const row of this.resultList) {
+        const emp = this.employees.find(e => `${e.lastName} ${e.firstName}` === row.employeeName);
+        const exists = this.standardMonthlyDecisions.some(dec =>
+          dec.employeeId === (emp ? emp.employeeId : '') &&
+          dec.applyYearMonth === applyYearMonth &&
+          dec.type === 'occasional'
+        );
+        if (exists) {
+          alreadyRegistered.push(`${row.employeeName} の ${this.startYear}年${this.startMonth}月適用には既に随時改定データが登録されています。`);
+        }
+      }
+      if (alreadyRegistered.length > 0) {
+        alert(alreadyRegistered.join('\n'));
+        return;
+      }
+      const promises = this.resultList.map(async row => {
+        const emp = this.employees.find(e => `${e.lastName} ${e.firstName}` === row.employeeName);
+        const officeId = emp ? emp.officeId : '';
+        const decision: Omit<StandardMonthlyDecision, 'createdAt' | 'updatedAt'> = {
+          companyKey: this.companyKey,
+          officeId: officeId,
+          employeeId: emp ? emp.employeeId : '',
+          applyYearMonth,
+          healthGrade: row.judgedGrade,
+          healthMonthly: row.judgedMonthly,
+          pensionGrade: row.pensionJudgedGrade,
+          pensionMonthly: row.pensionJudgedMonthly,
+          salaryTotal: row.salaryTotal ?? 0,
+          salaryAvg: row.salaryAvg ?? 0,
+          type: 'occasional',
+          aprilSalary: row.aprilSalary ?? null,
+          maySalary: row.maySalary ?? null,
+          juneSalary: row.juneSalary ?? null,
+          usedMonths: row.usedMonths ?? '',
+        };
+        await this.firestoreService.addStandardMonthlyDecision(decision);
+      });
+      await Promise.all(promises);
+      alert('随時改定データの保存が完了しました');
+      this.router.navigate(['/manage-standard-monthly']);
+      this.isConfirmed = false;
+    } catch (error: any) {
+      alert('保存に失敗しました: ' + (error?.message || error));
+    }
+  }
 }

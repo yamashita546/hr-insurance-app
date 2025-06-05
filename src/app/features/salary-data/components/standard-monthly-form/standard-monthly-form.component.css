@@ -131,3 +131,49 @@ button:hover {
   min-width: 100px;
   max-width: 120px;
 }
+
+.summary-table-block {
+  margin: 24px 0 0 0;
+  padding: 0;
+}
+.summary-table {
+  width: 100%;
+  min-width: 420px;
+  max-width: 600px;
+  margin: 0 0 18px 0;
+  border-collapse: collapse;
+  background: #f5fafd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  table-layout: fixed;
+}
+.summary-table th, .summary-table td {
+  border: 1px solid #b3d1ea;
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 1.05em;
+}
+.summary-table th {
+  background: #e3f2fd;
+  color: #1976d2;
+  font-weight: bold;
+  font-size: 1.15em;
+  text-align: center;
+  white-space: pre-line;
+  border-radius: 8px 8px 0 0;
+  padding: 14px 10px;
+  word-break: keep-all;
+}
+.summary-table tr:first-child th:first-child {
+  border-top-left-radius: 8px;
+}
+.summary-table tr:first-child th:last-child {
+  border-top-right-radius: 8px;
+}
+.summary-table td {
+  background: #fff;
+  color: #222;
+  font-size: 1.1em;
+  padding: 12px 8px;
+}

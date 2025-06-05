@@ -127,12 +127,31 @@
     </div>
   </form>
 
+  <div *ngIf="isConfirmed && decisionType !== 'entry'" class="summary-table-block">
+    <h4>社会保険適用状況集計</h4>
+    <table class="summary-table">
+      <tr>
+        <th>社会保険<br>加入者</th>
+        <th>定時決定<br>対象者</th>
+        <th>定時決定<br>非対象者</th>
+        <th>社会保険<br>非加入者</th>
+      </tr>
+      <tr>
+        <td>{{ healthInsuranceMemberCount }} 名</td>
+        <td>{{ fixedDecisionTargetCount }} 名</td>
+        <td>{{ fixedDecisionNotTargetCount }} 名</td>
+        <td>{{ healthInsuranceNotMemberCount }} 名</td>
+      </tr>
+    </table>
+  </div>
+
   <div *ngIf="isConfirmed && resultList && resultList.length > 0 && decisionType !== 'entry'" class="result-table-block">
     <h3>判定結果一覧</h3>
     <table class="result-table">
       <thead>
         <tr>
           <th>従業員名</th>
+          <th>所属事業所</th>
           <th>現等級</th>
           <th>現月額</th>
           <th>対象期間<br>給与合計</th>
@@ -148,6 +167,7 @@
       <tbody>
         <tr *ngFor="let row of resultList; let i = index">
           <td>{{ row.employeeName }}</td>
+          <td>{{ getOfficeName(row.officeId) }}</td>
           <td>
             <ng-container *ngIf="getCurrentDecisionForEmployee(row.employeeId, row.officeId) as current; else noCurrent">
               {{ current.healthGrade }}（{{ current.pensionGrade }}）
@@ -186,6 +206,8 @@
     </div>
   </div>
 
+ 
+
   <div *ngIf="decisionType === 'entry' && isConfirmed && resultList && resultList.length > 0" class="result-table-block">
     <h3>判定結果一覧（入社時決定）</h3>
     <table class="result-table">
@@ -218,4 +240,6 @@
       <button type="button" (click)="onSave()">保存</button>
     </div>
   </div>
+
+  
 </div>

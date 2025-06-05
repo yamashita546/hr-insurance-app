@@ -118,23 +118,38 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     this.saveMessage = '';
     console.log('[saveEdit] docId:', this.docId);
     if (!this.docId) return;
-    // 介護保険適用の自動判定
     const health = this.editEmployee.healthInsuranceStatus?.isApplicable;
     const birthday = this.editEmployee.birthday;
-    let isCare = false;
-    if (health && birthday) {
+    let age = 0;
+    if (birthday) {
       const birthDate = new Date(birthday);
       const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
+      age = today.getFullYear() - birthDate.getFullYear();
       const m = today.getMonth() - birthDate.getMonth();
       if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
         age--;
       }
-      if (age >= 40 && age < 65) {
-        isCare = true;
-      }
     }
-    this.editEmployee.isCareInsuranceApplicable = isCare;
+
+    // 健康保険がfalseなのに介護保険がtrueの場合はエラー
+    if (!health && this.editEmployee.isCareInsuranceApplicable) {
+      alert('健康保険が適用されていない場合、介護保険も適用できません。');
+      return;
+    }
+
+    // 健康保険がtrueかつ年齢が40歳以上65歳未満なら確認
+    if (health && age >= 40 && age < 65) {
+      const ok = confirm('この従業員は年齢が40歳以上65歳未満かつ健康保険適用のため、介護保険適用が必要です。\n介護保険を適用して保存してよろしいですか？');
+      if (!ok) {
+        return;
+      }
+      this.editEmployee.isCareInsuranceApplicable = true;
+    }
+
+    // 健康保険がfalseなら介護保険もfalseに自動修正
+    if (!health) {
+      this.editEmployee.isCareInsuranceApplicable = false;
+    }
 
     // コード値で保存するための変換処理
     // 雇用形態
@@ -361,5 +376,12 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
 
   onBack() {
     this.router.navigate(['/employees/list']);
+  }
+
+  // 健康保険の編集時に介護保険もfalseにする
+  onHealthInsuranceChange() {
+    if (!this.editEmployee.healthInsuranceStatus?.isApplicable) {
+      this.editEmployee.isCareInsuranceApplicable = false;
+    }
   }
 }

@@ -192,7 +192,7 @@
       <tr>
         <th>健康保険適用</th>
         <td *ngIf="!isEditMode">{{ employee.healthInsuranceStatus?.isApplicable ? '○' : '×' }}</td>
-        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.healthInsuranceStatus.isApplicable"></td>
+        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.healthInsuranceStatus.isApplicable" (change)="onHealthInsuranceChange()"></td>
       </tr>
       <ng-container *ngIf="isEditMode ? editEmployee.healthInsuranceStatus?.isApplicable : employee.healthInsuranceStatus?.isApplicable">
         <tr>

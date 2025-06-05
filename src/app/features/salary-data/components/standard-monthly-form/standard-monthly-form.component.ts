@@ -30,7 +30,7 @@ export class StandardMonthlyFormComponent implements OnInit {
 
   // フォーム用バインド変数
   selectedOfficeId: string = '';
-  selectedEmployeeType: string = '';
+  selectedEmployeeId: string = '';
   startYear: number = 2025;
   startMonth: number = 9;
   salaryFromYear: number = 2025;
@@ -104,8 +104,8 @@ export class StandardMonthlyFormComponent implements OnInit {
     if (this.selectedOfficeId) {
       filteredEmployees = filteredEmployees.filter(emp => emp.officeId === this.selectedOfficeId);
     }
-    if (this.selectedEmployeeType) {
-      filteredEmployees = filteredEmployees.filter(emp => emp.employeeType === this.selectedEmployeeType);
+    if (this.selectedEmployeeId) {
+      filteredEmployees = filteredEmployees.filter(emp => emp.employeeId === this.selectedEmployeeId);
     }
     // 社会保険適用者のみ対象
     filteredEmployees = filteredEmployees.filter(emp => emp.healthInsuranceStatus?.isApplicable);
@@ -144,13 +144,55 @@ export class StandardMonthlyFormComponent implements OnInit {
     const toYm = `${this.salaryToYear}-${String(this.salaryToMonth).padStart(2, '0')}`;
     // 3. 各従業員ごとに期間内の給与データを集計
     this.resultList = filteredEmployees.map(emp => {
-      const salaryList = this.salaries.filter((sal: any) => {
+      // 1. 給与データの抽出
+      let salaryList = this.salaries.filter((sal: any) => {
         return sal.employeeId === emp.employeeId &&
           sal.targetYearMonth >= fromYm &&
           sal.targetYearMonth <= toYm;
       });
+
+      // 2. 契約開始日が4月1日～5月31日か判定
+      if (emp.contractStartDate) {
+        const start = new Date(emp.contractStartDate);
+        const startYear = start.getFullYear();
+        const startMonth = start.getMonth() + 1; // 1月=0
+        if (
+          startYear === this.salaryFromYear &&
+          (startMonth === 4 || startMonth === 5)
+        ) {
+          // 3. 契約開始月の給与データがある場合
+          const ym = `${start.getFullYear()}-${String(startMonth).padStart(2, '0')}`;
+          const salaryIndex = salaryList.findIndex(sal => sal.targetYearMonth === ym);
+          if (salaryIndex !== -1) {
+            // 4. 契約開始日から月末までの日数を計算
+            const lastDay = new Date(start.getFullYear(), startMonth, 0).getDate();
+            const days = lastDay - start.getDate() + 1;
+            if (days < 17) {
+              // 5. 17日未満ならその月の給与を除外
+              salaryList.splice(salaryIndex, 1);
+            }
+          }
+        }
+      }
+
+      // 追加: 4月・5月・6月の給与金額
+      const aprilYm = `${this.salaryFromYear}-04`;
+      const mayYm = `${this.salaryFromYear}-05`;
+      const juneYm = `${this.salaryFromYear}-06`;
+      const aprilSalary = salaryList.find(s => s.targetYearMonth === aprilYm)?.totalSalary ?? null;
+      const maySalary = salaryList.find(s => s.targetYearMonth === mayYm)?.totalSalary ?? null;
+      const juneSalary = salaryList.find(s => s.targetYearMonth === juneYm)?.totalSalary ?? null;
+      // 算定に利用した月
+      const usedMonthsArr: string[] = [];
+      if (salaryList.find(s => s.targetYearMonth === aprilYm)) usedMonthsArr.push('4');
+      if (salaryList.find(s => s.targetYearMonth === mayYm)) usedMonthsArr.push('5');
+      if (salaryList.find(s => s.targetYearMonth === juneYm)) usedMonthsArr.push('6');
+      const usedMonths = usedMonthsArr.join(',');
+
+      // 6. 残ったsalaryListで合計・平均を算出
       const salaryTotal = salaryList.reduce((sum: number, s: any) => sum + (s.totalSalary || 0), 0);
       const salaryAvg = salaryList.length > 0 ? Math.round(salaryTotal / salaryList.length) : 0;
+
       const office = this.offices.find((o: any) => o.id === emp.officeId);
       const insuranceType = office && office.insuranceType ? office.insuranceType : '1';
       const applyYm = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
@@ -188,6 +230,10 @@ export class StandardMonthlyFormComponent implements OnInit {
         employeeName: emp.lastName + ' ' + emp.firstName,
         currentGrade: emp.grade || '',
         currentMonthly: emp.monthly || 0,
+        aprilSalary,
+        maySalary,
+        juneSalary,
+        usedMonths,
         salaryTotal,
         salaryAvg,
         judgedGrade,
@@ -210,6 +256,23 @@ export class StandardMonthlyFormComponent implements OnInit {
     const applyYearMonth = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
     const isEntry = this.decisionType === 'entry';
     try {
+      // 既存データ該当者をリストアップ
+      const alreadyRegistered: string[] = [];
+      for (const row of this.resultList) {
+        const emp = this.employees.find(e => `${e.lastName} ${e.firstName}` === row.employeeName);
+        const exists = this.standardMonthlyDecisions.some(dec =>
+          dec.employeeId === (emp ? emp.employeeId : '') &&
+          dec.applyYearMonth === applyYearMonth &&
+          dec.type === 'fixed'
+        );
+        if (exists) {
+          alreadyRegistered.push(`${row.employeeName} の ${this.startYear}年${this.startMonth}月適用には既に標準報酬月額が登録されています。`);
+        }
+      }
+      if (alreadyRegistered.length > 0) {
+        alert(alreadyRegistered.join('\n'));
+        return;
+      }
       const promises = this.resultList.map(async row => {
         const emp = this.employees.find(e => `${e.lastName} ${e.firstName}` === row.employeeName);
         const officeId = emp ? emp.officeId : '';
@@ -225,6 +288,10 @@ export class StandardMonthlyFormComponent implements OnInit {
           salaryTotal: isEntry ? row.estimatedTotal : row.salaryTotal ?? 0,
           salaryAvg: isEntry ? row.estimatedTotal : row.salaryAvg ?? 0,
           type: isEntry ? 'entry' : 'fixed',
+          aprilSalary: row.aprilSalary ?? null,
+          maySalary: row.maySalary ?? null,
+          juneSalary: row.juneSalary ?? null,
+          usedMonths: row.usedMonths ?? '',
           ...(isEntry && {
             estimatedBaseSalary: row.estimatedBaseSalary ?? 0,
             estimatedOvertime: row.estimatedOvertime ?? 0,
@@ -257,8 +324,8 @@ export class StandardMonthlyFormComponent implements OnInit {
     if (this.selectedOfficeId) {
       filteredEmployees = filteredEmployees.filter(emp => emp.officeId === this.selectedOfficeId);
     }
-    if (this.selectedEmployeeType) {
-      filteredEmployees = filteredEmployees.filter(emp => emp.employeeType === this.selectedEmployeeType);
+    if (this.selectedEmployeeId) {
+      filteredEmployees = filteredEmployees.filter(emp => emp.employeeId === this.selectedEmployeeId);
     }
 
     // 2. 資格取得日の年月（YYYY-MM）と適用開始年月が一致する従業員のみ
@@ -452,5 +519,21 @@ export class StandardMonthlyFormComponent implements OnInit {
       // いずれにも該当しなければ対象者
       return false;
     }).length;
+  }
+
+  get employeesSortedByIdName() {
+    return [...this.employees].sort((a, b) => {
+      const aKey = `${a.employeeId}${a.lastName}${a.firstName}`;
+      const bKey = `${b.employeeId}${b.lastName}${b.firstName}`;
+      return aKey.localeCompare(bKey, 'ja');
+    });
+  }
+
+  onRemoveRow(index: number) {
+    const name = this.resultList[index]?.employeeName || '';
+    if (!confirm(`${name} を一括登録から削除します。よろしいですか？`)) {
+      return;
+    }
+    this.resultList.splice(index, 1);
   }
 }

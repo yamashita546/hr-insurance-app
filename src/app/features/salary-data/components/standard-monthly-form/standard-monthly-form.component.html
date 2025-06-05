@@ -1,5 +1,5 @@
 <div class="standard-monthly-form-container">
-  <h2>標準報酬月額 定時決定 登録</h2>
+  <h2>標準報酬月額 登録フォーム</h2>
   <div class="company-info-block" *ngIf="companyId && companyName">
     <div>企業ID：{{ companyId }}</div>
     <div>企業名：{{ companyName }}</div>
@@ -13,15 +13,17 @@
     </div>
     <div *ngIf="decisionType === 'fixed'">
       <div class="form-row">
-        <label>支社</label>
+        <label>事業所</label>
         <select [(ngModel)]="selectedOfficeId" name="office">
-          <option value="">全支社</option>
+          <option value="">全事業所</option>
           <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
         </select>
-        <label>従業員区分</label>
-        <select [(ngModel)]="selectedEmployeeType" name="employeeType">
+        <label>従業員</label>
+        <select [(ngModel)]="selectedEmployeeId" name="employeeId">
           <option value="">全従業員</option>
-          <option *ngFor="let t of employeeTypes" [value]="t.code">{{ t.name }}</option>
+          <option *ngFor="let emp of employeesSortedByIdName" [value]="emp.employeeId">
+            {{ emp.employeeId }} {{ emp.lastName }}{{ emp.firstName }}
+          </option>
         </select>
       </div>
       <div class="form-row">
@@ -65,10 +67,12 @@
           <option value="">全支社</option>
           <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
         </select>
-        <label>従業員区分</label>
-        <select [(ngModel)]="selectedEmployeeType" name="employeeType_entry">
+        <label>従業員</label>
+        <select [(ngModel)]="selectedEmployeeId" name="employeeId">
           <option value="">全従業員</option>
-          <option *ngFor="let t of employeeTypes" [value]="t.code">{{ t.name }}</option>
+          <option *ngFor="let emp of employeesSortedByIdName" [value]="emp.employeeId">
+            {{ emp.employeeId }} {{ emp.lastName }}{{ emp.firstName }}
+          </option>
         </select>
       </div>
       <div class="form-row">
@@ -154,6 +158,10 @@
           <th>所属事業所</th>
           <th>現等級</th>
           <th>現月額</th>
+          <th>4月給与</th>
+          <th>5月給与</th>
+          <th>6月給与</th>
+          <th>対象月</th>
           <th>対象期間<br>給与合計</th>
           <th>平均</th>
           <th>健康保険<br>等級</th>
@@ -180,23 +188,27 @@
             </ng-container>
             <ng-template #noCurrent>ー</ng-template>
           </td>
+          <td>{{ row.aprilSalary != null ? (row.aprilSalary | currency:'JPY':'symbol':'1.0-0') : 'ー' }}</td>
+          <td>{{ row.maySalary != null ? (row.maySalary | currency:'JPY':'symbol':'1.0-0') : 'ー' }}</td>
+          <td>{{ row.juneSalary != null ? (row.juneSalary | currency:'JPY':'symbol':'1.0-0') : 'ー' }}</td>
+          <td>{{ row.usedMonths || 'ー' }}</td>
           <td>{{ row.salaryTotal | currency:'JPY':'symbol':'1.0-0' }}</td>
           <td>{{ row.salaryAvg | currency:'JPY':'symbol':'1.0-0' }}</td>
           <td>
-            <input [(ngModel)]="row.judgedGrade" name="judgedGrade{{i}}" style="width: 60px;">
+            {{ row.judgedGrade }}
           </td>
           <td>
-            <input [(ngModel)]="row.judgedMonthly" name="judgedMonthly{{i}}" style="width: 100px;">
+            {{ row.judgedMonthly | currency:'JPY':'symbol':'1.0-0' }}
           </td>
           <td>
-            <input [(ngModel)]="row.pensionJudgedGrade" name="pensionJudgedGrade{{i}}" style="width: 60px;">
+            {{ row.pensionJudgedGrade }}
           </td>
           <td>
-            <input [(ngModel)]="row.pensionJudgedMonthly" name="pensionJudgedMonthly{{i}}" style="width: 100px;">
+            {{ row.pensionJudgedMonthly | currency:'JPY':'symbol':'1.0-0' }}
           </td>
           <td>{{ startYear }}年{{ startMonth }}月</td>
           <td>
-            <button type="button" (click)="onEditRow(i)">修正</button>
+            <button type="button" (click)="onRemoveRow(i)">削除</button>
           </td>
         </tr>
       </tbody>

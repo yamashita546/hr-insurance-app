@@ -32,6 +32,10 @@ export interface StandardMonthlyDecision {
   estimatedInKind?: number;          // 現物支給
   estimatedTotal?: number;           // 支給総額（自動計算）
   isCareInsuranceApplicable?: boolean; // 介護保険適用
+  aprilSalary?: number | null;
+  maySalary?: number | null;
+  juneSalary?: number | null;
+  usedMonths?: string; // 算定に利用した月（例: "4,5,6" や "5,6"）
 }
 
 export interface StandardBonusDecision {

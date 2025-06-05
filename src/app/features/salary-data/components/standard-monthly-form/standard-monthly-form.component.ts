@@ -48,6 +48,8 @@ export class StandardMonthlyFormComponent implements OnInit {
 
   employeeTypes: EmployeeType[] = EMPLOYEE_TYPES;
 
+  isConfirmed = false;
+
   constructor(
     private userCompanyService: UserCompanyService,
     private firestoreService: FirestoreService,
@@ -222,10 +224,9 @@ export class StandardMonthlyFormComponent implements OnInit {
 
   // 保存ボタン押下時
   async onSave() {
-    // 判定結果をStandardMonthlyDecision型に変換し、Firestoreに一括保存
     const applyYearMonth = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
+    const isEntry = this.decisionType === 'entry';
     const promises = this.resultList.map(async row => {
-      // 従業員のofficeIdを取得
       const emp = this.employees.find(e => `${e.lastName} ${e.firstName}` === row.employeeName);
       const officeId = emp ? emp.officeId : '';
       const decision: Omit<StandardMonthlyDecision, 'createdAt' | 'updatedAt'> = {
@@ -237,15 +238,23 @@ export class StandardMonthlyFormComponent implements OnInit {
         healthMonthly: row.judgedMonthly,
         pensionGrade: row.pensionJudgedGrade,
         pensionMonthly: row.pensionJudgedMonthly,
-        salaryTotal: row.salaryTotal,
-        salaryAvg: row.salaryAvg,
-        type: 'fixed' as StandardMonthlyDecisionType
+        salaryTotal: isEntry ? row.estimatedTotal : row.salaryTotal ?? 0,
+        salaryAvg: isEntry ? row.estimatedTotal : row.salaryAvg ?? 0,
+        type: isEntry ? 'entry' : 'fixed',
+        estimatedBaseSalary: row.estimatedBaseSalary,
+        estimatedOvertime: row.estimatedOvertime,
+        estimatedCommute: row.estimatedCommute,
+        estimatedPositionAllowance: row.estimatedPositionAllowance,
+        estimatedOtherAllowance: row.estimatedOtherAllowance,
+        estimatedInKind: row.estimatedInKind,
+        estimatedTotal: row.estimatedTotal
       };
       await this.firestoreService.addStandardMonthlyDecision(decision);
     });
     await Promise.all(promises);
     alert(`${this.resultList.length}件の標準報酬月額データを保存しました。`);
     this.router.navigate(['/manage-standard-monthly']);
+    this.isConfirmed = false;
   }
 
   onDecisionTypeChange() {
@@ -301,8 +310,10 @@ export class StandardMonthlyFormComponent implements OnInit {
       judgedGrade: '',
       judgedMonthly: 0,
       pensionJudgedGrade: '',
-      pensionJudgedMonthly: 0
+      pensionJudgedMonthly: 0,
+      isCareInsuranceApplicable: false
     }));
+    this.isConfirmed = false;
   }
 
   // 入力値変更時：合計・等級自動判定
@@ -352,5 +363,16 @@ export class StandardMonthlyFormComponent implements OnInit {
     row.pensionJudgedMonthly = matchedPensionGrade ? matchedPensionGrade.compensation : 0;
     // 反映
     this.resultList[i] = { ...row };
+  }
+
+  onConfirmEstimated() {
+    // 入力済みの見込み報酬額から等級・月額を自動判定
+    this.resultList.forEach((row, i) => this.onEstimatedSalaryChange(row, i));
+    this.isConfirmed = true;
+  }
+
+  getOfficeName(officeId: string): string {
+    const office = this.offices.find(o => o.id === officeId);
+    return office ? office.name : '';
   }
 }

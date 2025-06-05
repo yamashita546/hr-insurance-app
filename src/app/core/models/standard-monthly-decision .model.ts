@@ -31,6 +31,7 @@ export interface StandardMonthlyDecision {
   estimatedOtherAllowance?: number;  // その他手当
   estimatedInKind?: number;          // 現物支給
   estimatedTotal?: number;           // 支給総額（自動計算）
+  isCareInsuranceApplicable?: boolean; // 介護保険適用
 }
 
 export interface StandardBonusDecision {

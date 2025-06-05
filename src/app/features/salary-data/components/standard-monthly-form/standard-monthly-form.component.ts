@@ -313,7 +313,26 @@ export class StandardMonthlyFormComponent implements OnInit {
     }
   }
 
+  // 定時決定：適用開始月・決定種別変更時に自動設定
+  setFixedDecisionPeriod() {
+    this.startMonth = 9;
+    this.salaryFromMonth = 4;
+    this.salaryToMonth = 6;
+    this.salaryFromYear = this.startYear;
+    this.salaryToYear = this.startYear;
+  }
+
+  onFixedStartMonthChange() {
+    if (this.decisionType === 'fixed') {
+      this.setFixedDecisionPeriod();
+    }
+  }
+
   onDecisionTypeChange() {
+    // 決定種別変更時の初期化
+    if (this.decisionType === 'fixed') {
+      this.setFixedDecisionPeriod();
+    }
     // 今後、typeごとの初期化やバリデーション切り替えなどをここで実装
   }
 
@@ -369,6 +388,9 @@ export class StandardMonthlyFormComponent implements OnInit {
       pensionJudgedMonthly: 0,
       isCareInsuranceApplicable: false
     }));
+    if (this.resultList.length === 0) {
+      alert('対象の従業員が存在しません。');
+    }
     this.isConfirmed = false;
   }
 
@@ -675,5 +697,26 @@ export class StandardMonthlyFormComponent implements OnInit {
     } catch (error: any) {
       alert('保存に失敗しました: ' + (error?.message || error));
     }
+  }
+
+  // 随時改定：適用開始月変更時に算出根拠月を自動設定
+  onOccasionalStartMonthChange() {
+    // 適用開始月の前3ヶ月を算出
+    let toYear = this.startYear;
+    let toMonth = this.startMonth - 1;
+    if (toMonth === 0) {
+      toYear--;
+      toMonth = 12;
+    }
+    let fromYear = toYear;
+    let fromMonth = toMonth - 2;
+    if (fromMonth <= 0) {
+      fromYear--;
+      fromMonth += 12;
+    }
+    this.salaryFromYear = fromYear;
+    this.salaryFromMonth = fromMonth;
+    this.salaryToYear = toYear;
+    this.salaryToMonth = toMonth;
   }
 }

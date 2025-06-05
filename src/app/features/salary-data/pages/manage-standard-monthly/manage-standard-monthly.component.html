@@ -22,7 +22,7 @@
           <th>次回等級</th>
           <th>新報酬月額</th>
           <th>適用開始予定</th>
-          <th>随時改定</th>
+          <th>詳細</th>
         </tr>
       </thead>
       <tbody>
@@ -61,7 +61,7 @@
             <ng-template #noNext>ー</ng-template>
           </td>
           <td>
-            <button (click)="onRevision(row)">随時改定</button>
+            <button [routerLink]="['/detail-standard-monthly']" [queryParams]="{ employeeId: row.employeeId, officeId: row.officeId }">詳細</button>
           </td>
         </tr>
       </tbody>

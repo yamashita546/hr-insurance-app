@@ -21,7 +21,7 @@ export class ManageStandardMonthlyComponent implements OnInit {
   standardMonthlyList: StandardMonthlyDecision[] = [];
   employees: any[] = [];
 
-  constructor(private userCompanyService: UserCompanyService, private firestoreService: FirestoreService) {}
+  constructor(private userCompanyService: UserCompanyService, private firestoreService: FirestoreService, private router: Router) {}
 
   ngOnInit() {
     this.userCompanyService.company$
@@ -51,7 +51,7 @@ export class ManageStandardMonthlyComponent implements OnInit {
   }
 
   onRevision(row: any) {
-    alert(`「${row.name}」の随時改定ボタンがクリックされました。`);
+    this.router.navigate(['/detail-standard-monthly', row.employeeId, row.officeId]);
   }
 
   getNextGrade(row: StandardMonthlyDecision): string {

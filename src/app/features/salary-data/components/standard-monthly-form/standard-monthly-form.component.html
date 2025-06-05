@@ -32,7 +32,7 @@
           <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
         </select>
         <label>適用開始月</label>
-        <select [(ngModel)]="startMonth" name="startMonth">
+        <select [(ngModel)]="startMonth" name="startMonth" (change)="onFixedStartMonthChange()">
           <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
         </select>
       </div>
@@ -77,7 +77,7 @@
           <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
         </select>
         <label>適用開始月</label>
-        <select [(ngModel)]="startMonth" name="startMonth_occasional">
+        <select [(ngModel)]="startMonth" name="startMonth_occasional" (change)="onOccasionalStartMonthChange()">
           <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
         </select>
       </div>

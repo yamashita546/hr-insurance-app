@@ -1,0 +1,148 @@
+body, :host {
+  background: #f4f7fb;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 1.2em 2em;
+  margin-bottom: 1.5em;
+}
+.avatar {
+  width: 64px; height: 64px;
+  background: #1976d2;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 2em;
+  display: flex; align-items: center; justify-content: center;
+  margin-right: 1.2em;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+.profile-main .name {
+  font-size: 1.3em;
+  font-weight: bold;
+  margin-bottom: 0.2em;
+}
+.profile-main .id, .profile-main .office, .profile-main .birth, .profile-main .contract {
+  font-size: 1em;
+  color: #555;
+  margin-bottom: 0.1em;
+}
+
+.insurance-status-row {
+  display: flex;
+  gap: 1em;
+  margin-bottom: 1.5em;
+}
+.insurance-card {
+  flex: 1;
+  background: #f0f4fa;
+  border-radius: 8px;
+  padding: 0.8em;
+  text-align: center;
+  color: #888;
+  font-weight: bold;
+  transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  font-size: 1.1em;
+}
+.insurance-card.active {
+  background: #1976d2;
+  color: #fff;
+}
+.icon {
+  display: inline-block;
+  width: 1.3em;
+  height: 1.3em;
+  border-radius: 50%;
+  margin-right: 0.2em;
+}
+.icon.health {
+  background: linear-gradient(135deg, #4fc3f7 60%, #1976d2 100%);
+}
+.icon.pension {
+  background: linear-gradient(135deg, #a7ffeb 60%, #26a69a 100%);
+}
+.icon.care {
+  background: linear-gradient(135deg, #ffe082 60%, #ffb300 100%);
+}
+
+.grade-cards {
+  display: flex;
+  gap: 1.5em;
+  margin-bottom: 2em;
+}
+.grade-card {
+  flex: 1;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 1em 1.5em;
+  min-width: 220px;
+}
+.grade-card h3 {
+  font-size: 1.1em;
+  color: #1976d2;
+  margin-bottom: 0.7em;
+  border-left: 4px solid #1976d2;
+  padding-left: 0.5em;
+}
+.grade-card > div {
+  margin-bottom: 0.3em;
+}
+
+.history-table {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 1em 1.5em;
+  margin-bottom: 2em;
+}
+.history-table h3 {
+  font-size: 1.1em;
+  color: #1976d2;
+  margin-bottom: 0.7em;
+  border-left: 4px solid #1976d2;
+  padding-left: 0.5em;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5em;
+  background: #fff;
+}
+th, td {
+  border: 1px solid #e3e7ed;
+  padding: 0.5em 0.8em;
+  text-align: left;
+}
+th {
+  background: #e3e7ed;
+  font-weight: bold;
+}
+tr:nth-child(even) td {
+  background: #f8fafd;
+}
+
+@media (max-width: 900px) {
+  .grade-cards {
+    flex-direction: column;
+    gap: 1em;
+  }
+  .profile-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1em;
+  }
+  .avatar {
+    margin-bottom: 0.7em;
+    margin-right: 0;
+  }
+}

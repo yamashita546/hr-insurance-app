@@ -68,7 +68,7 @@ export class InsuranceFormComponent implements OnInit {
   getStandardMonthlyForEmployee(employeeId: string, officeId: string): any {
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
     const candidates = this.standardMonthlyDecisions
-      .filter(r => r.employeeId === employeeId && r.officeId === officeId && r.applyYearMonth <= ym)
+      .filter(r => r.employeeId === employeeId && r.officeId === officeId && r.applyYearMonth <= ym && r.isActive !== false)
       .sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth));
     return candidates[0] || null;
   }
@@ -130,130 +130,148 @@ export class InsuranceFormComponent implements OnInit {
     }
     // 標準報酬月額未登録従業員リストを初期化
     this.missingStandardMonthlyEmployees = [];
+    // 対象年月の月末日
+    const targetYm = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+    const targetMonthEnd = new Date(this.selectedYear, this.selectedMonth, 0); // 月末日
     if (this.selectedType === 'salary') {
-      this.previewList = targetEmployees.map(emp => {
-        // 対象年月の1日
-        const ymDate = new Date(this.selectedYear, this.selectedMonth - 1, 1);
-        // 各保険の適用判定
-        let healthApplicable = emp.healthInsuranceStatus?.isApplicable;
-        let pensionApplicable = emp.pensionStatus?.isApplicable;
-        let employmentApplicable = emp.employmentInsuranceStatus?.isApplicable;
-        let careApplicable = emp.isCareInsuranceApplicable;
-        // 外国人特例（厚生年金免除）
-        if (emp.isForeignWorker && emp.foreignWorkerInfo?.hasSpecialExemption) {
-          pensionApplicable = false;
-        }
-        // 休職特例（期間中は免除）
-        if (Array.isArray(emp.extraordinaryLeaves)) {
-          for (const leave of emp.extraordinaryLeaves) {
-            // 健康保険免除
-            if (leave.isHealthInsuranceExempted && leave.leaveStartDate && leave.leaveEndDate) {
-              if (ymDate >= new Date(leave.leaveStartDate) && ymDate <= new Date(leave.leaveEndDate)) {
-                healthApplicable = false;
-              }
+      this.previewList = targetEmployees
+        // 社会保険加入判定・喪失日判定
+        .filter(emp => {
+          // 社会保険未加入は対象外
+          if (!emp.healthInsuranceStatus?.isApplicable) return false;
+          // 喪失日がある場合、対象年月の月末より前なら対象外
+          const lossDateRaw = emp.healthInsuranceStatus?.lossDate;
+          if (lossDateRaw) {
+            const lossDate = new Date(lossDateRaw);
+            if (!isNaN(lossDate.getTime()) && lossDate < targetMonthEnd) {
+              return false;
             }
-            // 厚生年金免除
-            if (leave.isPensionExempted && leave.leaveStartDate && leave.leaveEndDate) {
-              if (ymDate >= new Date(leave.leaveStartDate) && ymDate <= new Date(leave.leaveEndDate)) {
-                pensionApplicable = false;
+          }
+          return true;
+        })
+        .map(emp => {
+          // 対象年月の1日
+          const ymDate = new Date(this.selectedYear, this.selectedMonth - 1, 1);
+          // 各保険の適用判定
+          let healthApplicable = emp.healthInsuranceStatus?.isApplicable;
+          let pensionApplicable = emp.pensionStatus?.isApplicable;
+          let employmentApplicable = emp.employmentInsuranceStatus?.isApplicable;
+          let careApplicable = emp.isCareInsuranceApplicable;
+          // 外国人特例（厚生年金免除）
+          if (emp.isForeignWorker && emp.foreignWorkerInfo?.hasSpecialExemption) {
+            pensionApplicable = false;
+          }
+          // 休職特例（期間中は免除）
+          if (Array.isArray(emp.extraordinaryLeaves)) {
+            for (const leave of emp.extraordinaryLeaves) {
+              // 健康保険免除
+              if (leave.isHealthInsuranceExempted && leave.leaveStartDate && leave.leaveEndDate) {
+                if (ymDate >= new Date(leave.leaveStartDate) && ymDate <= new Date(leave.leaveEndDate)) {
+                  healthApplicable = false;
+                }
               }
-            }
-            // 雇用保険免除
-            if (leave.isEmploymentInsuranceExempted && leave.leaveStartDate && leave.leaveEndDate) {
-              if (ymDate >= new Date(leave.leaveStartDate) && ymDate <= new Date(leave.leaveEndDate)) {
-                employmentApplicable = false;
+              // 厚生年金免除
+              if (leave.isPensionExempted && leave.leaveStartDate && leave.leaveEndDate) {
+                if (ymDate >= new Date(leave.leaveStartDate) && ymDate <= new Date(leave.leaveEndDate)) {
+                  pensionApplicable = false;
+                }
               }
-            }
-            // 介護保険免除
-            if (leave.isCareInsuranceExempted && leave.leaveStartDate && leave.leaveEndDate) {
-              if (ymDate >= new Date(leave.leaveStartDate) && ymDate <= new Date(leave.leaveEndDate)) {
-                careApplicable = false;
+              // 雇用保険免除
+              if (leave.isEmploymentInsuranceExempted && leave.leaveStartDate && leave.leaveEndDate) {
+                if (ymDate >= new Date(leave.leaveStartDate) && ymDate <= new Date(leave.leaveEndDate)) {
+                  employmentApplicable = false;
+                }
+              }
+              // 介護保険免除
+              if (leave.isCareInsuranceExempted && leave.leaveStartDate && leave.leaveEndDate) {
+                if (ymDate >= new Date(leave.leaveStartDate) && ymDate <= new Date(leave.leaveEndDate)) {
+                  careApplicable = false;
+                }
               }
             }
           }
-        }
-        // 標準報酬月額の有効性チェック
-        const std = this.getStandardMonthlyForEmployee(emp.employeeId, emp.officeId);
-        if ((healthApplicable || pensionApplicable) && !std) {
-          this.missingStandardMonthlyEmployees.push(emp);
-        }
-        // 調査用ログ
-        // console.log('emp:', emp);
-        // console.log('std:', std);
-        const salary = this.getSalaryForEmployee(emp.employeeId);
-        // console.log('salary:', salary);
-        const rate = this.getInsuranceRateForOffice(emp.officeId);
-        // console.log('rate:', rate);
-        let careInsurance = '×';
-        let healthInsurance = 'ー';
-        let healthInsuranceDeduction = 'ー';
-        let pension = 'ー';
-        let pensionDeduction = 'ー';
-        let deductionTotal = 'ー';
-        let childcare = 'ー';
-        let companyShare = 'ー';
-        let grade = std ? `${std.healthGrade}（${std.pensionGrade}）` : 'ー';
-        let monthly = std ? std.healthMonthly : 'ー';
-        if (std && rate) {
-          // 介護保険適用判定
-          const age = this.getAgeAtYearMonth1st(emp.birthday, this.selectedYear, this.selectedMonth);
-          const isCare = age >= 40 && age < 65 && careApplicable;
-          careInsurance = isCare ? '〇' : '×';
-          // 料率
-          let healthRate = rate.healthInsuranceRate;
-          let careRate = isCare && rate.careInsuranceRate ? rate.careInsuranceRate : 0;
-          let totalHealthRate = healthRate + careRate;
-          let pensionRate = rate.employeePensionInsuranceRate;
-          // 健康保険料
-          if (healthApplicable) {
-            const health = std.healthMonthly * (totalHealthRate / 100);
-            healthInsurance = this.formatDecimal(health);
-            // 健康保険料控除額
-            const healthDeduct = this.roundHalfUp(std.healthMonthly * (totalHealthRate / 100) / 2);
-            healthInsuranceDeduction = healthDeduct.toLocaleString();
-            // 控除額合計（健康保険分のみ）
-            deductionTotal = healthDeduct.toLocaleString();
-            // 子ども子育て拠出金
-            const childcareVal = std.healthMonthly * (Number(ChildcareInsuranceRate.CHILDCARE_INSURANCE_RATE) / 100);
-            childcare = this.formatDecimal(childcareVal);
-            // 会社負担（健康保険分のみ）
-            companyShare = this.formatDecimal(healthDeduct + childcareVal);
+          // 標準報酬月額の有効性チェック
+          const std = this.getStandardMonthlyForEmployee(emp.employeeId, emp.officeId);
+          if ((healthApplicable || pensionApplicable) && !std) {
+            this.missingStandardMonthlyEmployees.push(emp);
           }
-          // 厚生年金保険料
-          if (pensionApplicable) {
-            const pensionVal = std.healthMonthly * (pensionRate / 100);
-            pension = this.formatDecimal(pensionVal);
-            // 厚生年金保険料控除額
-            const pensionDeduct = this.roundHalfUp(std.healthMonthly * (pensionRate / 100) / 2);
-            pensionDeduction = pensionDeduct.toLocaleString();
-            // 控除額合計（健康保険＋年金）
+          // 調査用ログ
+          // console.log('emp:', emp);
+          // console.log('std:', std);
+          const salary = this.getSalaryForEmployee(emp.employeeId);
+          // console.log('salary:', salary);
+          const rate = this.getInsuranceRateForOffice(emp.officeId);
+          // console.log('rate:', rate);
+          let careInsurance = '×';
+          let healthInsurance = 'ー';
+          let healthInsuranceDeduction = 'ー';
+          let pension = 'ー';
+          let pensionDeduction = 'ー';
+          let deductionTotal = 'ー';
+          let childcare = 'ー';
+          let companyShare = 'ー';
+          let grade = std ? `${std.healthGrade}（${std.pensionGrade}）` : 'ー';
+          let monthly = std ? std.healthMonthly : 'ー';
+          if (std && rate) {
+            // 介護保険適用判定
+            const age = this.getAgeAtYearMonth1st(emp.birthday, this.selectedYear, this.selectedMonth);
+            const isCare = age >= 40 && age < 65 && careApplicable;
+            careInsurance = isCare ? '〇' : '×';
+            // 料率
+            let healthRate = rate.healthInsuranceRate;
+            let careRate = isCare && rate.careInsuranceRate ? rate.careInsuranceRate : 0;
+            let totalHealthRate = healthRate + careRate;
+            let pensionRate = rate.employeePensionInsuranceRate;
+            // 健康保険料
             if (healthApplicable) {
-              deductionTotal = (Number(healthInsuranceDeduction.replace(/,/g, '')) + pensionDeduct).toLocaleString();
-              companyShare = this.formatDecimal(Number(companyShare.replace(/,/g, '')) + pensionDeduct);
-            } else {
-              deductionTotal = pensionDeduct.toLocaleString();
-              companyShare = this.formatDecimal(pensionDeduct);
+              const health = std.healthMonthly * (totalHealthRate / 100);
+              healthInsurance = this.formatDecimal(health);
+              // 健康保険料控除額
+              const healthDeduct = this.roundHalfUp(std.healthMonthly * (totalHealthRate / 100) / 2);
+              healthInsuranceDeduction = healthDeduct.toLocaleString();
+              // 控除額合計（健康保険分のみ）
+              deductionTotal = healthDeduct.toLocaleString();
+              // 子ども子育て拠出金
+              const childcareVal = std.healthMonthly * (Number(ChildcareInsuranceRate.CHILDCARE_INSURANCE_RATE) / 100);
+              childcare = this.formatDecimal(childcareVal);
+              // 会社負担（健康保険分のみ）
+              companyShare = this.formatDecimal(healthDeduct + childcareVal);
+            }
+            // 厚生年金保険料
+            if (pensionApplicable) {
+              const pensionVal = std.healthMonthly * (pensionRate / 100);
+              pension = this.formatDecimal(pensionVal);
+              // 厚生年金保険料控除額
+              const pensionDeduct = this.roundHalfUp(std.healthMonthly * (pensionRate / 100) / 2);
+              pensionDeduction = pensionDeduct.toLocaleString();
+              // 控除額合計（健康保険＋年金）
+              if (healthApplicable) {
+                deductionTotal = (Number(healthInsuranceDeduction.replace(/,/g, '')) + pensionDeduct).toLocaleString();
+                companyShare = this.formatDecimal(Number(companyShare.replace(/,/g, '')) + pensionDeduct);
+              } else {
+                deductionTotal = pensionDeduct.toLocaleString();
+                companyShare = this.formatDecimal(pensionDeduct);
+              }
             }
           }
-        }
-        return {
-          officeId: emp.officeId,
-          employeeId: emp.employeeId,
-          officeName: this.offices.find(o => o.id === emp.officeId)?.name || '',
-          employeeName: emp.lastName + ' ' + emp.firstName,
-          careInsurance,
-          salaryTotal: salary ? Number(salary.totalSalary).toLocaleString() : 'ー',
-          grade,
-          monthly: std ? Number(std.healthMonthly).toLocaleString() : 'ー',
-          healthInsurance,
-          healthInsuranceDeduction,
-          pension,
-          pensionDeduction,
-          deductionTotal,
-          childcare,
-          companyShare
-        };
-      });
+          return {
+            officeId: emp.officeId,
+            employeeId: emp.employeeId,
+            officeName: this.offices.find(o => o.id === emp.officeId)?.name || '',
+            employeeName: emp.lastName + ' ' + emp.firstName,
+            careInsurance,
+            salaryTotal: salary ? Number(salary.totalSalary).toLocaleString() : 'ー',
+            grade,
+            monthly: std ? Number(std.healthMonthly).toLocaleString() : 'ー',
+            healthInsurance,
+            healthInsuranceDeduction,
+            pension,
+            pensionDeduction,
+            deductionTotal,
+            childcare,
+            companyShare
+          };
+        });
     } else if (this.selectedType === 'bonus') {
       this.previewList = targetEmployees.map(emp => {
         const std = this.getStandardMonthlyForEmployee(emp.employeeId, emp.officeId);

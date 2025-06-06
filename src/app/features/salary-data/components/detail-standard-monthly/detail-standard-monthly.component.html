@@ -34,7 +34,14 @@
       <div>月額: {{ currentDecision.healthMonthly | currency:'JPY':'symbol':'1.0-0' }}（{{ currentDecision.pensionMonthly | currency:'JPY':'symbol':'1.0-0' }}）</div>
       <div>適用年月: {{ currentDecision.applyYearMonth }}</div>
       <div>登録種別: {{ getLabel(currentDecision.type) }}</div>
-      <div>算出根拠: 4月給与: {{ currentDecision.aprilSalary ?? 'ー' }}, 5月給与: {{ currentDecision.maySalary ?? 'ー' }}, 6月給与: {{ currentDecision.juneSalary ?? 'ー' }}, 対象月: {{ currentDecision.usedMonths ?? 'ー' }}</div>
+      <div>算出根拠</div>
+      <div class="basis-block">
+        <div><span>対象月:</span> <span>{{ currentDecision.usedMonths ?? 'ー' }}</span></div>
+        <div><span>4月給与:</span> <span>{{ currentDecision.aprilSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+        <div><span>5月給与:</span> <span>{{ currentDecision.maySalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+        <div><span>6月給与:</span> <span>{{ currentDecision.juneSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+        
+      </div>
     </ng-container>
     <ng-template #noCurrent><div>該当なし</div></ng-template>
   </div>
@@ -45,7 +52,14 @@
       <div>月額: {{ nextDecision.healthMonthly | currency:'JPY':'symbol':'1.0-0' }}（{{ nextDecision.pensionMonthly | currency:'JPY':'symbol':'1.0-0' }}）</div>
       <div>適用年月: {{ nextDecision.applyYearMonth }}</div>
       <div>登録種別: {{ getLabel(nextDecision.type) }}</div>
-      <div>算出根拠: 4月給与: {{ nextDecision.aprilSalary ?? 'ー' }}, 5月給与: {{ nextDecision.maySalary ?? 'ー' }}, 6月給与: {{ nextDecision.juneSalary ?? 'ー' }}, 対象月: {{ nextDecision.usedMonths ?? 'ー' }}</div>
+      <div>算出根拠</div>
+      <div class="basis-block">
+        <div><span>対象月:</span> <span>{{ nextDecision.usedMonths ?? 'ー' }}</span></div>
+        <div><span>4月給与:</span> <span>{{ nextDecision.aprilSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+        <div><span>5月給与:</span> <span>{{ nextDecision.maySalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+        <div><span>6月給与:</span> <span>{{ nextDecision.juneSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+        
+      </div>
     </ng-container>
     <ng-template #noNext><div>該当なし</div></ng-template>
   </div>

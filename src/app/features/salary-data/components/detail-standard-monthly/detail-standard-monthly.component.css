@@ -146,3 +146,19 @@ tr:nth-child(even) td {
     margin-right: 0;
   }
 }
+
+.basis-block {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+.basis-block > div {
+  display: flex;
+  gap: 0.7em;
+  margin-bottom: 0.1em;
+  font-size: 1em;
+}
+.basis-block > div span:first-child {
+  min-width: 5em;
+  color: #1976d2;
+  font-weight: bold;
+}

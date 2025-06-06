@@ -367,4 +367,12 @@ export class FirestoreService {
     const snap = await getDocs(q_);
     return snap.docs.map(doc => doc.data());
   }
+
+  // 標準報酬月額決定の更新
+  async updateStandardMonthlyDecision(decision: any) {
+    // ドキュメントIDは companyKey_officeId_employeeId_applyYearMonth で構成されていると仮定
+    const docId = `${decision.companyKey}_${decision.officeId}_${decision.employeeId}_${decision.applyYearMonth}`;
+    const docRef = doc(this.firestore, 'standardMonthlyDecisions', docId);
+    await setDoc(docRef, { ...decision, updatedAt: Timestamp.now() }, { merge: true });
+  }
 }

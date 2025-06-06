@@ -5,8 +5,8 @@
     <form class="insurance-form">
         <!-- 給与・賞与選択ラジオボタン -->
         <div class="form-row" style="margin-bottom: 1em;">
-            <label><input type="radio" [(ngModel)]="selectedType" name="type" value="salary"> 給与</label>
-            <label style="margin-left: 1em;"><input type="radio" [(ngModel)]="selectedType" name="type" value="bonus"> 賞与</label>
+            <label><input type="radio" [(ngModel)]="selectedType" name="type" value="salary" (ngModelChange)="onTypeChange($event)"> 給与</label>
+            <label style="margin-left: 1em;"><input type="radio" [(ngModel)]="selectedType" name="type" value="bonus" (ngModelChange)="onTypeChange($event)"> 賞与</label>
         </div>
         <div class="form-row" style="margin-bottom: 1em;">
             <label>支社</label>
@@ -26,10 +26,10 @@
         </div>
         <div class="form-row" style="margin-bottom: 1em;">
             <label>対象年月</label>
-            <select [(ngModel)]="selectedYear" name="year">
+            <select [(ngModel)]="selectedYear" name="year" (ngModelChange)="onYearChange($event)">
                 <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
             </select>
-            <select [(ngModel)]="selectedMonth" name="month" style="margin-left: 1em;">
+            <select [(ngModel)]="selectedMonth" name="month" style="margin-left: 1em;" (ngModelChange)="onMonthChange($event)">
                 <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
             </select>
         </div>
@@ -40,78 +40,80 @@
 
     <div class="insurance-preview-block">
         <h3>計算結果プレビュー</h3>
-        <!-- 給与プレビュー -->
-        <table class="insurance-preview-table" *ngIf="selectedType === 'salary'">
-            <thead>
-                <tr>
-                    <th>支社</th>
-                    <th>従業員名</th>
-                    <th>介護保険適用</th>
-                    <th>当月給与総支給</th>
-                    <th>等級</th>
-                    <th>標準報酬月額</th>
-                    <th>健康保険料</th>
-                    <th>健康保険料控除額</th>
-                    <th>厚生年金保険料</th>
-                    <th>厚生年金保険料控除額</th>
-                    <th>控除額合計</th>
-                    <th>子ども子育て拠出金</th>
-                    <th>会社負担</th>
-                    <th>計算根拠</th>
-                </tr>
-            </thead>
-            <tbody>
-                <ng-container *ngFor="let row of previewList; let i = index">
+        <ng-container *ngIf="selectedType === 'salary'">
+          <!-- 給与プレビュー -->
+          <table class="insurance-preview-table">
+              <thead>
                   <tr>
-                    <td>{{ row.officeName }}</td>
-                    <td>{{ row.employeeName }}</td>
-                    <td>{{ row.careInsurance }}</td>
-                    <td>{{ row.salaryTotal }}</td>
-                    <td>{{ row.grade }}</td>
-                    <td>{{ row.monthly }}</td>
-                    <td>{{ row.healthInsurance }}</td>
-                    <td>{{ row.healthInsuranceDeduction }}</td>
-                    <td>{{ row.pension }}</td>
-                    <td>{{ row.pensionDeduction }}</td>
-                    <td>{{ row.deductionTotal }}</td>
-                    <td>{{ row.childcare }}</td>
-                    <td>{{ row.companyShare }}</td>
-                    <td>
-                      <button type="button" (click)="row.showDetail = !row.showDetail">計算根拠</button>
-                    </td>
+                      <th>支社</th>
+                      <th>従業員名</th>
+                      <th>介護保険適用</th>
+                      <th>当月給与総支給</th>
+                      <th>等級</th>
+                      <th>標準報酬月額</th>
+                      <th>健康保険料</th>
+                      <th>健康保険料控除額</th>
+                      <th>厚生年金保険料</th>
+                      <th>厚生年金保険料控除額</th>
+                      <th>控除額合計</th>
+                      <th>子ども子育て拠出金</th>
+                      <th>会社負担</th>
+                      <th>計算根拠</th>
                   </tr>
-                  <tr *ngIf="row.showDetail">
-                    <td colspan="14">
-                      <div>
-                        <strong>給与内訳:</strong>
-                        基本給: {{ row.salaryBreakdown.basic | number }}円 /
-                        残業代: {{ row.salaryBreakdown.overtime | number }}円 /
-                        通勤費: {{ row.salaryBreakdown.commute | number }}円 /
-                        役職手当: {{ row.salaryBreakdown.position | number }}円 /
-                        その他手当: {{ row.salaryBreakdown.other | number }}円<br>
-                        <strong>合計:</strong> {{ row.salaryBreakdown.calcTotal | number }}円
-                        <span *ngIf="!row.salaryBreakdown.isMatch" style="color:red;">（DB合計と不一致）</span>
-                      </div>
-                      <div>
-                        <strong>控除・会社負担計算根拠:</strong><br>
-                        適用都道府県: {{ row.prefectureName || 'ー' }}<br>
-                        健康保険料率: {{ row.healthRate }}%<span *ngIf="row.careRate && row.careRate > 0">（介護保険料率: {{ row.careRate }}% も加算）</span><br>
-                        厚生年金保険料率: {{ row.pensionRate }}%<br>
-                        子ども子育て拠出金率: {{ row.childcareRate }}%<br>
-                        保険料総額: {{ row.insuranceTotal | number:'1.0-2' }}円（健康保険料＋厚生年金保険料＋子ども子育て拠出金）<br>
-                        健康保険料: {{ row.healthInsurance }}円（標準報酬月額×料率）<br>
-                        健康保険料控除額: {{ row.healthInsuranceDeduction }}円（健康保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
-                        厚生年金保険料: {{ row.pension }}円（標準報酬月額×料率）<br>
-                        厚生年金保険料控除額: {{ row.pensionDeduction }}円（厚生年金保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
-                        控除額合計: {{ row.deductionTotal }}円<br>
-                        子ども子育て拠出金: {{ row.childcare }}円（標準報酬月額×子ども子育て拠出金率）<br>
-                        会社負担: {{ row.companyShare }}円（保険料総額－労働者負担額＋子ども子育て拠出金）
-                      </div>
-                    </td>
-                  </tr>
-                </ng-container>
-            </tbody>
-        </table>
+              </thead>
+              <tbody>
+                  <ng-container *ngFor="let row of previewList; let i = index">
+                    <tr>
+                      <td>{{ row.officeName }}</td>
+                      <td>{{ row.employeeName }}</td>
+                      <td>{{ row.careInsurance }}</td>
+                      <td>{{ row.salaryTotal }}</td>
+                      <td>{{ row.grade }}</td>
+                      <td>{{ row.monthly }}</td>
+                      <td>{{ row.healthInsurance }}</td>
+                      <td>{{ row.healthInsuranceDeduction }}</td>
+                      <td>{{ row.pension }}</td>
+                      <td>{{ row.pensionDeduction }}</td>
+                      <td>{{ row.deductionTotal }}</td>
+                      <td>{{ row.childcare }}</td>
+                      <td>{{ row.companyShare }}</td>
+                      <td>
+                        <button type="button" (click)="row.showDetail = !row.showDetail">計算根拠</button>
+                      </td>
+                    </tr>
+                    <tr *ngIf="row.showDetail">
+                      <td colspan="14">
+                        <div>
+                          <strong>給与内訳:</strong>
+                          基本給: {{ row.salaryBreakdown.basic | number }}円 /
+                          残業代: {{ row.salaryBreakdown.overtime | number }}円 /
+                          通勤費: {{ row.salaryBreakdown.commute | number }}円 /
+                          役職手当: {{ row.salaryBreakdown.position | number }}円 /
+                          その他手当: {{ row.salaryBreakdown.other | number }}円<br>
+                          <strong>合計:</strong> {{ row.salaryBreakdown.calcTotal | number }}円
+                          <span *ngIf="!row.salaryBreakdown.isMatch" style="color:red;">（DB合計と不一致）</span>
+                        </div>
+                        <div>
+                          <strong>控除・会社負担計算根拠:</strong><br>
+                          適用都道府県: {{ row.prefectureName || 'ー' }}<br>
+                          健康保険料率: {{ row.healthRate }}%<span *ngIf="row.careRate && row.careRate > 0">（介護保険料率: {{ row.careRate }}% も加算）</span><br>
+                          厚生年金保険料率: {{ row.pensionRate }}%<br>
+                          子ども子育て拠出金率: {{ row.childcareRate }}%<br>
+                          保険料総額: {{ row.insuranceTotal | number:'1.0-2' }}円（健康保険料＋厚生年金保険料＋子ども子育て拠出金）<br>
+                          健康保険料: {{ row.healthInsurance }}円（標準報酬月額×料率）<br>
+                          健康保険料控除額: {{ row.healthInsuranceDeduction }}円（健康保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
+                          厚生年金保険料: {{ row.pension }}円（標準報酬月額×料率）<br>
+                          厚生年金保険料控除額: {{ row.pensionDeduction }}円（厚生年金保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
+                          控除額合計: {{ row.deductionTotal }}円<br>
+                          子ども子育て拠出金: {{ row.childcare }}円（標準報酬月額×子ども子育て拠出金率）<br>
+                          会社負担: {{ row.companyShare }}円（保険料総額－労働者負担額＋子ども子育て拠出金）
+                        </div>
+                      </td>
+                    </tr>
+                  </ng-container>
+              </tbody>
+          </table>
+        </ng-container>
         <!-- 賞与プレビュー -->
         <table class="insurance-preview-table" *ngIf="selectedType === 'bonus'">
             <thead>
@@ -129,10 +131,11 @@
                     <th>控除額合計</th>
                     <th>子ども子育て拠出金</th>
                     <th>会社負担</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let row of previewList">
+                <tr *ngFor="let row of previewList; let i = index">
                     <td>{{ row.officeName }}</td>
                     <td>{{ row.employeeName }}</td>
                     <td>{{ row.careInsurance }}</td>
@@ -146,6 +149,7 @@
                     <td>{{ row.deductionTotal }}</td>
                     <td>{{ row.childcare }}</td>
                     <td>{{ row.companyShare }}</td>
+                    <td><button type="button" (click)="removeBonusRow(i)">削除</button></td>
                 </tr>
             </tbody>
         </table>

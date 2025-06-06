@@ -556,7 +556,15 @@
       <div *ngFor="let leave of editEmployee.extraordinaryLeaves; let i = index" class="sub-table">
         <h4>休職特例 {{ i + 1 }}</h4>
         <table>
-          <tr><th>休職区分</th><td><input [(ngModel)]="leave.leaveTypeCode"></td></tr>
+          <tr>
+            <th>休職区分</th>
+            <td>
+              <select [(ngModel)]="leave.leaveTypeCode">
+                <option value="">選択してください</option>
+                <option *ngFor="let t of extraordinaryLeaveTypes" [value]="t.code">{{ t.label }}</option>
+              </select>
+            </td>
+          </tr>
           <tr><th>休職開始日</th><td><input type="date" [(ngModel)]="leave.leaveStartDate"></td></tr>
           <tr><th>休職終了日</th><td><input type="date" [(ngModel)]="leave.leaveEndDate"></td></tr>
           <tr><th>復職予定日</th><td><input type="date" [(ngModel)]="leave.returnPlanDate"></td></tr>

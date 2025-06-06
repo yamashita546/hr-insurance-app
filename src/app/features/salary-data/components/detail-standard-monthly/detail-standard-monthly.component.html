@@ -37,10 +37,22 @@
       <div>登録種別: {{ getLabel(currentDecision.type) }}</div>
       <div>算出根拠</div>
       <div class="basis-block">
-        <div><span>対象月:</span> <span>{{ currentDecision.usedMonths ?? 'ー' }}</span></div>
-        <div><span>4月給与:</span> <span>{{ currentDecision.aprilSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
-        <div><span>5月給与:</span> <span>{{ currentDecision.maySalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
-        <div><span>6月給与:</span> <span>{{ currentDecision.juneSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+        <ng-container *ngIf="currentDecision.type === 'entry'; else normalBasisCurrent">
+          <div>見込み報酬額</div>
+          <div><span>基本給:</span> <span>{{ currentDecision.estimatedBaseSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>残業代:</span> <span>{{ currentDecision.estimatedOvertime | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>通勤費:</span> <span>{{ currentDecision.estimatedCommute | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>役職手当:</span> <span>{{ currentDecision.estimatedPositionAllowance | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>その他手当:</span> <span>{{ currentDecision.estimatedOtherAllowance | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>現物支給:</span> <span>{{ currentDecision.estimatedInKind | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>支給総額:</span> <span>{{ currentDecision.estimatedTotal | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+        </ng-container>
+        <ng-template #normalBasisCurrent>
+          <div><span>対象月:</span> <span>{{ currentDecision.usedMonths ?? 'ー' }}</span></div>
+          <div><span>4月給与:</span> <span>{{ currentDecision.aprilSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>5月給与:</span> <span>{{ currentDecision.maySalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>6月給与:</span> <span>{{ currentDecision.juneSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+        </ng-template>
       </div>
     </ng-container>
     <ng-template #noCurrent><div>該当なし</div></ng-template>
@@ -55,10 +67,22 @@
       <div>登録種別: {{ getLabel(nextDecision.type) }}</div>
       <div>算出根拠</div>
       <div class="basis-block">
-        <div><span>対象月:</span> <span>{{ nextDecision.usedMonths ?? 'ー' }}</span></div>
-        <div><span>4月給与:</span> <span>{{ nextDecision.aprilSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
-        <div><span>5月給与:</span> <span>{{ nextDecision.maySalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
-        <div><span>6月給与:</span> <span>{{ nextDecision.juneSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+        <ng-container *ngIf="nextDecision.type === 'entry'; else normalBasisNext">
+          <div>見込み報酬額</div>
+          <div><span>基本給:</span> <span>{{ nextDecision.estimatedBaseSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>残業代:</span> <span>{{ nextDecision.estimatedOvertime | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>通勤費:</span> <span>{{ nextDecision.estimatedCommute | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>役職手当:</span> <span>{{ nextDecision.estimatedPositionAllowance | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>その他手当:</span> <span>{{ nextDecision.estimatedOtherAllowance | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>現物支給:</span> <span>{{ nextDecision.estimatedInKind | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>支給総額:</span> <span>{{ nextDecision.estimatedTotal | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+        </ng-container>
+        <ng-template #normalBasisNext>
+          <div><span>対象月:</span> <span>{{ nextDecision.usedMonths ?? 'ー' }}</span></div>
+          <div><span>4月給与:</span> <span>{{ nextDecision.aprilSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>5月給与:</span> <span>{{ nextDecision.maySalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+          <div><span>6月給与:</span> <span>{{ nextDecision.juneSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
+        </ng-template>
       </div>
     </ng-container>
     <ng-template #noNext><div>該当なし</div></ng-template>

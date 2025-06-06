@@ -144,6 +144,46 @@ export class StandardMonthlyFormComponent implements OnInit {
     return candidates[0] || null;
   }
 
+  // 対象期間内の各月に通勤手当を分配するユーティリティ関数
+  private distributeCommuteAllowance(salaries: any[], fromYm: string, toYm: string): { [ym: string]: number } {
+    // fromYm, toYm: 'YYYY-MM' 形式
+    const salaryMap: { [ym: string]: number } = {};
+    let ym = fromYm;
+    while (ym <= toYm) {
+      salaryMap[ym] = 0;
+      ym = this.nextYm(ym);
+    }
+    for (const sal of salaries) {
+      // 通常の給与合計
+      if (salaryMap[sal.targetYearMonth] !== undefined) {
+        salaryMap[sal.targetYearMonth] += (sal.basicSalary || 0) + (sal.overtimeSalary || 0) + (sal.otherAllowance || 0) + (sal.totalAllowance || 0);
+      }
+      // 通勤手当の分配
+      if (sal.commuteAllowance && sal.commuteAllowanceMonths && sal.commuteAllowancePeriodFrom && sal.commuteAllowancePeriodTo) {
+        const months = sal.commuteAllowanceMonths;
+        const monthlyCommute = sal.commuteAllowance / months;
+        let commuteYm = sal.commuteAllowancePeriodFrom;
+        for (let i = 0; i < months; i++) {
+          if (salaryMap[commuteYm] !== undefined) {
+            salaryMap[commuteYm] += monthlyCommute;
+          }
+          commuteYm = this.nextYm(commuteYm);
+        }
+      }
+    }
+    return salaryMap;
+  }
+
+  // '2024-04' → '2024-05' のように次の月を返す
+  private nextYm(ym: string): string {
+    const [year, month] = ym.split('-').map(Number);
+    if (month === 12) {
+      return `${year + 1}-01`;
+    } else {
+      return `${year}-${String(month + 1).padStart(2, '0')}`;
+    }
+  }
+
   // 決定ボタン押下時
   async onDecision() {
     if (this.decisionType === 'entry') {
@@ -202,7 +242,8 @@ export class StandardMonthlyFormComponent implements OnInit {
           sal.targetYearMonth >= fromYm &&
           sal.targetYearMonth <= toYm;
       });
-
+      // 通勤手当を月割りで分配して加算
+      const salaryMap = this.distributeCommuteAllowance(salaryList, fromYm, toYm);
       // 2. 契約開始日が4月1日～5月31日か判定
       if (emp.contractStartDate) {
         const start = new Date(emp.contractStartDate);
@@ -214,37 +255,34 @@ export class StandardMonthlyFormComponent implements OnInit {
         ) {
           // 3. 契約開始月の給与データがある場合
           const ym = `${start.getFullYear()}-${String(startMonth).padStart(2, '0')}`;
-          const salaryIndex = salaryList.findIndex(sal => sal.targetYearMonth === ym);
-          if (salaryIndex !== -1) {
+          if (salaryMap[ym] !== undefined) {
             // 4. 契約開始日から月末までの日数を計算
             const lastDay = new Date(start.getFullYear(), startMonth, 0).getDate();
             const days = lastDay - start.getDate() + 1;
             if (days < 17) {
               // 5. 17日未満ならその月の給与を除外
-              salaryList.splice(salaryIndex, 1);
+              salaryMap[ym] = 0;
             }
           }
         }
       }
-
       // 追加: 4月・5月・6月の給与金額
       const aprilYm = `${this.salaryFromYear}-04`;
       const mayYm = `${this.salaryFromYear}-05`;
       const juneYm = `${this.salaryFromYear}-06`;
-      const aprilSalary = salaryList.find(s => s.targetYearMonth === aprilYm)?.totalSalary ?? null;
-      const maySalary = salaryList.find(s => s.targetYearMonth === mayYm)?.totalSalary ?? null;
-      const juneSalary = salaryList.find(s => s.targetYearMonth === juneYm)?.totalSalary ?? null;
+      const aprilSalary = salaryMap[aprilYm] ?? null;
+      const maySalary = salaryMap[mayYm] ?? null;
+      const juneSalary = salaryMap[juneYm] ?? null;
       // 算定に利用した月
       const usedMonthsArr: string[] = [];
-      if (salaryList.find(s => s.targetYearMonth === aprilYm)) usedMonthsArr.push('4');
-      if (salaryList.find(s => s.targetYearMonth === mayYm)) usedMonthsArr.push('5');
-      if (salaryList.find(s => s.targetYearMonth === juneYm)) usedMonthsArr.push('6');
+      if (salaryMap[aprilYm]) usedMonthsArr.push('4');
+      if (salaryMap[mayYm]) usedMonthsArr.push('5');
+      if (salaryMap[juneYm]) usedMonthsArr.push('6');
       const usedMonths = usedMonthsArr.join(',');
-
-      // 6. 残ったsalaryListで合計・平均を算出
-      const salaryTotal = salaryList.reduce((sum: number, s: any) => sum + (s.totalSalary || 0), 0);
-      const salaryAvg = salaryList.length > 0 ? Math.round(salaryTotal / salaryList.length) : 0;
-
+      // 6. 残ったsalaryMapで合計・平均を算出
+      const salaryValues = Object.values(salaryMap).filter(v => v > 0);
+      const salaryTotal = salaryValues.reduce((sum: number, s: number) => sum + s, 0);
+      const salaryAvg = salaryValues.length > 0 ? Math.round(salaryTotal / salaryValues.length) : 0;
       const office = this.offices.find((o: any) => o.id === emp.officeId);
       const insuranceType = office && office.insuranceType ? office.insuranceType : '1';
       const applyYm = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
@@ -680,22 +718,25 @@ export class StandardMonthlyFormComponent implements OnInit {
           sal.targetYearMonth >= fromYm &&
           sal.targetYearMonth <= toYm;
       });
+      // 通勤手当を月割りで分配して加算
+      const salaryMap = this.distributeCommuteAllowance(salaryList, fromYm, toYm);
       // 4月・5月・6月の給与金額
       const aprilYm = `${this.salaryFromYear}-04`;
       const mayYm = `${this.salaryFromYear}-05`;
       const juneYm = `${this.salaryFromYear}-06`;
-      const aprilSalary = salaryList.find(s => s.targetYearMonth === aprilYm)?.totalSalary ?? null;
-      const maySalary = salaryList.find(s => s.targetYearMonth === mayYm)?.totalSalary ?? null;
-      const juneSalary = salaryList.find(s => s.targetYearMonth === juneYm)?.totalSalary ?? null;
+      const aprilSalary = salaryMap[aprilYm] ?? null;
+      const maySalary = salaryMap[mayYm] ?? null;
+      const juneSalary = salaryMap[juneYm] ?? null;
       // 算定に利用した月
       const usedMonthsArr: string[] = [];
-      if (salaryList.find(s => s.targetYearMonth === aprilYm)) usedMonthsArr.push('4');
-      if (salaryList.find(s => s.targetYearMonth === mayYm)) usedMonthsArr.push('5');
-      if (salaryList.find(s => s.targetYearMonth === juneYm)) usedMonthsArr.push('6');
+      if (salaryMap[aprilYm]) usedMonthsArr.push('4');
+      if (salaryMap[mayYm]) usedMonthsArr.push('5');
+      if (salaryMap[juneYm]) usedMonthsArr.push('6');
       const usedMonths = usedMonthsArr.join(',');
       // 合計・平均
-      const salaryTotal = salaryList.reduce((sum: number, s: any) => sum + (s.totalSalary || 0), 0);
-      const salaryAvg = salaryList.length > 0 ? Math.round(salaryTotal / salaryList.length) : 0;
+      const salaryValues = Object.values(salaryMap).filter(v => v > 0);
+      const salaryTotal = salaryValues.reduce((sum: number, s: number) => sum + s, 0);
+      const salaryAvg = salaryValues.length > 0 ? Math.round(salaryTotal / salaryValues.length) : 0;
       const office = this.offices.find((o: any) => o.id === emp.officeId);
       const insuranceType = office && office.insuranceType ? office.insuranceType : '1';
       const applyYm = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;

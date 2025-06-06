@@ -20,7 +20,7 @@
   overflow-x: auto;
 }
 .standard-monthly-table {
-  min-width: 1200px;
+  min-width: 900px;
   width: 100%;
   border-collapse: collapse;
   background: #fafbfc;
@@ -30,10 +30,10 @@
   margin-bottom: 18px;
 }
 .standard-monthly-table th, .standard-monthly-table td {
-  padding: 14px 12px;
+  padding: 8px 6px;
   text-align: left;
   border-bottom: 1px solid #e0e0e0;
-  font-size: 1rem;
+  font-size: 0.97rem;
 }
 .standard-monthly-table th {
   color: #1976d2;

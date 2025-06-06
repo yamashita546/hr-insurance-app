@@ -4,22 +4,26 @@
     <div>企業ID：{{ companyId }}</div>
     <div>企業名：{{ companyName }}</div>
   </div>
+  <div *ngIf="editMode" class="edit-banner">
+    <span>編集モード（再登録）</span>
+    <button (click)="onDelete()" style="margin-left:2em;color:#b71c1c;">削除</button>
+  </div>
   <form (ngSubmit)="$event.preventDefault()">
     <div class="form-row">
       <label>決定種別</label>
-      <select [(ngModel)]="decisionType" name="decisionType" (change)="onDecisionTypeChange()">
+      <select [(ngModel)]="decisionType" name="decisionType" (change)="onDecisionTypeChange()" [disabled]="editMode">
         <option *ngFor="let t of decisionTypes" [value]="t">{{ decisionTypeLabels[t] }}</option>
       </select>
     </div>
     <div *ngIf="decisionType === 'fixed'">
       <div class="form-row">
         <label>事業所</label>
-        <select [(ngModel)]="selectedOfficeId" name="office">
+        <select [(ngModel)]="selectedOfficeId" name="office" [disabled]="editMode">
           <option value="">全事業所</option>
           <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
         </select>
         <label>従業員</label>
-        <select [(ngModel)]="selectedEmployeeId" name="employeeId">
+        <select [(ngModel)]="selectedEmployeeId" name="employeeId" [disabled]="editMode">
           <option value="">全従業員</option>
           <option *ngFor="let emp of employeesSortedByIdName" [value]="emp.employeeId">
             {{ emp.employeeId }} {{ emp.lastName }}{{ emp.firstName }}
@@ -28,11 +32,11 @@
       </div>
       <div class="form-row">
         <label>適用開始年</label>
-        <select [(ngModel)]="startYear" name="startYear">
+        <select [(ngModel)]="startYear" name="startYear" >
           <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
         </select>
         <label>適用開始月</label>
-        <select [(ngModel)]="startMonth" name="startMonth" (change)="onFixedStartMonthChange()">
+        <select [(ngModel)]="startMonth" name="startMonth" [disabled]="editMode" (change)="onFixedStartMonthChange()">
           <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
         </select>
       </div>
@@ -181,12 +185,12 @@
     <div *ngIf="decisionType === 'entry'">
       <div class="form-row">
         <label>支社</label>
-        <select [(ngModel)]="selectedOfficeId" name="office_entry">
+        <select [(ngModel)]="selectedOfficeId" name="office_entry" [disabled]="editMode">
           <option value="">全支社</option>
           <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
         </select>
         <label>従業員</label>
-        <select [(ngModel)]="selectedEmployeeId" name="employeeId">
+        <select [(ngModel)]="selectedEmployeeId" name="employeeId" [disabled]="editMode">
           <option value="">全従業員</option>
           <option *ngFor="let emp of employeesSortedByIdName" [value]="emp.employeeId">
             {{ emp.employeeId }} {{ emp.lastName }}{{ emp.firstName }}
@@ -195,11 +199,11 @@
       </div>
       <div class="form-row">
         <label>適用開始年</label>
-        <select [(ngModel)]="startYear" name="startYear_entry">
+        <select [(ngModel)]="startYear" name="startYear_entry" [disabled]="editMode">
           <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
         </select>
         <label>適用開始月</label>
-        <select [(ngModel)]="startMonth" name="startMonth_entry">
+        <select [(ngModel)]="startMonth" name="startMonth_entry" [disabled]="editMode">
           <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
         </select>
       </div>
@@ -249,24 +253,27 @@
     </div>
   </form>
 
+  <!-- 社会保険適用状況集計（編集モード時は非表示） -->
+  <div *ngIf="decisionType === 'fixed' && isConfirmed && resultList && resultList.length > 0 && !editMode" class="summary-table-block">
+    <h4>社会保険適用状況集計</h4>
+    <table class="summary-table">
+      <tr>
+        <th>社会保険<br>加入者</th>
+        <th>定時決定<br>対象者</th>
+        <th>定時決定<br>非対象者</th>
+        <th>社会保険<br>非加入者</th>
+      </tr>
+      <tr>
+        <td>{{ healthInsuranceMemberCount }} 名</td>
+        <td>{{ fixedDecisionTargetCount }} 名</td>
+        <td>{{ fixedDecisionNotTargetCount }} 名</td>
+        <td>{{ healthInsuranceNotMemberCount }} 名</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 判定結果一覧（定時決定）は常に表示 -->
   <div *ngIf="decisionType === 'fixed' && isConfirmed && resultList && resultList.length > 0" class="result-table-block">
-    <div class="summary-table-block">
-      <h4>社会保険適用状況集計</h4>
-      <table class="summary-table">
-        <tr>
-          <th>社会保険<br>加入者</th>
-          <th>定時決定<br>対象者</th>
-          <th>定時決定<br>非対象者</th>
-          <th>社会保険<br>非加入者</th>
-        </tr>
-        <tr>
-          <td>{{ healthInsuranceMemberCount }} 名</td>
-          <td>{{ fixedDecisionTargetCount }} 名</td>
-          <td>{{ fixedDecisionNotTargetCount }} 名</td>
-          <td>{{ healthInsuranceNotMemberCount }} 名</td>
-        </tr>
-      </table>
-    </div>
     <h3>判定結果一覧（定時決定）</h3>
     <table class="result-table">
       <thead>
@@ -369,3 +376,15 @@
   </div>
 
 </div>
+
+<style>
+.edit-banner {
+  background: #ffe082;
+  color: #b26a00;
+  font-weight: bold;
+  padding: 0.5em 1em;
+  border-radius: 6px;
+  margin-bottom: 1em;
+  text-align: center;
+}
+</style>

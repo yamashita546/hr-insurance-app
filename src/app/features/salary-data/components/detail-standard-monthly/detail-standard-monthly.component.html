@@ -1,7 +1,7 @@
 <h2>標準報酬月額 詳細</h2>
 
 <!-- プロフィールカード -->
-<div class="profile-card">
+<div class="profile-card" *ngIf="employeeInfo">
   <div class="avatar">{{ employeeInfo.lastName[0] }}{{ employeeInfo.firstName[0] }}</div>
   <div class="profile-main">
     <div class="name">{{ employeeInfo.lastName }} {{ employeeInfo.firstName }}</div>
@@ -13,7 +13,7 @@
 </div>
 
 <!-- 保険適用状況 -->
-<div class="insurance-status-row">
+<div class="insurance-status-row" *ngIf="employeeInfo">
   <div class="insurance-card" [class.active]="employeeInfo.healthInsuranceStatus?.isApplicable">
     <span class="icon health"></span> 健康保険
   </div>
@@ -28,6 +28,7 @@
 <!-- 等級カード -->
 <div class="grade-cards">
   <div class="grade-card current">
+    <button class="edit-btn" (click)="onEditDecision(currentDecision)" *ngIf="currentDecision">編集</button>
     <h3>現在適用中の等級</h3>
     <ng-container *ngIf="currentDecision; else noCurrent">
       <div>等級: {{ currentDecision.healthGrade }}（{{ currentDecision.pensionGrade }}）</div>
@@ -40,12 +41,12 @@
         <div><span>4月給与:</span> <span>{{ currentDecision.aprilSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
         <div><span>5月給与:</span> <span>{{ currentDecision.maySalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
         <div><span>6月給与:</span> <span>{{ currentDecision.juneSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
-        
       </div>
     </ng-container>
     <ng-template #noCurrent><div>該当なし</div></ng-template>
   </div>
   <div class="grade-card next">
+    <button class="edit-btn" (click)="onEditDecision(nextDecision)" *ngIf="nextDecision">編集</button>
     <h3>今後適用予定の等級</h3>
     <ng-container *ngIf="nextDecision; else noNext">
       <div>等級: {{ nextDecision.healthGrade }}（{{ nextDecision.pensionGrade }}）</div>
@@ -58,7 +59,6 @@
         <div><span>4月給与:</span> <span>{{ nextDecision.aprilSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
         <div><span>5月給与:</span> <span>{{ nextDecision.maySalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
         <div><span>6月給与:</span> <span>{{ nextDecision.juneSalary | currency:'JPY':'symbol':'1.0-0' }}</span></div>
-        
       </div>
     </ng-container>
     <ng-template #noNext><div>該当なし</div></ng-template>
@@ -68,9 +68,12 @@
 <!-- 登録履歴テーブル -->
 <div class="history-table">
   <h3>登録履歴</h3>
-  <table *ngIf="decisions.length > 0">
+  <table *ngIf="historyList.length > 0">
     <thead>
       <tr>
+        <th>操作種別</th>
+        <th>操作日時</th>
+        <th>操作ユーザー</th>
         <th>適用年月</th>
         <th>等級</th>
         <th>月額</th>
@@ -78,13 +81,38 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let d of decisions">
-        <td>{{ d.applyYearMonth }}</td>
-        <td>{{ d.healthGrade }}（{{ d.pensionGrade }}）</td>
-        <td>{{ d.healthMonthly | currency:'JPY':'symbol':'1.0-0' }}（{{ d.pensionMonthly | currency:'JPY':'symbol':'1.0-0' }}）</td>
-        <td>{{ getLabel(d.type) }}</td>
+      <tr *ngFor="let h of historyList">
+        <td>{{ h.operationType === 'edit' ? '編集' : h.operationType === 'delete' ? '削除' : '登録' }}</td>
+        <td>{{ h.operationAt ? (h.operationAt.toDate ? (h.operationAt.toDate() | date:'yyyy-MM-dd HH:mm') : (h.operationAt | date:'yyyy-MM-dd HH:mm')) : '' }}</td>
+        <td>{{ h.operatedByUserName || h.operatedByUserId || 'ー' }}</td>
+        <td>{{ h.applyYearMonth }}</td>
+        <td>{{ h.healthGrade }}（{{ h.pensionGrade }}）</td>
+        <td>{{ h.healthMonthly | currency:'JPY':'symbol':'1.0-0' }}（{{ h.pensionMonthly | currency:'JPY':'symbol':'1.0-0' }}）</td>
+        <td>{{ getLabel(h.type) }}</td>
       </tr>
     </tbody>
   </table>
-  <div *ngIf="decisions.length === 0">履歴なし</div>
+  <div *ngIf="historyList.length === 0">履歴なし</div>
 </div>
+
+<style>
+.grade-card {
+  position: relative;
+}
+.edit-btn {
+  position: absolute;
+  top: 1em;
+  right: 1em;
+  z-index: 2;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.3em 1em;
+  font-size: 0.95em;
+  cursor: pointer;
+}
+.edit-btn:hover {
+  background: #1565c0;
+}
+</style>

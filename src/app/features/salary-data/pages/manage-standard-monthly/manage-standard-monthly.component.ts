@@ -70,7 +70,8 @@ export class ManageStandardMonthlyComponent implements OnInit {
       .filter(r =>
         r.employeeId === row.employeeId &&
         r.officeId === row.officeId &&
-        r.applyYearMonth > row.applyYearMonth
+        r.applyYearMonth > row.applyYearMonth &&
+        r.isActive !== false
       )
       .sort((a, b) => a.applyYearMonth.localeCompare(b.applyYearMonth))[0];
     return next || null;
@@ -83,7 +84,8 @@ export class ManageStandardMonthlyComponent implements OnInit {
       .filter(r =>
         r.employeeId === row.employeeId &&
         r.officeId === row.officeId &&
-        r.applyYearMonth <= currentYm
+        r.applyYearMonth <= currentYm &&
+        r.isActive !== false
       )
       .sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth));
     return candidates[0] || null;
@@ -93,13 +95,15 @@ export class ManageStandardMonthlyComponent implements OnInit {
     const today = new Date();
     const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
     const map = new Map<string, StandardMonthlyDecision>();
-    this.standardMonthlyList.forEach(decision => {
-      if (decision.applyYearMonth > currentYm) return; // 未来は除外
-      const key = `${decision.employeeId}_${decision.officeId}`;
-      if (!map.has(key) || map.get(key)!.applyYearMonth < decision.applyYearMonth) {
-        map.set(key, decision);
-      }
-    });
+    this.standardMonthlyList
+      .filter(decision => decision.isActive !== false) // 無効データ除外
+      .forEach(decision => {
+        if (decision.applyYearMonth > currentYm) return; // 未来は除外
+        const key = `${decision.employeeId}_${decision.officeId}`;
+        if (!map.has(key) || map.get(key)!.applyYearMonth < decision.applyYearMonth) {
+          map.set(key, decision);
+        }
+      });
     return Array.from(map.values());
   }
 }

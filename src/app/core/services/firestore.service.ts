@@ -10,7 +10,8 @@ import {
   addDoc,
   deleteDoc,
   getDocs,
-  where
+  where,
+  getDoc
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { AppUser } from '../models/user.model';
@@ -270,13 +271,14 @@ export class FirestoreService {
 
   // 標準報酬月額決定データ保存
   async addStandardMonthlyDecision(decision: Omit<import('../models/standard-monthly-decision .model').StandardMonthlyDecision, 'createdAt' | 'updatedAt'>) {
-    const decisionsCol = collection(this.firestore, 'standardMonthlyDecisions');
     const now = Timestamp.now();
-    await addDoc(decisionsCol, {
+    const docId = `${decision.companyKey}_${decision.officeId}_${decision.employeeId}_${decision.applyYearMonth}`;
+    const docRef = doc(this.firestore, 'standardMonthlyDecisions', docId);
+    await setDoc(docRef, {
       ...decision,
       createdAt: now,
       updatedAt: now
-    });
+    }, { merge: true });
   }
 
   // 会社IDで標準報酬月額決定データ一覧取得
@@ -368,11 +370,63 @@ export class FirestoreService {
     return snap.docs.map(doc => doc.data());
   }
 
-  // 標準報酬月額決定の更新
-  async updateStandardMonthlyDecision(decision: any) {
-    // ドキュメントIDは companyKey_officeId_employeeId_applyYearMonth で構成されていると仮定
+  // 標準報酬月額決定の履歴保存
+  async addStandardMonthlyDecisionHistory(history: any) {
+    const col = collection(this.firestore, 'standardMonthlyDecisionHistory');
+    await addDoc(col, history);
+  }
+
+  // 標準報酬月額決定の更新（履歴も保存）
+  async updateStandardMonthlyDecisionWithHistory(decision: any, userId: string, userName: string) {
+    // 履歴保存
+    await this.addStandardMonthlyDecisionHistory({
+      ...decision,
+      operationType: 'edit',
+      operationAt: new Date(),
+      operatedByUserId: userId,
+      operatedByUserName: userName
+    });
+    // 本体上書き
     const docId = `${decision.companyKey}_${decision.officeId}_${decision.employeeId}_${decision.applyYearMonth}`;
     const docRef = doc(this.firestore, 'standardMonthlyDecisions', docId);
     await setDoc(docRef, { ...decision, updatedAt: Timestamp.now() }, { merge: true });
+  }
+
+  // 標準報酬月額決定の論理削除（履歴も保存）
+  async deleteStandardMonthlyDecisionWithHistory(decision: any, userId: string, userName: string) {
+    // 履歴保存
+    await this.addStandardMonthlyDecisionHistory({
+      ...decision,
+      operationType: 'delete',
+      operationAt: new Date(),
+      operatedByUserId: userId,
+      operatedByUserName: userName
+    });
+    // 論理削除
+    const docId = `${decision.companyKey}_${decision.officeId}_${decision.employeeId}_${decision.applyYearMonth}`;
+    const docRef = doc(this.firestore, 'standardMonthlyDecisions', docId);
+    await setDoc(docRef, { ...decision, isActive: false, updatedAt: Timestamp.now() }, { merge: true });
+  }
+
+  // IDで標準報酬月額決定データを取得
+  async getStandardMonthlyDecisionById(decisionId: string): Promise<any> {
+    const docRef = doc(this.firestore, 'standardMonthlyDecisions', decisionId);
+    const snap = await getDoc(docRef);
+    return snap.exists() ? snap.data() : null;
+  }
+
+  // 履歴取得
+  async getStandardMonthlyDecisionHistory(companyKey: string, employeeId: string, officeId: string): Promise<any[]> {
+    const colRef = collection(this.firestore, 'standardMonthlyDecisionHistory');
+    const q_ = query(
+      colRef,
+      where('companyKey', '==', companyKey),
+      where('employeeId', '==', employeeId),
+      where('officeId', '==', officeId)
+    );
+    const snap = await getDocs(q_);
+    return snap.docs
+      .map(doc => doc.data())
+      .sort((a, b) => (b['applyYearMonth'] || '').localeCompare(a['applyYearMonth'] || ''));
   }
 }

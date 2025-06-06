@@ -52,7 +52,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit() {
-    console.log('[ngOnInit] start');
+    
     const id = this.route.snapshot.paramMap.get('id');
     this.selectedOfficeId = this.route.snapshot.queryParamMap.get('selectedOfficeId') || '';
     // 1. クエリパラメータ優先
@@ -81,7 +81,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
             this.selectedEmployeeId = this.filteredEmployees[0].employeeId;
           }
         }
-        console.log('[ngOnInit] selectedOfficeId:', this.selectedOfficeId, 'selectedEmployeeId:', this.selectedEmployeeId);
+        // console.log('[ngOnInit] selectedOfficeId:', this.selectedOfficeId, 'selectedEmployeeId:', this.selectedEmployeeId);
         await this.onEmployeeChange();
       }
     });
@@ -92,7 +92,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   }
 
   startEdit() {
-    console.log('[startEdit] called');
+    // console.log('[startEdit] called');
     this.isEditMode = true;
     // deep copy
     this.editEmployee = JSON.parse(JSON.stringify(this.employee || {}));
@@ -107,16 +107,16 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   }
 
   cancelEdit() {
-    console.log('[cancelEdit] called');
+    // console.log('[cancelEdit] called');
     this.isEditMode = false;
     this.editEmployee = null;
   }
 
   async saveEdit() {
-    console.log('[saveEdit] called');
+    // console.log('[saveEdit] called');
     this.validationErrors = [];
     this.saveMessage = '';
-    console.log('[saveEdit] docId:', this.docId);
+    // console.log('[saveEdit] docId:', this.docId);
     if (!this.docId) return;
     const health = this.editEmployee.healthInsuranceStatus?.isApplicable;
     const birthday = this.editEmployee.birthday;
@@ -186,7 +186,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     }
 
     // バリデーション: 正社員なら社会保険3種のisApplicableがすべてtrueでなければならない
-    console.log('[saveEdit] employeeType:', this.editEmployee.employeeType);
+    // console.log('[saveEdit] employeeType:', this.editEmployee.employeeType);
     if (this.editEmployee.employeeType === 'regular') {
       if (!this.editEmployee.healthInsuranceStatus?.isApplicable) {
         this.validationErrors.push('正社員の場合、健康保険適用は必須です');
@@ -198,18 +198,18 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
         this.validationErrors.push('正社員の場合、雇用保険適用は必須です');
       }
     }
-    console.log('[saveEdit] validationErrors:', this.validationErrors);
+    // console.log('[saveEdit] validationErrors:', this.validationErrors);
     if (this.validationErrors.length > 0) {
       // エラーがあれば編集モードを終了しない
       return;
     }
-    console.log('[saveEdit] updateEmployee実行:', this.docId, this.editEmployee);
+    // console.log('[saveEdit] updateEmployee実行:', this.docId, this.editEmployee);
     await this.firestoreService.updateEmployee(this.docId, this.editEmployee);
     this.employee = JSON.parse(JSON.stringify(this.editEmployee));
     this.isEditMode = false;
     this.editEmployee = null;
     this.saveMessage = '保存が完了しました';
-    console.log('[saveEdit] 完了');
+    // console.log('[saveEdit] 完了');
   }
 
   canDeactivate(): boolean {
@@ -276,7 +276,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     // employeeIdを明示的にString型に変換
     this.filteredEmployees = this.filteredEmployees.map(e => ({ ...e, employeeId: String(e.employeeId) }));
     this.selectedEmployeeId = String(this.selectedEmployeeId);
-    console.log('[updateFilteredEmployees] selectedOfficeId:', this.selectedOfficeId, 'allEmployees:', this.allEmployees, 'filteredEmployees:', this.filteredEmployees);
+    // console.log('[updateFilteredEmployees] selectedOfficeId:', this.selectedOfficeId, 'allEmployees:', this.allEmployees, 'filteredEmployees:', this.filteredEmployees);
     this.filteredEmployees.sort((a, b) => (a.employeeId > b.employeeId ? 1 : -1));
   }
 
@@ -285,7 +285,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   }
 
   async onOfficeChange() {
-    console.log('[onOfficeChange] called', this.selectedOfficeId);
+    // console.log('[onOfficeChange] called', this.selectedOfficeId);
     this.updateFilteredEmployees();
     if (this.filteredEmployees.length > 0) {
       this.selectedEmployeeId = this.filteredEmployees[0].employeeId;
@@ -305,12 +305,12 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   }
 
   async onEmployeeChange() {
-    console.log('[onEmployeeChange] called', this.selectedEmployeeId);
+    // console.log('[onEmployeeChange] called', this.selectedEmployeeId);
     this.employee = this.filteredEmployees.find(e => e.employeeId === this.selectedEmployeeId || e.id === this.selectedEmployeeId) || null;
     if (this.employee) {
-      console.log('[onEmployeeChange] employee:', this.employee);
+      // console.log('[onEmployeeChange] employee:', this.employee);
       this.docId = this.employee.id || this.employee.docId || '';
-      console.log('[onEmployeeChange] docId:', this.docId);
+      // console.log('[onEmployeeChange] docId:', this.docId);
       // addressオブジェクトがなければ再構築
       if (!this.employee.address) {
         this.employee.address = {

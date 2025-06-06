@@ -54,8 +54,8 @@ export class InsuranceFormComponent implements OnInit {
           this.insuranceRates = rates;
         });
         // データ内容の調査用ログ
-        console.log('standardMonthlyDecisions', this.standardMonthlyDecisions);
-        console.log('salaries', this.salaries);
+        // console.log('standardMonthlyDecisions', this.standardMonthlyDecisions);
+        // console.log('salaries', this.salaries);
       });
   }
 
@@ -178,12 +178,12 @@ export class InsuranceFormComponent implements OnInit {
           this.missingStandardMonthlyEmployees.push(emp);
         }
         // 調査用ログ
-        console.log('emp:', emp);
-        console.log('std:', std);
+        // console.log('emp:', emp);
+        // console.log('std:', std);
         const salary = this.getSalaryForEmployee(emp.employeeId);
-        console.log('salary:', salary);
+        // console.log('salary:', salary);
         const rate = this.getInsuranceRateForOffice(emp.officeId);
-        console.log('rate:', rate);
+        // console.log('rate:', rate);
         let careInsurance = '×';
         let healthInsurance = 'ー';
         let healthInsuranceDeduction = 'ー';

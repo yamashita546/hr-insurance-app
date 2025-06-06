@@ -18,16 +18,13 @@ export class AuthService {
         const userDoc = doc(this.firestore, 'users', user.uid);
         const snap = await getDoc(userDoc);
         const data = snap.data() as AppUser | undefined;
-        console.log('[AuthService] user.uid:', user.uid);
-        console.log('[AuthService] snap.exists():', snap.exists());
-        console.log('[AuthService] data:', data);
+        
         if (data) {
           this.appUserSubject.next(data);
         } else {
           this.appUserSubject.next(null);
         }
       } else {
-        console.log('[AuthService] user is null');
         this.appUserSubject.next(null);
       }
     });

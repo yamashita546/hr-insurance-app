@@ -8,8 +8,9 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { StandardMonthlyDecision, StandardMonthlyDecisionType, STANDARD_MONTHLY_DECISION_TYPES, STANDARD_MONTHLY_DECISION_TYPE_LABELS } from '../../../../core/models/standard-monthly-decision .model';
-import { Router ,RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { EMPLOYEE_TYPES, EmployeeType } from '../../../../core/models/employee.type';
+import { AppUser } from '../../../../core/models/user.model';
 
 @Component({
   selector: 'app-standard-monthly-form',
@@ -50,13 +51,35 @@ export class StandardMonthlyFormComponent implements OnInit {
 
   isConfirmed = false;
 
+  currentUser: AppUser | null = null;
+
+  editMode = false;
+  editingDecisionId: string | null = null;
+  decisionToEdit: any = null;
+
   constructor(
     private userCompanyService: UserCompanyService,
     private firestoreService: FirestoreService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   async ngOnInit() {
+    this.userCompanyService.user$.subscribe(user => {
+      this.currentUser = user;
+    });
+    this.route.queryParamMap.subscribe(async params => {
+      const mode = params.get('mode');
+      const decisionId = params.get('decisionId');
+      if (mode === 'edit' && decisionId) {
+        this.editMode = true;
+        this.editingDecisionId = decisionId;
+        const decision = await this.firestoreService.getStandardMonthlyDecisionById(decisionId);
+        if (decision) {
+          this.decisionToEdit = decision;
+        }
+      }
+    });
     this.userCompanyService.company$
       .pipe(filter(company => !!company && !!company.companyKey), take(1))
       .subscribe(async company => {
@@ -65,22 +88,51 @@ export class StandardMonthlyFormComponent implements OnInit {
         this.companyName = company!.name;
         this.offices = await this.firestoreService.getOffices(this.companyKey);
         this.employees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
-        console.log('従業員データ:', this.employees);
         this.salaries = await this.firestoreService.getSalariesByCompanyKey(this.companyKey);
-        console.log('取得した給与データ:', this.salaries);
         const grades = await firstValueFrom(this.firestoreService.getStandardMonthlyGrades());
-        console.log('Firestoreから取得したgrades:', grades);
         this.standardMonthlyGrades = grades || [];
-        console.log('this.standardMonthlyGradesセット直後:', this.standardMonthlyGrades);
-        // 標準報酬月額決定データも取得
         this.standardMonthlyDecisions = await this.firestoreService.getStandardMonthlyDecisionsByCompanyKey(this.companyKey);
+        if (this.editMode && this.decisionToEdit) {
+          this.setFormForEdit(this.decisionToEdit);
+        }
       });
+  }
+
+  setFormForEdit(decision: any) {
+    const emp = this.employees.find(e => e.employeeId === decision.employeeId);
+    const office = this.offices.find(o => o.id === decision.officeId);
+    this.selectedOfficeId = decision.officeId;
+    this.selectedEmployeeId = decision.employeeId;
+    this.startYear = Number(decision.applyYearMonth.split('-')[0]);
+    this.startMonth = Number(decision.applyYearMonth.split('-')[1]);
+    this.salaryFromYear = this.startYear;
+    this.salaryToYear = this.startYear;
+    this.resultList = [{
+      ...decision,
+      employeeName: emp
+        ? emp.lastName + ' ' + emp.firstName
+        : (decision.lastName && decision.firstName
+            ? decision.lastName + ' ' + decision.firstName
+            : decision.employeeId),
+      officeName: office ? office.name : decision.officeId,
+      judgedGrade: decision.healthGrade,
+      judgedMonthly: decision.healthMonthly,
+      pensionJudgedGrade: decision.pensionGrade,
+      pensionJudgedMonthly: decision.pensionMonthly
+    }];
+    this.isConfirmed = true;
+    this.decisionType = decision.type;
+  }
+
+  getEmployeeName(employeeId: string): string {
+    const emp = this.employees.find(e => e.employeeId === employeeId);
+    return emp ? emp.lastName + ' ' + emp.firstName : '';
   }
 
   getCurrentDecisionForEmployee(employeeId: string, officeId: string): StandardMonthlyDecision | null {
     const today = new Date();
     const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-    console.log('currentYm:', currentYm, 'employeeId:', employeeId, 'officeId:', officeId);
+    // console.log('currentYm:', currentYm, 'employeeId:', employeeId, 'officeId:', officeId);
     const candidates = this.standardMonthlyDecisions
       .filter(r =>
         r.employeeId === employeeId &&
@@ -88,7 +140,7 @@ export class StandardMonthlyFormComponent implements OnInit {
         r.applyYearMonth <= currentYm
       )
       .sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth));
-    console.log('candidates:', candidates);
+    // console.log('candidates:', candidates);
     return candidates[0] || null;
   }
 
@@ -255,6 +307,44 @@ export class StandardMonthlyFormComponent implements OnInit {
   async onSave() {
     const applyYearMonth = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
     const isEntry = this.decisionType === 'entry';
+    const userId = this.currentUser?.uid || '';
+    const userName = this.currentUser?.displayName || '';
+    if (this.editMode && this.editingDecisionId) {
+      const row = this.resultList[0];
+      const decision = {
+        companyKey: this.companyKey,
+        officeId: this.selectedOfficeId,
+        employeeId: this.selectedEmployeeId,
+        applyYearMonth,
+        healthGrade: row.judgedGrade ?? row.healthGrade,
+        healthMonthly: row.judgedMonthly ?? row.healthMonthly,
+        pensionGrade: row.pensionJudgedGrade ?? row.pensionGrade,
+        pensionMonthly: row.pensionJudgedMonthly ?? row.pensionMonthly,
+        salaryTotal: isEntry ? row.estimatedTotal : row.salaryTotal ?? 0,
+        salaryAvg: isEntry ? row.estimatedTotal : row.salaryAvg ?? 0,
+        type: isEntry ? 'entry' : row.type ?? 'fixed',
+        aprilSalary: row.aprilSalary ?? null,
+        maySalary: row.maySalary ?? null,
+        juneSalary: row.juneSalary ?? null,
+        usedMonths: row.usedMonths ?? '',
+        isActive: true,
+        ...(isEntry && {
+          estimatedBaseSalary: row.estimatedBaseSalary ?? 0,
+          estimatedOvertime: row.estimatedOvertime ?? 0,
+          estimatedCommute: row.estimatedCommute ?? 0,
+          estimatedPositionAllowance: row.estimatedPositionAllowance ?? 0,
+          estimatedOtherAllowance: row.estimatedOtherAllowance ?? 0,
+          estimatedInKind: row.estimatedInKind ?? 0,
+          estimatedTotal: row.estimatedTotal ?? 0
+        })
+      };
+      await this.firestoreService.updateStandardMonthlyDecisionWithHistory(
+        decision, userId, userName
+      );
+      alert('編集内容を保存しました');
+      this.router.navigate(['/manage-standard-monthly']);
+      return;
+    }
     try {
       // 既存データ該当者をリストアップ
       const alreadyRegistered: string[] = [];
@@ -292,6 +382,7 @@ export class StandardMonthlyFormComponent implements OnInit {
           maySalary: row.maySalary ?? null,
           juneSalary: row.juneSalary ?? null,
           usedMonths: row.usedMonths ?? '',
+          isActive: true,
           ...(isEntry && {
             estimatedBaseSalary: row.estimatedBaseSalary ?? 0,
             estimatedOvertime: row.estimatedOvertime ?? 0,
@@ -302,6 +393,15 @@ export class StandardMonthlyFormComponent implements OnInit {
             estimatedTotal: row.estimatedTotal ?? 0
           })
         };
+        // 履歴保存
+        await this.firestoreService.addStandardMonthlyDecisionHistory({
+          ...decision,
+          operationType: 'create',
+          operationAt: new Date(),
+          operatedByUserId: userId,
+          operatedByUserName: userName
+        });
+        // 本体保存
         await this.firestoreService.addStandardMonthlyDecision(decision);
       });
       await Promise.all(promises);
@@ -358,17 +458,17 @@ export class StandardMonthlyFormComponent implements OnInit {
       return acqYm === applyYm;
     });
 
-    // 3. 現在有効な標準報酬月額が未登録の従業員のみ
-    const today = new Date();
-    const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-    filteredEmployees = filteredEmployees.filter(emp => {
-      const hasCurrentDecision = this.standardMonthlyDecisions.some(dec =>
-        dec.employeeId === emp.employeeId &&
-        dec.officeId === emp.officeId &&
-        dec.applyYearMonth <= currentYm
-      );
-      return !hasCurrentDecision;
-    });
+    // // 3. 現在有効な標準報酬月額が未登録の従業員のみ
+    // const today = new Date();
+    // const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    // filteredEmployees = filteredEmployees.filter(emp => {
+    //   const hasCurrentDecision = this.standardMonthlyDecisions.some(dec =>
+    //     dec.employeeId === emp.employeeId &&
+    //     dec.officeId === emp.officeId &&
+    //     dec.applyYearMonth <= currentYm
+    //   );
+    //   return !hasCurrentDecision;
+    // });
 
     // 4. リスト生成
     this.resultList = filteredEmployees.map(emp => ({
@@ -651,6 +751,8 @@ export class StandardMonthlyFormComponent implements OnInit {
   // 随時改定用：保存処理
   async onSaveOccasional() {
     const applyYearMonth = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
+    const userId = this.currentUser?.uid || '';
+    const userName = this.currentUser?.displayName || '';
     try {
       const alreadyRegistered: string[] = [];
       for (const row of this.resultList) {
@@ -687,7 +789,17 @@ export class StandardMonthlyFormComponent implements OnInit {
           maySalary: row.maySalary ?? null,
           juneSalary: row.juneSalary ?? null,
           usedMonths: row.usedMonths ?? '',
+          isActive: true
         };
+        // 履歴保存
+        await this.firestoreService.addStandardMonthlyDecisionHistory({
+          ...decision,
+          operationType: 'create',
+          operationAt: new Date(),
+          operatedByUserId: userId,
+          operatedByUserName: userName
+        });
+        // 本体保存
         await this.firestoreService.addStandardMonthlyDecision(decision);
       });
       await Promise.all(promises);
@@ -718,5 +830,23 @@ export class StandardMonthlyFormComponent implements OnInit {
     this.salaryFromMonth = fromMonth;
     this.salaryToYear = toYear;
     this.salaryToMonth = toMonth;
+  }
+
+  async onDelete() {
+    if (!confirm('本当に削除しますか？')) return;
+    const row = this.resultList[0];
+    const decision = {
+      companyKey: this.companyKey,
+      officeId: this.selectedOfficeId,
+      employeeId: this.selectedEmployeeId,
+      applyYearMonth: `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`,
+      ...row,
+      isActive: false
+    };
+    await this.firestoreService.deleteStandardMonthlyDecisionWithHistory(
+      decision, this.currentUser?.uid || '', this.currentUser?.displayName || ''
+    );
+    alert('削除しました');
+    this.router.navigate(['/manage-standard-monthly']);
   }
 }

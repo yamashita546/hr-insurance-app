@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { StandardMonthlyDecision, STANDARD_MONTHLY_DECISION_TYPE_LABELS } from '../../../../core/models/standard-monthly-decision .model';
@@ -24,11 +24,13 @@ export class DetailStandardMonthlyComponent implements OnInit {
   employeeInfo: any = null;
   officeInfo: any = null;
   nextDecision: StandardMonthlyDecision | null = null;
+  historyList: any[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private firestoreService: FirestoreService,
-    private userCompanyService: UserCompanyService
+    private userCompanyService: UserCompanyService,
+    private router: Router
   ) {}
 
   async ngOnInit() {
@@ -41,17 +43,20 @@ export class DetailStandardMonthlyComponent implements OnInit {
       const allDecisions = await this.firestoreService.getStandardMonthlyDecisionsByCompanyKey(this.companyKey);
       this.decisions = allDecisions
         .filter(d => d.employeeId === this.employeeId && d.officeId === this.officeId)
+        .map(d => ({ ...d, companyKey: this.companyKey }))
         .sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth));
+      // 履歴も取得
+      this.historyList = await this.firestoreService.getStandardMonthlyDecisionHistory(this.companyKey, this.employeeId, this.officeId);
       // 適用年月で現在・今後を正しく判定
       const today = new Date();
       const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
       // 現在適用中
       this.currentDecision = this.decisions
-        .filter(d => d.applyYearMonth <= currentYm)
+        .filter(d => d.applyYearMonth <= currentYm && d.isActive !== false)
         .sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth))[0] || null;
       // 今後適用予定
       this.nextDecision = this.decisions
-        .filter(d => d.applyYearMonth > currentYm)
+        .filter(d => d.applyYearMonth > currentYm && d.isActive !== false)
         .sort((a, b) => a.applyYearMonth.localeCompare(b.applyYearMonth))[0] || null;
       // Firestoreから従業員・事業所情報も取得
       const employees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
@@ -63,5 +68,11 @@ export class DetailStandardMonthlyComponent implements OnInit {
 
   getLabel(type: string): string {
     return this.decisionTypeLabels[type as keyof typeof this.decisionTypeLabels] || type;
+  }
+
+  onEditDecision(decision: any) {
+    console.log('編集対象decision:', decision);
+    const decisionId = `${decision.companyKey}_${decision.officeId}_${decision.employeeId}_${decision.applyYearMonth}`;
+    this.router.navigate(['/standard-monthly-form'], { queryParams: { mode: 'edit', decisionId } });
   }
 }

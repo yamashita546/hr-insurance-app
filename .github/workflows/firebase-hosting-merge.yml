@@ -22,3 +22,4 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KENSYU10089 }}
           channelId: live
           projectId: kensyu10089
+          firebaseToolsVersion: '14.5.0'   

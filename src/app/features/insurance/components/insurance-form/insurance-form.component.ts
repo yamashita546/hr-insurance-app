@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { ChildcareInsuranceRate } from '../../../../core/models/insurance-rate.model';
 import { Router, RouterModule  } from '@angular/router';
 import { PREFECTURES } from '../../../../core/models/prefecture.model';
+import { isMaternityLeaveExempted, isChildcareLeaveExempted } from '../../../../core/services/childcare.leave.decision';
 
 @Component({
   selector: 'app-insurance-form',
@@ -210,6 +211,10 @@ export class InsuranceFormComponent implements OnInit {
         .map(emp => {
           // 対象年月の1日
           const ymDate = new Date(this.selectedYear, this.selectedMonth - 1, 1);
+          const ymStr = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+          // 産前産後休業・育児休業の免除判定
+          const isMaternityExempted = isMaternityLeaveExempted(emp, ymStr);
+          const isChildcareExempted = isChildcareLeaveExempted(emp, ymStr);
           // 各保険の適用判定
           let healthApplicable = emp.healthInsuranceStatus?.isApplicable;
           let pensionApplicable = emp.pensionStatus?.isApplicable;
@@ -217,6 +222,11 @@ export class InsuranceFormComponent implements OnInit {
           let careApplicable = emp.isCareInsuranceApplicable;
           // 外国人特例（厚生年金免除）
           if (emp.isForeignWorker && emp.foreignWorkerInfo?.hasSpecialExemption) {
+            pensionApplicable = false;
+          }
+          // 休業特例による免除（健康保険・厚生年金）
+          if (isMaternityExempted || isChildcareExempted) {
+            healthApplicable = false;
             pensionApplicable = false;
           }
           // 休職特例（期間中は免除）
@@ -384,6 +394,10 @@ export class InsuranceFormComponent implements OnInit {
           return true;
         })
         .map(emp => {
+          const ymStr = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+          // 産前産後休業・育児休業の免除判定
+          const isMaternityExempted = isMaternityLeaveExempted(emp, ymStr);
+          const isChildcareExempted = isChildcareLeaveExempted(emp, ymStr);
           const std = this.getStandardMonthlyForEmployee(emp.employeeId, emp.officeId);
           const bonus = this.getBonusForEmployee(emp.employeeId);
           const rate = this.getInsuranceRateForOffice(emp.officeId);
@@ -420,6 +434,8 @@ export class InsuranceFormComponent implements OnInit {
             annualBonusTotal = bonusesInYear.reduce((acc, b) => acc + Math.floor(Number(b.bonusTotal) / 1000) * 1000, 0);
             annualBonusTotalDisplay = annualBonusTotal ? annualBonusTotal.toLocaleString() : 'ー';
           }
+          // 休業特例による免除（健康保険・厚生年金）
+          let healthExempted = isMaternityExempted || isChildcareExempted;
           // 健康保険料計算
           let healthInsurance = 'ー';
           let pension = 'ー';
@@ -433,7 +449,7 @@ export class InsuranceFormComponent implements OnInit {
             const limit = 5730000;
             let available = limit - (annualBonusTotal - standardBonus);
             let targetBonus = standardBonus;
-            if (available <= 0) {
+            if (available <= 0 || healthExempted) {
               healthInsurance = '0';
               pension = '0';
               childcare = '0';

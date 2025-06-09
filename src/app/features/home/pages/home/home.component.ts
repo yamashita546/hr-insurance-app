@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -9,7 +10,11 @@ import { Router, RouterModule } from '@angular/router';
   styleUrl: './home.component.css'
 })
 export class HomeComponent {
-  constructor(private router: Router) {}
+  currentUser: any;
+
+  constructor(private router: Router, private authService: AuthService) {
+    this.currentUser = this.authService.currentUser;
+  }
 
   navigateTo(path: string) {
     this.router.navigate([path]);

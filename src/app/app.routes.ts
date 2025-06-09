@@ -13,7 +13,7 @@ import { NotificationComponent } from './features/notification/pages/notificatio
 import { DashboardComponent } from './features/dashboard/pages/dashboard/dashboard.component';
 import { HelpComponent } from './features/help/pages/help/help.component';
 import { LoginComponent } from './features/auth/pages/login/login.component';
-import { authGuard } from './core/guards/auth.guards';
+import { authGuard, adminGuard } from './core/guards/auth.guards';
 import { CompaniesComponent } from './features/master/pages/companies/company.base.info/companies.component';
 import { InsuranceRateComponent } from './features/master/pages/insurance-rate/insurance-rate.component';
 import { ManageAdminComponent } from './features/master/pages/manage-admin/manage-admin.component';
@@ -58,7 +58,7 @@ export const routes: Routes = [
       { path: 'attendance', component: AttendanceListComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'csv-export', component: CsvExportComponent },
       { path: 'history', component: HistoryListComponent },
-      { path: 'master', component: MasterMainComponent },
+      { path: 'master', component: MasterMainComponent, canActivate: [adminGuard] },
       { path: 'settings', component: CompanySettingComponent },
       { path: 'notification', component: NotificationComponent },
       { path: 'dashboard', component: DashboardComponent },

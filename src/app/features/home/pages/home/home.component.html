@@ -37,7 +37,7 @@
         <span>設定画面</span>
     </button>
 
-    <button class="menu-button" routerLink="/master" >
+    <button class="menu-button" routerLink="/master" *ngIf="currentUser?.role === 'admin'">
         <i class="fas fa-user-shield"></i>
         <span>マスタ管理画面</span>
     </button>

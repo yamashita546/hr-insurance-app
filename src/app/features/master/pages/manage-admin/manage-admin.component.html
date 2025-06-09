@@ -1,1 +1,65 @@
-<p>manage-admin works!</p>
+<div class="admin-header">
+  <h2>管理者ユーザー一覧</h2>
+  <button class="add-admin-btn" routerLink="/add-admin-user">管理者ユーザー追加</button>
+</div>
+
+<table class="admin-table">
+  <thead>
+    <tr>
+      <th (click)="onSort('userId')" class="sortable">
+        ユーザーID
+        <span *ngIf="sortKey === 'userId'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+      </th>
+      <th (click)="onSort('displayName')" class="sortable">
+        氏名
+        <span *ngIf="sortKey === 'displayName'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+      </th>
+      <th (click)="onSort('email')" class="sortable">
+        メールアドレス
+        <span *ngIf="sortKey === 'email'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+      </th>
+      <th (click)="onSort('isRegistered')" class="sortable">
+        登録状態
+        <span *ngIf="sortKey === 'isRegistered'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+      </th>
+      <th (click)="onSort('createdAt')" class="sortable">
+        作成日
+        <span *ngIf="sortKey === 'createdAt'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+      </th>
+      <th>操作</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let user of adminUsers">
+      <ng-container *ngIf="editingUid === user.uid; else viewRow">
+        <td>{{ user.userId }}</td>
+        <td>
+          <input [(ngModel)]="editUser.displayName" placeholder="氏名" />
+        </td>
+        <td>
+          <input [(ngModel)]="editUser.email" placeholder="メールアドレス" />
+        </td>
+        <td>{{ user.isRegistered ? '登録済み' : '未登録' }}</td>
+        <td>{{ user.createdAt | dateTimestamp:'yyyy/MM/dd' }}</td>
+        <td>
+          <button class="edit-btn" (click)="onSaveEdit(user)">保存</button>
+          <button class="delete-btn" (click)="onCancelEdit()">キャンセル</button>
+        </td>
+      </ng-container>
+      <ng-template #viewRow>
+        <td>{{ user.userId }}</td>
+        <td>{{ user.displayName }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.isRegistered ? '登録済み' : '未登録' }}</td>
+        <td>{{ user.createdAt | dateTimestamp:'yyyy/MM/dd' }}</td>
+        <td>
+          <button class="edit-btn" (click)="onEditAdmin(user)">編集</button>
+          <button class="delete-btn" (click)="onDeleteAdmin(user)">削除</button>
+        </td>
+      </ng-template>
+    </tr>
+    <tr *ngIf="adminUsers.length === 0">
+      <td colspan="6" class="no-admin-users">管理者ユーザーが登録されていません</td>
+    </tr>
+  </tbody>
+</table>

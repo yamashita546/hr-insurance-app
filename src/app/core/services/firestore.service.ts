@@ -429,4 +429,20 @@ export class FirestoreService {
       .map(doc => doc.data())
       .sort((a, b) => (b['applyYearMonth'] || '').localeCompare(a['applyYearMonth'] || ''));
   }
+
+  // 管理者ユーザー一覧取得
+  async getAdminUsersByCompanyKey(companyKey: string): Promise<AppUser[]> {
+    const usersCol = collection(this.firestore, 'users');
+    const q = query(usersCol, where('companyKey', '==', companyKey), where('role', '==', 'admin'));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ ...(doc.data() as AppUser) }));
+  }
+
+  async deleteUser(uid: string) {
+    await deleteDoc(doc(this.firestore, 'users', uid));
+  }
+
+  async updateUser(uid: string, data: Partial<AppUser>) {
+    await setDoc(doc(this.firestore, 'users', uid), data, { merge: true });
+  }
 }

@@ -1,0 +1,113 @@
+/* フォーム全体を中央寄せ */
+:host {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+.form-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  padding: 2.2rem 2rem 2rem 2rem;
+  min-width: 320px;
+  max-width: 420px;
+  width: 100%;
+  margin: 2.5rem auto 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.form-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 1.3rem;
+  color: #1976d2;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.18rem;
+  font-weight: 500;
+  color: #333;
+}
+
+input[type="text"],
+input[type="email"] {
+  width: 100%;
+  padding: 0.55em 0.9em;
+  border: 1px solid #cfd8dc;
+  border-radius: 7px;
+  margin-bottom: 0.9rem;
+  font-size: 1.02rem;
+  background: #f9fbfc;
+  transition: border 0.2s;
+  box-sizing: border-box;
+}
+input:focus {
+  border-color: #1976d2;
+  outline: none;
+  background: #fff;
+}
+input.invalid {
+  border-color: #d32f2f;
+  background: #fff8f8;
+}
+
+button[type="submit"] {
+  width: 100%;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 0.7em 0;
+  font-size: 1.08rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 0.5rem;
+}
+button[type="submit"]:hover {
+  background: #1565c0;
+}
+
+.delete-btn {
+  width: 100%;
+  background: #fff3f3;
+  color: #d32f2f;
+  border: 1px solid #ffcdd2;
+  border-radius: 7px;
+  padding: 0.7em 0;
+  font-size: 1.08rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.delete-btn:hover {
+  background: #ffcdd2;
+  color: #b71c1c;
+}
+
+.error-message {
+  color: #d32f2f;
+  background: #fff3f3;
+  border: 1px solid #ffcdd2;
+  border-radius: 7px;
+  padding: 0.5em 0.7em;
+  margin-bottom: 0.7rem;
+  text-align: center;
+  font-size: 0.97rem;
+}
+
+@media (max-width: 600px) {
+  .form-card {
+    min-width: 96vw;
+    max-width: 98vw;
+    padding: 1.2rem 0.5rem;
+  }
+}

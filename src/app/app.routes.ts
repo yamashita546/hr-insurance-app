@@ -36,6 +36,8 @@ import { StandardMonthlyFormComponent } from './features/salary-data/components/
 import { InsuranceFormComponent } from './features/insurance/components/insurance-form/insurance-form.component';
 import { DetailSalaryComponent } from './features/salary-data/components/detail-salary/detail-salary.component';
 import { DetailStandardMonthlyComponent } from './features/salary-data/components/detail-standard-monthly/detail-standard-monthly.component';
+import { AddAdminUserComponent } from './features/master/components/add-admin-user/add-admin-user.component';
+import { EditAdminUserComponent } from './features/master/components/edit-admin-user/edit-admin-user.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -78,6 +80,8 @@ export const routes: Routes = [
       { path: 'insurance-form', component: InsuranceFormComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'detail-salary', component: DetailSalaryComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'detail-standard-monthly', component: DetailStandardMonthlyComponent, canDeactivate: [CanDeactivateDialogGuard] },
+      { path: 'add-admin-user', component: AddAdminUserComponent, canDeactivate: [CanDeactivateDialogGuard] },
+      { path: 'edit-admin-user/:uid', component: EditAdminUserComponent, canDeactivate: [CanDeactivateDialogGuard] },
     ],
   },
 ];

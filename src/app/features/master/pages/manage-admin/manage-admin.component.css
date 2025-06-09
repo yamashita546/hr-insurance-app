@@ -1,0 +1,119 @@
+/* ヘッダー部分 */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2em;
+}
+.admin-header h2 {
+  font-size: 1.3rem;
+  color: #1976d2;
+  margin: 0;
+}
+.add-admin-btn {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5em 1.2em;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.add-admin-btn:hover {
+  background: #1565c0;
+}
+
+/* テーブル全体 */
+.admin-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.admin-table th, .admin-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: left;
+  font-size: 0.98rem;
+}
+.admin-table th {
+  background: #e3f2fd;
+  color: #1976d2;
+  font-weight: bold;
+}
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ボタン */
+.edit-btn, .delete-btn {
+  border: none;
+  border-radius: 4px;
+  padding: 0.35em 0.9em;
+  font-size: 0.97rem;
+  font-weight: 500;
+  margin-right: 0.3em;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.edit-btn {
+  background: #fffde7;
+  color: #1976d2;
+  border: 1px solid #ffe082;
+}
+.edit-btn:hover {
+  background: #fff9c4;
+}
+.delete-btn {
+  background: #fff3f3;
+  color: #d32f2f;
+  border: 1px solid #ffcdd2;
+}
+.delete-btn:hover {
+  background: #ffcdd2;
+  color: #b71c1c;
+}
+
+/* 空行メッセージ */
+.no-admin-users {
+  text-align: center;
+  padding: 22px 0;
+  color: #888;
+  font-size: 1.05rem;
+  background: #f8fafc;
+}
+
+@media (max-width: 600px) {
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7em;
+  }
+  .admin-table th, .admin-table td {
+    padding: 7px 4px;
+    font-size: 0.93rem;
+  }
+  .add-admin-btn {
+    width: 100%;
+  }
+}
+
+.admin-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+  position: relative;
+}
+.admin-table th.sortable:hover {
+  background: #bbdefb;
+}
+.admin-table th.sortable span {
+  font-size: 0.95em;
+  margin-left: 0.3em;
+  color: #1976d2;
+}

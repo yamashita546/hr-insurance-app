@@ -1,0 +1,24 @@
+<div class="form-card">
+  <div class="form-title">管理者ユーザー追加</div>
+  <form [formGroup]="adminForm" (ngSubmit)="onSubmit()">
+    <div *ngIf="errorMsg" class="error-message">{{ errorMsg }}</div>
+    <label for="userId">ユーザーID <span style="color:#d32f2f">*</span></label>
+    <input id="userId" type="text" formControlName="userId" [class.invalid]="adminForm.get('userId')?.invalid && adminForm.get('userId')?.touched" />
+    <div *ngIf="adminForm.get('userId')?.invalid && adminForm.get('userId')?.touched" class="error-message">ユーザーIDは必須です</div>
+
+    <label for="displayName">氏名 <span style="color:#d32f2f">*</span></label>
+    <input id="displayName" type="text" formControlName="displayName" [class.invalid]="adminForm.get('displayName')?.invalid && adminForm.get('displayName')?.touched" />
+    <div *ngIf="adminForm.get('displayName')?.invalid && adminForm.get('displayName')?.touched" class="error-message">氏名は必須です</div>
+
+    <label for="email">メールアドレス <span style="color:#d32f2f">*</span></label>
+    <input id="email" type="email" formControlName="email" [class.invalid]="adminForm.get('email')?.invalid && adminForm.get('email')?.touched" />
+    <div *ngIf="adminForm.get('email')?.invalid && adminForm.get('email')?.touched" class="error-message">有効なメールアドレスを入力してください</div>
+
+    <label for="initialPassword">初期パスワード <span style="color:#d32f2f">*</span></label>
+    <input id="initialPassword" type="password" formControlName="initialPassword" [class.invalid]="adminForm.get('initialPassword')?.invalid && adminForm.get('initialPassword')?.touched" />
+    <div *ngIf="adminForm.get('initialPassword')?.invalid && adminForm.get('initialPassword')?.touched" class="error-message">8文字以上のパスワードを入力してください</div>
+
+    <button type="submit" [disabled]="adminForm.invalid || loading">登録</button>
+    <span *ngIf="loading" style="margin-left: 1em; color: #1976d2;">登録中...</span>
+  </form>
+</div>

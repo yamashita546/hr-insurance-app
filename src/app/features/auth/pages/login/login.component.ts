@@ -4,6 +4,7 @@ import { Auth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, 
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../core/services/auth.service';
+import { Firestore, doc, updateDoc } from '@angular/fire/firestore';
 
 
 @Component({
@@ -21,7 +22,8 @@ export class LoginComponent {
     private fb: FormBuilder,
     private auth: Auth,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private firestore: Firestore
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -44,6 +46,13 @@ export class LoginComponent {
         return;
       }
       if (!appUser.isRegistered) {
+        // 初回ログイン時、initialPasswordを削除しisRegisteredをtrueに
+        const userDocRef = doc(this.firestore, 'users', cred.user.uid);
+        await updateDoc(userDocRef, {
+          initialPassword: null,
+          isRegistered: true,
+          updatedAt: new Date(),
+        });
         alert('初回ログインです。パスワード変更が必要です。');
         this.router.navigate(['/register'], { queryParams: { uid: cred.user.uid, msg: 'first-login' } });
         return;

@@ -7,6 +7,7 @@ import { AppUser } from '../../../../core/models/user.model';
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { Auth, createUserWithEmailAndPassword } from '@angular/fire/auth';
 import { Company } from '../../../../core/models/company.model';
+import { CloudFunctionsService } from '../../../../core/services/cloud.functions.service';
 
 @Component({
   selector: 'app-add-owner-user',
@@ -26,7 +27,8 @@ export class AddOwnerUserComponent {
     private firestore: Firestore,
     private router: Router,
     private firestoreService: FirestoreService,
-    private auth: Auth
+    private auth: Auth,
+    private cloudFunctionsService: CloudFunctionsService
   ) {
     this.ownerForm = this.fb.group({
       companyKey: ['', [Validators.required]],
@@ -50,22 +52,16 @@ export class AddOwnerUserComponent {
     this.loading = true;
     const { companyKey, userId, displayName, email, initialPassword } = this.ownerForm.value;
     try {
-      // Firebase Authにユーザー作成
-      const cred = await createUserWithEmailAndPassword(this.auth, email, initialPassword);
-      const uid = cred.user.uid;
-      // Firestoreのusersコレクションにも登録
-      const user: Omit<AppUser, 'createdAt' | 'updatedAt'> = {
-        uid,
-        userId,
-        displayName,
+      // Cloud Functions経由でオーナーユーザーを作成
+      await this.cloudFunctionsService.createUserByAdmin({
         email,
+        password: initialPassword,
+        displayName,
         companyKey,
+        userId,
         role: 'owner',
-        isRegistered: false,
-        isActive: true,
-        initialPassword
-      };
-      await this.firestoreService.addUser(user, uid);
+        initialPassword,
+      });
       alert('オーナーユーザーを追加しました');
       this.router.navigate(['/company-owner']);
     } catch (e: any) {

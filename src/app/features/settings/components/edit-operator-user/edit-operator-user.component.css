@@ -1,0 +1,70 @@
+.form-card {
+  max-width: 400px;
+  margin: 2em auto;
+  padding: 2em;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.form-title {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 1.5em;
+  text-align: center;
+}
+.form-group {
+  margin-bottom: 1.2em;
+}
+label {
+  display: block;
+  margin-bottom: 0.3em;
+  font-weight: 500;
+}
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 0.5em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1em;
+}
+input.invalid {
+  border-color: #d32f2f;
+}
+.error-message {
+  color: #d32f2f;
+  font-size: 0.95em;
+  margin-top: 0.2em;
+}
+.password-note {
+  font-size: 0.9em;
+  color: #888;
+  margin-top: 0.2em;
+}
+.password-note.disabled {
+  color: #bbb;
+}
+button[type="submit"] {
+  width: 100%;
+  padding: 0.7em;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1em;
+  transition: background 0.2s;
+}
+button[disabled] {
+  background: #b0b0b0;
+  cursor: not-allowed;
+}
+.saving-note {
+  display: block;
+  text-align: center;
+  color: #1976d2;
+  margin-top: 1em;
+}

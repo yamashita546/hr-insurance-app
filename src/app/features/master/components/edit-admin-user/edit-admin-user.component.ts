@@ -5,7 +5,8 @@ import { CommonModule } from '@angular/common';
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { AppUser } from '../../../../core/models/user.model';
 import { RouterModule } from '@angular/router';
-import { Auth, updateEmail, updatePassword } from '@angular/fire/auth';
+import { Auth } from '@angular/fire/auth';
+import { CloudFunctionsService } from '../../../../core/services/cloud.functions.service';
 
 @Component({
   selector: 'app-edit-admin-user',
@@ -26,7 +27,8 @@ export class EditAdminUserComponent {
     private route: ActivatedRoute,
     private router: Router,
     private firestoreService: FirestoreService,
-    private auth: Auth
+    private auth: Auth,
+    private cloudFunctionsService: CloudFunctionsService
   ) {
     this.editForm = this.fb.group({
       userId: ['', [Validators.required]],
@@ -74,22 +76,14 @@ export class EditAdminUserComponent {
     this.loading = true;
     try {
       const updateData: any = {
-        userId: this.editForm.value.userId,
+        uid: this.uid,
+        email: this.editForm.value.email,
         displayName: this.editForm.value.displayName,
-        email: this.editForm.value.email
       };
-      // Firebase Authのユーザー情報も更新
-      const user = this.auth.currentUser;
-      if (user) {
-        if (user.email !== this.editForm.value.email) {
-          await updateEmail(user, this.editForm.value.email);
-        }
-        if (!this.isRegistered && this.editForm.get('initialPassword')?.dirty) {
-          await updatePassword(user, this.editForm.get('initialPassword')?.value);
-          updateData.initialPassword = this.editForm.get('initialPassword')?.value;
-        }
+      if (!this.isRegistered && this.editForm.get('initialPassword')?.dirty) {
+        updateData.password = this.editForm.get('initialPassword')?.value;
       }
-      await this.firestoreService.updateUser(this.uid, updateData);
+      await this.cloudFunctionsService.updateUserByAdmin(updateData);
       alert('管理者ユーザー情報を更新しました');
       this.router.navigate(['/manage-admin']);
     } catch (e: any) {

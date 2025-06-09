@@ -40,7 +40,8 @@ import { AddAdminUserComponent } from './features/master/components/add-admin-us
 import { EditAdminUserComponent } from './features/master/components/edit-admin-user/edit-admin-user.component';
 import { AddOwnerUserComponent } from './features/master/components/add-owner-user/add-owner-user.component';
 import { EditOwnerUserComponent } from './features/master/components/edit-owner-user/edit-owner-user.component';
-
+import { AddOperatorUserComponent } from './features/settings/components/add-operator-user/add-operator-user.component'; 
+import { EditOperatorUserComponent } from './features/settings/components/edit-operator-user/edit-operator-user.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -87,6 +88,8 @@ export const routes: Routes = [
       { path: 'edit-admin-user/:uid', component: EditAdminUserComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'add-owner-user', component: AddOwnerUserComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'edit-owner-user/:uid', component: EditOwnerUserComponent, canDeactivate: [CanDeactivateDialogGuard] },
+      { path: 'add-operator-user', component: AddOperatorUserComponent, canDeactivate: [CanDeactivateDialogGuard] },
+      { path: 'edit-operator-user/:uid', component: EditOperatorUserComponent, canDeactivate: [CanDeactivateDialogGuard] },
     ],
   },
 ];

@@ -5,21 +5,19 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AppUser } from '../../../../core/models/user.model';
 import { FirestoreService } from '../../../../core/services/firestore.service';
-import { Company } from '../../../../core/models/company.model';
 import { CloudFunctionsService } from '../../../../core/services/cloud.functions.service';
 
 @Component({
-  selector: 'app-edit-owner-user',
+  selector: 'app-edit-operator-user',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './edit-owner-user.component.html',
-  styleUrl: './edit-owner-user.component.css'
+  templateUrl: './edit-operator-user.component.html',
+  styleUrl: './edit-operator-user.component.css'
 })
-export class EditOwnerUserComponent {
-  ownerForm: FormGroup;
+export class EditOperatorUserComponent {
+  operatorForm: FormGroup;
   errorMsg: string = '';
   loading: boolean = false;
-  companies: Company[] = [];
   uid: string = '';
   isRegistered: boolean = false;
 
@@ -31,33 +29,28 @@ export class EditOwnerUserComponent {
     private firestoreService: FirestoreService,
     private cloudFunctionsService: CloudFunctionsService
   ) {
-    this.ownerForm = this.fb.group({
-      companyKey: [{ value: '', disabled: true }, [Validators.required]],
+    this.operatorForm = this.fb.group({
       userId: [{ value: '', disabled: true }, [Validators.required]],
       displayName: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
       initialPassword: ['']
     });
-    this.loadCompaniesAndUser();
+    this.loadUser();
   }
 
-  async loadCompaniesAndUser() {
-    this.companies = await new Promise<Company[]>(resolve => {
-      this.firestoreService.getCompanies().subscribe(companies => resolve(companies));
-    });
+  async loadUser() {
     this.uid = this.route.snapshot.paramMap.get('uid') || '';
     if (this.uid) {
       const user = await this.firestoreService.getAppUserByUid(this.uid);
       if (user) {
         this.isRegistered = !!user.isRegistered;
-        this.ownerForm.patchValue({
-          companyKey: user.companyKey,
+        this.operatorForm.patchValue({
           userId: user.userId,
           displayName: user.displayName,
           email: user.email,
           initialPassword: user.initialPassword || ''
         });
-        const pwCtrl = this.ownerForm.get('initialPassword');
+        const pwCtrl = this.operatorForm.get('initialPassword');
         if (this.isRegistered) {
           pwCtrl?.disable();
         } else {
@@ -69,21 +62,21 @@ export class EditOwnerUserComponent {
 
   async onSubmit() {
     this.errorMsg = '';
-    if (this.ownerForm.invalid) return;
+    if (this.operatorForm.invalid) return;
     this.loading = true;
-    const { displayName, email, initialPassword } = this.ownerForm.getRawValue();
+    const { displayName, email, initialPassword } = this.operatorForm.getRawValue();
     try {
       const updateData: any = {
         uid: this.uid,
         displayName,
         email,
       };
-      if (!this.isRegistered && this.ownerForm.get('initialPassword')?.dirty) {
+      if (!this.isRegistered && this.operatorForm.get('initialPassword')?.dirty) {
         updateData.password = initialPassword;
       }
       await this.cloudFunctionsService.updateUserByAdmin(updateData);
-      alert('オーナーユーザー情報を更新しました');
-      this.router.navigate(['/company-owner']);
+      alert('実務担当者情報を更新しました');
+      this.router.navigate(['/manage-operator']);
     } catch (e: any) {
       this.errorMsg = e.message || '更新に失敗しました';
     } finally {

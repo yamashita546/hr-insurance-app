@@ -1,0 +1,112 @@
+/* ヘッダー */
+.operator-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.operator-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #222;
+}
+.add-operator-btn {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.add-operator-btn:hover {
+  background: #1565c0;
+}
+
+/* テーブル */
+.operator-list {
+  margin: 24px 0;
+}
+.table-wrapper {
+  overflow-x: auto;
+  min-width: 100%;
+}
+.operator-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  background: #fff;
+  margin-bottom: 8px;
+  table-layout: auto;
+}
+.operator-table th, .operator-table td {
+  border: 1px solid #e0e0e0;
+  padding: 8px 12px;
+  text-align: center;
+  white-space: normal;
+  word-break: break-all;
+  vertical-align: middle;
+}
+.operator-table th {
+  background: #f5f7fa;
+  font-weight: 600;
+  color: #333;
+}
+.operator-table tr:nth-child(even) {
+  background: #f9f9fb;
+}
+.operator-table tr:hover {
+  background: #e3f2fd;
+}
+.no-operator-users {
+  text-align: center;
+  color: #888;
+  background: #f5f7fa;
+}
+.edit-btn, .delete-btn {
+  background: #fff;
+  border: 1px solid #1976d2;
+  color: #1976d2;
+  border-radius: 4px;
+  padding: 4px 10px;
+  margin-right: 4px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+.edit-btn:hover {
+  background: #1976d2;
+  color: #fff;
+}
+.delete-btn {
+  border-color: #e53935;
+  color: #e53935;
+}
+.delete-btn:hover {
+  background: #e53935;
+  color: #fff;
+}
+
+@media (max-width: 700px) {
+  .operator-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .table-wrapper {
+    min-width: 0;
+  }
+  .operator-table {
+    min-width: 600px;
+  }
+}
+
+.company-info {
+  margin: 0 0 24px 0;
+  font-size: 1.08rem;
+  color: #222;
+  line-height: 1.7;
+  padding-left: 4px;
+}

@@ -17,7 +17,6 @@ export interface AppUser {
   isGoogleLinked?: boolean;
   isActive?: boolean;
   initialPassword?: string;
-  googleAuth?: boolean;
 }
 
 

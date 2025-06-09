@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AppUser } from '../../../../core/models/user.model';
 import { FirestoreService } from '../../../../core/services/firestore.service';
+import { Auth, createUserWithEmailAndPassword } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-add-admin-user',
@@ -23,7 +24,8 @@ export class AddAdminUserComponent {
     private fb: FormBuilder,
     private firestore: Firestore,
     private router: Router,
-    private firestoreService: FirestoreService
+    private firestoreService: FirestoreService,
+    private auth: Auth
   ) {
     this.adminForm = this.fb.group({
       userId: ['', [Validators.required]],
@@ -39,26 +41,22 @@ export class AddAdminUserComponent {
     this.loading = true;
     const { userId, displayName, email, initialPassword } = this.adminForm.value;
     const companyKey = this.companyKey;
-    const uid = doc(collection(this.firestore, 'users')).id;
-    const q = query(collection(this.firestore, 'users'), where('companyKey', '==', companyKey), where('userId', '==', userId));
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      this.errorMsg = '同じ会社・ユーザーIDの管理者が既に存在します。';
-      this.loading = false;
-      return;
-    }
-    const user: Omit<AppUser, 'createdAt' | 'updatedAt'> = {
-      uid,
-      userId,
-      displayName,
-      email,
-      companyKey,
-      role: 'admin',
-      isRegistered: false,
-      isActive: true,
-      initialPassword
-    };
     try {
+      // Firebase Authにユーザー作成
+      const cred = await createUserWithEmailAndPassword(this.auth, email, initialPassword);
+      const uid = cred.user.uid;
+      // Firestoreのusersコレクションにも登録
+      const user: Omit<AppUser, 'createdAt' | 'updatedAt'> = {
+        uid,
+        userId,
+        displayName,
+        email,
+        companyKey,
+        role: 'admin',
+        isRegistered: false,
+        isActive: true,
+        initialPassword
+      };
       await this.firestoreService.addUser(user, uid);
       alert('管理者ユーザーを追加しました');
       this.router.navigate(['/manage-admin']);

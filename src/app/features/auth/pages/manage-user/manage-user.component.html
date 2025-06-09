@@ -21,5 +21,18 @@
       <th>管理権限</th>
       <td>{{ role }}</td>
     </tr>
+    <tr>
+      <th>Google認証</th>
+      <td>
+        <button (click)="showPasswordInput = true" *ngIf="!isGoogleLinked && !showPasswordInput">Google認証を有効にする</button>
+        <span *ngIf="isGoogleLinked" style="color: #1976d2;">Google認証連携済み</span>
+        <div *ngIf="showPasswordInput">
+          <label style="display:block; margin-bottom:4px;">現在のパスワードを入力してください</label>
+          <input type="password" [(ngModel)]="inputPassword" style="margin-right:8px;">
+          <button (click)="onLinkGoogleWithPassword()">連携する</button>
+          <button (click)="showPasswordInput = false">キャンセル</button>
+        </div>
+      </td>
+    </tr>
   </table>
 </div>

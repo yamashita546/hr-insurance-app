@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Auth, signInWithEmailAndPassword, updatePassword } from '@angular/fire/auth';
-import { Firestore, doc, getDoc, setDoc, deleteDoc, Timestamp } from '@angular/fire/firestore';
-import { Router } from '@angular/router';
+import { Firestore, doc, getDoc, setDoc, deleteDoc, Timestamp, updateDoc } from '@angular/fire/firestore';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -12,20 +12,29 @@ import { CommonModule } from '@angular/common';
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
+  message: string = '';
 
   constructor(
     private fb: FormBuilder,
     private auth: Auth,
     private firestore: Firestore,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.registerForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       tempPassword: ['', Validators.required],
       newPassword: ['', [Validators.required, Validators.minLength(8)]]
     });
+  }
+
+  ngOnInit() {
+    const msg = this.route.snapshot.queryParamMap.get('msg');
+    if (msg === 'first-login') {
+      this.message = '初回ログインのため、パスワード変更が必要です。';
+    }
   }
 
   async onRegister() {
@@ -37,28 +46,30 @@ export class RegisterComponent {
       // 2. 本パスワードに変更
       await updatePassword(cred.user, newPassword);
 
-      // 3. Firestoreのusersコレクションで「メールアドレスID」のドキュメントを取得
-      const oldDocRef = doc(this.firestore, 'users', email);
-      const oldSnap = await getDoc(oldDocRef);
+      // 3. Firestoreのusersコレクションでuidのドキュメントを取得・更新
+      const userDocRef = doc(this.firestore, 'users', cred.user.uid);
+      const userSnap = await getDoc(userDocRef);
 
-      if (oldSnap.exists()) {
-        const data = oldSnap.data();
-        await setDoc(doc(this.firestore, 'users', cred.user.uid), {
-          ...data,
-          uid: cred.user.uid,
+      if (userSnap.exists()) {
+        await updateDoc(userDocRef, {
           isRegistered: true,
           updatedAt: Timestamp.now()
         });
-        await deleteDoc(oldDocRef);
       } else {
-        // 旧ドキュメントがなければエラー
-        alert('仮登録情報が見つかりません。管理者にお問い合わせください。');
+        alert('ユーザー情報が見つかりません。管理者にお問い合わせください。');
         return;
       }
 
-      this.router.navigate(['/']); // ログイン後の画面へ
+      alert('本登録が完了しました。ログインしてください。');
+      this.router.navigate(['/login']);
     } catch (e: any) {
-      alert(e.message || '登録に失敗しました');
+      if (e.code === 'auth/wrong-password') {
+        alert('仮パスワードが正しくありません。');
+      } else if (e.code === 'auth/user-not-found') {
+        alert('ユーザーが見つかりません。');
+      } else {
+        alert(e.message || '登録に失敗しました');
+      }
     }
   }
 }

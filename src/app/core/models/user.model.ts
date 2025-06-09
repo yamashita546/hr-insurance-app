@@ -14,6 +14,7 @@ export interface AppUser {
   updatedAt: Timestamp;
   lastLoginAt?: Timestamp;
   isRegistered?: boolean;
+  isGoogleLinked?: boolean;
   isActive?: boolean;
   initialPassword?: string;
   googleAuth?: boolean;

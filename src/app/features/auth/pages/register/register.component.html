@@ -1,8 +1,19 @@
-<div class="register-container">
+<div class="register-card">
+  <div class="register-title">初回ログイン（本登録）</div>
+  <div *ngIf="message" class="register-message">{{ message }}</div>
   <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
-    <input type="email" formControlName="email" placeholder="メールアドレス" />
-    <input type="password" formControlName="tempPassword" placeholder="仮パスワード" />
-    <input type="password" formControlName="newPassword" placeholder="新しいパスワード（8文字以上）" />
-    <button type="submit">本登録</button>
+    <label for="email">メールアドレス</label>
+    <input id="email" type="email" formControlName="email" [class.invalid]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" />
+    <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="register-error">メールアドレスは必須です</div>
+
+    <label for="tempPassword">仮パスワード</label>
+    <input id="tempPassword" type="password" formControlName="tempPassword" [class.invalid]="registerForm.get('tempPassword')?.invalid && registerForm.get('tempPassword')?.touched" />
+    <div *ngIf="registerForm.get('tempPassword')?.invalid && registerForm.get('tempPassword')?.touched" class="register-error">仮パスワードは必須です</div>
+
+    <label for="newPassword">新しいパスワード（8文字以上）</label>
+    <input id="newPassword" type="password" formControlName="newPassword" [class.invalid]="registerForm.get('newPassword')?.invalid && registerForm.get('newPassword')?.touched" />
+    <div *ngIf="registerForm.get('newPassword')?.invalid && registerForm.get('newPassword')?.touched" class="register-error">8文字以上の新しいパスワードを入力してください</div>
+
+    <button type="submit" [disabled]="registerForm.invalid">本登録</button>
   </form>
 </div>

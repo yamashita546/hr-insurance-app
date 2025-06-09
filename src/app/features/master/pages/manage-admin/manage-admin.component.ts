@@ -5,6 +5,7 @@ import { DateTimestampPipe } from '../../../../core/pipe/date-timestamp.pipe';
 import { Router , RouterModule} from '@angular/router';
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { FormsModule } from '@angular/forms';
+import { Auth, createUserWithEmailAndPassword } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-manage-admin',
@@ -23,7 +24,7 @@ export class ManageAdminComponent implements OnInit {
   editingUid: string | null = null;
   editUser: Partial<AppUser> = {};
 
-  constructor(private firestoreService: FirestoreService, private router: Router) {}
+  constructor(private firestoreService: FirestoreService, private router: Router, private auth: Auth) {}
 
   async ngOnInit() {
     this.adminUsers = await this.firestoreService.getAdminUsersByCompanyKey(this.companyKey);
@@ -55,10 +56,29 @@ export class ManageAdminComponent implements OnInit {
     });
   }
 
-  // onAddAdmin() {
-  //   // 追加ダイアログやフォーム表示用
-  //   alert('管理者ユーザー追加機能は未実装です');
-  // }
+  async addAdminUser(email: string, password: string, userData: Partial<AppUser>) {
+    try {
+      // Firebase Authにユーザー作成
+      const cred = await createUserWithEmailAndPassword(this.auth, email, password);
+      const uid = cred.user.uid;
+      // Firestoreのusersコレクションにも登録
+      await this.firestoreService.addUser({
+        email,
+        uid,
+        userId: userData.userId || '',
+        displayName: userData.displayName || '',
+        companyKey: userData.companyKey || this.companyKey,
+        initialPassword: userData.initialPassword || '',
+        isRegistered: false,
+        isActive: true,
+        role: 'admin'
+      }, uid);
+      alert('管理者ユーザーを追加しました');
+      this.adminUsers = await this.firestoreService.getAdminUsersByCompanyKey(this.companyKey);
+    } catch (e: any) {
+      alert(e.message || 'ユーザー追加に失敗しました');
+    }
+  }
 
   async onDeleteAdmin(user: AppUser) {
     if (confirm(`本当に「${user.displayName}」を削除してよろしいですか？`)) {

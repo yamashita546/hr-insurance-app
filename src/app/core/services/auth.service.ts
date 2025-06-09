@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Auth, onAuthStateChanged, signOut, User as FirebaseUser } from '@angular/fire/auth';
+import { Auth, onAuthStateChanged, signOut, User as FirebaseUser, GoogleAuthProvider, EmailAuthProvider, signInWithPopup, linkWithCredential } from '@angular/fire/auth';
 import { Firestore, doc, getDoc, updateDoc, collection, query, where, getDocs, setDoc, deleteDoc } from '@angular/fire/firestore';
 import { BehaviorSubject } from 'rxjs';
 import { AppUser } from '../models/user.model';
@@ -71,5 +71,24 @@ export class AuthService {
     const newDocRef = doc(this.firestore, 'users', newUid);
     await setDoc(newDocRef, { ...data, uid: newUid });
     await deleteDoc(oldDocRef);
+  }
+
+  // Google認証とメール認証をリンク
+  async linkGoogleWithPassword(email: string, password: string): Promise<void> {
+    // 1. Google認証を実行
+    const googleProvider = new GoogleAuthProvider();
+    const googleCred = await signInWithPopup(this.auth, googleProvider);
+    // 2. メール認証のcredentialを作成
+    const emailCred = EmailAuthProvider.credential(email, password);
+    // 3. Google認証ユーザーにメール認証をリンク
+    await linkWithCredential(googleCred.user, emailCred);
+    // 4. FirestoreのisGoogleLinkedをtrueに
+    await this.setGoogleLinked(googleCred.user.uid);
+  }
+
+  // isGoogleLinkedをtrueに更新
+  async setGoogleLinked(uid: string) {
+    const userDoc = doc(this.firestore, 'users', uid);
+    await updateDoc(userDoc, { isGoogleLinked: true });
   }
 }

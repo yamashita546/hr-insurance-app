@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { Auth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from '@angular/fire/auth';
+import { Auth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, EmailAuthProvider, linkWithCredential } from '@angular/fire/auth';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -44,7 +44,8 @@ export class LoginComponent {
         return;
       }
       if (!appUser.isRegistered) {
-        this.router.navigate(['/register'], { queryParams: { uid: cred.user.uid } });
+        alert('初回ログインです。パスワード変更が必要です。');
+        this.router.navigate(['/register'], { queryParams: { uid: cred.user.uid, msg: 'first-login' } });
         return;
       }
       this.router.navigate(['/']);
@@ -67,8 +68,30 @@ export class LoginComponent {
       if (appUser.uid !== cred.user.uid) {
         await this.authService.updateUserUid(appUser.uid, cred.user.uid);
       }
+      // isRegistered=false かつ isGoogleLinked=false の場合はリンク処理
+      if (!appUser.isRegistered && !appUser.isGoogleLinked) {
+        const password = prompt('初回登録のため、仮パスワードを入力してください。\n（Google認証とメール認証を連携します）');
+        if (!password) {
+          alert('パスワードが入力されませんでした');
+          await this.authService.logout();
+          return;
+        }
+        try {
+          const emailCred = EmailAuthProvider.credential(cred.user.email!, password);
+          await linkWithCredential(cred.user, emailCred);
+          await this.authService.setGoogleLinked(cred.user.uid);
+          alert('Google認証とメール認証の連携が完了しました。パスワード変更に進みます。');
+          this.router.navigate(['/register'], { queryParams: { uid: cred.user.uid, msg: 'first-login' } });
+          return;
+        } catch (e: any) {
+          alert(e.message || 'Google認証とメール認証の連携に失敗しました');
+          await this.authService.logout();
+          return;
+        }
+      }
       if (!appUser.isRegistered) {
-        this.router.navigate(['/register'], { queryParams: { uid: cred.user.uid } });
+        alert('初回ログインです。パスワード変更が必要です。');
+        this.router.navigate(['/register'], { queryParams: { uid: cred.user.uid, msg: 'first-login' } });
         return;
       }
       this.router.navigate(['/']);

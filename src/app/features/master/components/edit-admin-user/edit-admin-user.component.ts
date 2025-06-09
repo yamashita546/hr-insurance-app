@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { AppUser } from '../../../../core/models/user.model';
 import { RouterModule } from '@angular/router';
+import { Auth, updateEmail, updatePassword } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-edit-admin-user',
@@ -24,7 +25,8 @@ export class EditAdminUserComponent {
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private firestoreService: FirestoreService
+    private firestoreService: FirestoreService,
+    private auth: Auth
   ) {
     this.editForm = this.fb.group({
       userId: ['', [Validators.required]],
@@ -76,8 +78,16 @@ export class EditAdminUserComponent {
         displayName: this.editForm.value.displayName,
         email: this.editForm.value.email
       };
-      if (!this.isRegistered) {
-        updateData.initialPassword = this.editForm.get('initialPassword')?.value;
+      // Firebase Authのユーザー情報も更新
+      const user = this.auth.currentUser;
+      if (user) {
+        if (user.email !== this.editForm.value.email) {
+          await updateEmail(user, this.editForm.value.email);
+        }
+        if (!this.isRegistered && this.editForm.get('initialPassword')?.dirty) {
+          await updatePassword(user, this.editForm.get('initialPassword')?.value);
+          updateData.initialPassword = this.editForm.get('initialPassword')?.value;
+        }
       }
       await this.firestoreService.updateUser(this.uid, updateData);
       alert('管理者ユーザー情報を更新しました');

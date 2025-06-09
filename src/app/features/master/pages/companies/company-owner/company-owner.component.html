@@ -5,11 +5,27 @@
 
 <div class="company-owner-list">
   <div class="table-wrapper">
+    <div class="filter-row">
+      <select [(ngModel)]="filterCompanyId" class="filter-select">
+        <option value="">全ての会社ID</option>
+        <option *ngFor="let company of companies" [value]="company.companyId">{{ company.companyId }}</option>
+      </select>
+      <select [(ngModel)]="filterCompanyName" class="filter-select">
+        <option value="">全ての会社名</option>
+        <option *ngFor="let company of companies" [value]="company.name">{{ company.name }}</option>
+      </select>
+    </div>
     <table class="owner-table">
       <thead>
         <tr>
-          <th>会社ID</th>
-          <th>会社名</th>
+          <th (click)="onSort('companyId')" class="sortable">
+            会社ID
+            <span *ngIf="sortKey === 'companyId'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+          </th>
+          <th (click)="onSort('companyName')" class="sortable">
+            会社名
+            <span *ngIf="sortKey === 'companyName'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+          </th>
           <th>ユーザーID</th>
           <th>氏名</th>
           <th>メールアドレス</th>
@@ -19,7 +35,7 @@
         </tr>
       </thead>
       <tbody>
-        <ng-container *ngFor="let company of companies">
+        <ng-container *ngFor="let company of filteredAndSortedCompanies()">
           <ng-container *ngIf="ownerUsers[company.companyKey] && ownerUsers[company.companyKey].length > 0; else noOwnerRow">
             <tr *ngFor="let user of ownerUsers[company.companyKey]">
               <td>{{ company.companyId }}</td>

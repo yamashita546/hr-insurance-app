@@ -430,12 +430,27 @@ export class FirestoreService {
       .sort((a, b) => (b['applyYearMonth'] || '').localeCompare(a['applyYearMonth'] || ''));
   }
 
-  // 管理者ユーザー一覧取得
-  async getAdminUsersByCompanyKey(companyKey: string): Promise<AppUser[]> {
+  // 指定会社・ロールのユーザー一覧取得（admin/owner/operator共通）
+  async getUsersByCompanyKeyAndRole(companyKey: string, role: string): Promise<AppUser[]> {
     const usersCol = collection(this.firestore, 'users');
-    const q = query(usersCol, where('companyKey', '==', companyKey), where('role', '==', 'admin'));
+    const q = query(usersCol, where('companyKey', '==', companyKey), where('role', '==', role));
     const snap = await getDocs(q);
     return snap.docs.map(doc => ({ ...(doc.data() as AppUser) }));
+  }
+
+  // 管理者ユーザー一覧取得
+  async getAdminUsersByCompanyKey(companyKey: string): Promise<AppUser[]> {
+    return this.getUsersByCompanyKeyAndRole(companyKey, 'admin');
+  }
+
+  // オーナーユーザー一覧取得
+  async getOwnerUsersByCompanyKey(companyKey: string): Promise<AppUser[]> {
+    return this.getUsersByCompanyKeyAndRole(companyKey, 'owner');
+  }
+
+  // オペレーターユーザー一覧取得
+  async getOperatorUsersByCompanyKey(companyKey: string): Promise<AppUser[]> {
+    return this.getUsersByCompanyKeyAndRole(companyKey, 'operator');
   }
 
   async deleteUser(uid: string) {
@@ -444,5 +459,12 @@ export class FirestoreService {
 
   async updateUser(uid: string, data: Partial<AppUser>) {
     await setDoc(doc(this.firestore, 'users', uid), data, { merge: true });
+  }
+
+  // uidでAppUserを取得
+  async getAppUserByUid(uid: string): Promise<AppUser | null> {
+    const userDoc = doc(this.firestore, 'users', uid);
+    const snap = await getDoc(userDoc);
+    return snap.exists() ? (snap.data() as AppUser) : null;
   }
 }

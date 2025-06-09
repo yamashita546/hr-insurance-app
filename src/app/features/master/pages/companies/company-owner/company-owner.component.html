@@ -1,1 +1,54 @@
-<p>company-owner works!</p>
+<div class="owner-header">
+  <h2>会社オーナーユーザー一覧</h2>
+  <button class="add-owner-btn" [routerLink]="['/add-owner-user']">オーナーユーザー追加</button>
+</div>
+
+<div class="company-owner-list">
+  <div class="table-wrapper">
+    <table class="owner-table">
+      <thead>
+        <tr>
+          <th>会社ID</th>
+          <th>会社名</th>
+          <th>ユーザーID</th>
+          <th>氏名</th>
+          <th>メールアドレス</th>
+          <th>登録状態</th>
+          <th>作成日</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let company of companies">
+          <ng-container *ngIf="ownerUsers[company.companyKey] && ownerUsers[company.companyKey].length > 0; else noOwnerRow">
+            <tr *ngFor="let user of ownerUsers[company.companyKey]">
+              <td>{{ company.companyId }}</td>
+              <td>{{ company.name }}</td>
+              <td>{{ user.userId }}</td>
+              <td>{{ user.displayName }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.isRegistered ? '登録済み' : '未登録' }}</td>
+              <td>{{ user.createdAt | dateTimestamp:'yyyy/MM/dd' }}</td>
+              <td>
+                <button class="edit-btn" [routerLink]="['/edit-owner-user', user.uid]">編集</button>
+                <button class="delete-btn">削除</button>
+              </td>
+            </tr>
+          </ng-container>
+          <ng-template #noOwnerRow>
+            <tr>
+              <td>{{ company.companyId }}</td>
+              <td>{{ company.name }}</td>
+              <td>ー</td>
+              <td>登録がありません</td>
+              <td>ー</td>
+              <td>ー</td>
+              <td>ー</td>
+              <td>ー</td>
+            </tr>
+          </ng-template>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+</div>

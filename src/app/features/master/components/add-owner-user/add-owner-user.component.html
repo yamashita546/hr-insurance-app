@@ -1,0 +1,31 @@
+<div class="form-card">
+  <div class="form-title">オーナーユーザー追加</div>
+  <form [formGroup]="ownerForm" (ngSubmit)="onSubmit()">
+    <div *ngIf="errorMsg" class="error-message">{{ errorMsg }}</div>
+    <label for="companyKey">会社 <span style="color:#d32f2f">*</span></label>
+    <select id="companyKey" formControlName="companyKey" [class.invalid]="ownerForm.get('companyKey')?.invalid && ownerForm.get('companyKey')?.touched">
+      <option value="" disabled selected>会社を選択してください</option>
+      <option *ngFor="let company of companies" [value]="company.companyKey">{{ company.name }}（{{ company.companyId }}）</option>
+    </select>
+    <div *ngIf="ownerForm.get('companyKey')?.invalid && ownerForm.get('companyKey')?.touched" class="error-message">会社は必須です</div>
+
+    <label for="userId">ユーザーID <span style="color:#d32f2f">*</span></label>
+    <input id="userId" type="text" formControlName="userId" [class.invalid]="ownerForm.get('userId')?.invalid && ownerForm.get('userId')?.touched" />
+    <div *ngIf="ownerForm.get('userId')?.invalid && ownerForm.get('userId')?.touched" class="error-message">ユーザーIDは必須です</div>
+
+    <label for="displayName">氏名 <span style="color:#d32f2f">*</span></label>
+    <input id="displayName" type="text" formControlName="displayName" [class.invalid]="ownerForm.get('displayName')?.invalid && ownerForm.get('displayName')?.touched" />
+    <div *ngIf="ownerForm.get('displayName')?.invalid && ownerForm.get('displayName')?.touched" class="error-message">氏名は必須です</div>
+
+    <label for="email">メールアドレス <span style="color:#d32f2f">*</span></label>
+    <input id="email" type="email" formControlName="email" [class.invalid]="ownerForm.get('email')?.invalid && ownerForm.get('email')?.touched" />
+    <div *ngIf="ownerForm.get('email')?.invalid && ownerForm.get('email')?.touched" class="error-message">有効なメールアドレスを入力してください</div>
+
+    <label for="initialPassword">初期パスワード <span style="color:#d32f2f">*</span></label>
+    <input id="initialPassword" type="password" formControlName="initialPassword" [class.invalid]="ownerForm.get('initialPassword')?.invalid && ownerForm.get('initialPassword')?.touched" />
+    <div *ngIf="ownerForm.get('initialPassword')?.invalid && ownerForm.get('initialPassword')?.touched" class="error-message">8文字以上のパスワードを入力してください</div>
+
+    <button type="submit" [disabled]="ownerForm.invalid || loading">登録</button>
+    <span *ngIf="loading" style="margin-left: 1em; color: #1976d2;">登録中...</span>
+  </form>
+</div>

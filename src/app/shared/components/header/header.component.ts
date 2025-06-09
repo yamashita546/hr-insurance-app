@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
+import { RouterModule } from '@angular/router';
 
 
 @Component({
@@ -9,7 +10,7 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
 })
 export class HeaderComponent {
   menuOpen = false;

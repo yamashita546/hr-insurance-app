@@ -38,6 +38,9 @@ import { DetailSalaryComponent } from './features/salary-data/components/detail-
 import { DetailStandardMonthlyComponent } from './features/salary-data/components/detail-standard-monthly/detail-standard-monthly.component';
 import { AddAdminUserComponent } from './features/master/components/add-admin-user/add-admin-user.component';
 import { EditAdminUserComponent } from './features/master/components/edit-admin-user/edit-admin-user.component';
+import { AddOwnerUserComponent } from './features/master/components/add-owner-user/add-owner-user.component';
+import { EditOwnerUserComponent } from './features/master/components/edit-owner-user/edit-owner-user.component';
+
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -82,6 +85,8 @@ export const routes: Routes = [
       { path: 'detail-standard-monthly', component: DetailStandardMonthlyComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'add-admin-user', component: AddAdminUserComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'edit-admin-user/:uid', component: EditAdminUserComponent, canDeactivate: [CanDeactivateDialogGuard] },
+      { path: 'add-owner-user', component: AddOwnerUserComponent, canDeactivate: [CanDeactivateDialogGuard] },
+      { path: 'edit-owner-user/:uid', component: EditOwnerUserComponent, canDeactivate: [CanDeactivateDialogGuard] },
     ],
   },
 ];

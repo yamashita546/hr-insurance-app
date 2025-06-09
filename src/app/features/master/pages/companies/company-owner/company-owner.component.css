@@ -1,0 +1,108 @@
+/* 全体レイアウト */
+.company-owner-list {
+  margin: 24px 0;
+}
+.company-section {
+  margin-bottom: 40px;
+  background: #fafbfc;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 20px 16px 8px 16px;
+}
+.company-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #1976d2;
+}
+
+/* テーブル */
+.table-wrapper {
+  overflow-x: auto;
+  min-width: 100%;
+}
+.owner-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  background: #fff;
+  margin-bottom: 8px;
+  table-layout: auto;
+}
+.owner-table th, .owner-table td {
+  border: 1px solid #e0e0e0;
+  padding: 8px 12px;
+  text-align: center;
+  white-space: normal;
+  word-break: break-all;
+  vertical-align: middle;
+}
+.owner-table th {
+  background: #f5f7fa;
+  font-weight: 600;
+  color: #333;
+}
+.owner-table tr:nth-child(even) {
+  background: #f9f9fb;
+}
+.owner-table tr:hover {
+  background: #e3f2fd;
+}
+.no-owner-users {
+  text-align: center;
+  color: #888;
+  background: #f5f7fa;
+}
+
+/* ボタン */
+.add-owner-btn {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: background 0.2s;
+}
+.add-owner-btn:hover {
+  background: #1565c0;
+}
+.edit-btn, .delete-btn {
+  background: #fff;
+  border: 1px solid #1976d2;
+  color: #1976d2;
+  border-radius: 4px;
+  padding: 4px 10px;
+  margin-right: 4px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+.edit-btn:hover {
+  background: #1976d2;
+  color: #fff;
+}
+.delete-btn {
+  border-color: #e53935;
+  color: #e53935;
+}
+.delete-btn:hover {
+  background: #e53935;
+  color: #fff;
+}
+
+/* ヘッダー */
+.owner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.owner-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #222;
+}

@@ -1,0 +1,42 @@
+<div class="form-card">
+  <div class="form-title">オーナーユーザー編集</div>
+  <form [formGroup]="ownerForm" (ngSubmit)="onSubmit()">
+    <div *ngIf="errorMsg" class="error-message">{{ errorMsg }}</div>
+
+    <div class="form-group">
+      <label for="companyKey">会社</label>
+      <select id="companyKey" formControlName="companyKey" [disabled]="true">
+        <option *ngFor="let company of companies" [value]="company.companyKey">{{ company.name }}（{{ company.companyId }}）</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="userId">ユーザーID</label>
+      <input id="userId" type="text" formControlName="userId" [disabled]="true" />
+    </div>
+
+    <div class="form-group">
+      <label for="displayName">氏名 <span class="required">*</span></label>
+      <input id="displayName" type="text" formControlName="displayName" [class.invalid]="ownerForm.get('displayName')?.invalid && ownerForm.get('displayName')?.touched" />
+      <div *ngIf="ownerForm.get('displayName')?.invalid && ownerForm.get('displayName')?.touched" class="error-message">氏名は必須です</div>
+    </div>
+
+    <div class="form-group">
+      <label for="email">メールアドレス <span class="required">*</span></label>
+      <input id="email" type="email" formControlName="email" [class.invalid]="ownerForm.get('email')?.invalid && ownerForm.get('email')?.touched" />
+      <div *ngIf="ownerForm.get('email')?.invalid && ownerForm.get('email')?.touched" class="error-message">有効なメールアドレスを入力してください</div>
+    </div>
+
+    <div class="form-group">
+      <label for="initialPassword">初期パスワード</label>
+      <input id="initialPassword" type="text" formControlName="initialPassword" />
+      <div class="password-note" [class.disabled]="isRegistered">
+        <span *ngIf="isRegistered">本登録済みのユーザーは初期パスワードを変更できません</span>
+        <span *ngIf="!isRegistered">未登録ユーザーは初期パスワードを変更できます</span>
+      </div>
+    </div>
+
+    <button type="submit" [disabled]="ownerForm.invalid || loading">保存</button>
+    <span *ngIf="loading" class="saving-note">保存中...</span>
+  </form>
+</div>

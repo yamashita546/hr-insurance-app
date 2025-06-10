@@ -337,6 +337,37 @@ export class SalaryFormComponent implements OnInit {
         errors.push(`${i+1}行目: targetYearまたはtargetMonthが未入力です`);
         continue;
       }
+      // 配列項目のパース
+      row.otherAllowances = [];
+      row.inKindAllowances = [];
+      row.retroAllowances = [];
+      row.actualExpenses = [];
+      for (let k = 0; k < 3; k++) {
+        if (row[`otherAllowances[${k}].name`] || row[`otherAllowances[${k}].amount`]) {
+          row.otherAllowances.push({
+            name: row[`otherAllowances[${k}].name`] || '',
+            amount: Number(row[`otherAllowances[${k}].amount`] || 0)
+          });
+        }
+        if (row[`inKindAllowances[${k}].name`] || row[`inKindAllowances[${k}].amount`]) {
+          row.inKindAllowances.push({
+            name: row[`inKindAllowances[${k}].name`] || '',
+            amount: Number(row[`inKindAllowances[${k}].amount`] || 0)
+          });
+        }
+        if (row[`retroAllowances[${k}].name`] || row[`retroAllowances[${k}].amount`]) {
+          row.retroAllowances.push({
+            name: row[`retroAllowances[${k}].name`] || '',
+            amount: Number(row[`retroAllowances[${k}].amount`] || 0)
+          });
+        }
+        if (row[`actualExpenses[${k}].name`] || row[`actualExpenses[${k}].amount`]) {
+          row.actualExpenses.push({
+            name: row[`actualExpenses[${k}].name`] || '',
+            amount: Number(row[`actualExpenses[${k}].amount`] || 0)
+          });
+        }
+      }
       data.push(row);
     }
     return { data, errors };
@@ -467,7 +498,12 @@ export class SalaryFormComponent implements OnInit {
         'targetYear', 'targetMonth',
         'basicSalary', 'overtimeSalary', 'commuteAllowance',
         'commuteAllowancePeriodFrom', 'commuteAllowancePeriodTo', 'commuteAllowanceMonths',
-        'positionAllowance', 'otherAllowance',
+        'positionAllowance',
+        // 配列項目（1セット分）
+        'otherAllowances[0].name', 'otherAllowances[0].amount',
+        'inKindAllowances[0].name', 'inKindAllowances[0].amount',
+        'retroAllowances[0].name', 'retroAllowances[0].amount',
+        'actualExpenses[0].name', 'actualExpenses[0].amount',
         'totalAllowance', 'totalSalary', 'remarks'
       ];
       const rows = targetEmployees.map(emp => [
@@ -478,7 +514,12 @@ export class SalaryFormComponent implements OnInit {
         emp.officeId || '',
         this.csvYear,
         this.csvMonth,
-        '', '', '', '', '', '', '', '', '', '', '' // 空欄（入力用）
+        '', '', '', '', '', '', '', // 既存項目
+        '', '', // otherAllowances[0]
+        '', '', // inKindAllowances[0]
+        '', '', // retroAllowances[0]
+        '', '', // actualExpenses[0]
+        '', '', '' // 合計・備考
       ]);
       const csv = [header.join(','), ...rows.map(r => r.join(','))].join('\r\n');
       const blob = new Blob([csv], { type: 'text/csv' });

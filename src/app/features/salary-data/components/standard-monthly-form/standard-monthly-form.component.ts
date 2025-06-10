@@ -28,6 +28,7 @@ export class StandardMonthlyFormComponent implements OnInit {
   salaries: any[] = [];
   standardMonthlyGrades: any[] = [];
   standardMonthlyDecisions: StandardMonthlyDecision[] = [];
+  attendances: any[] = [];
 
   // フォーム用バインド変数
   selectedOfficeId: string = '';
@@ -56,6 +57,67 @@ export class StandardMonthlyFormComponent implements OnInit {
   editMode = false;
   editingDecisionId: string | null = null;
   decisionToEdit: any = null;
+
+  // 算出根拠入力用
+  calculationRows: any[] = [];
+
+  get totalSum() {
+    return this.calculationRows.filter(row => !row.excluded).reduce((acc, row) => acc + (row.sum || 0), 0);
+  }
+  get average() {
+    const includedRows = this.calculationRows.filter(row => !row.excluded);
+    return includedRows.length > 0 ? Math.round(this.totalSum / includedRows.length) : 0;
+  }
+  get modifiedAverage() {
+    // 修正平均額も同様に対象外を除外して計算（現状は手動入力欄なので、必要ならここで自動計算も可）
+    const includedRows = this.calculationRows.filter(row => !row.excluded);
+    return includedRows.length > 0 ? Math.round(this.totalSum / includedRows.length) : 0;
+  }
+
+  // 指定した期間の月リストを生成
+  private generateCalculationRows() {
+    const rows = [];
+    let year = this.salaryFromYear;
+    let month = this.salaryFromMonth;
+    while (year < this.salaryToYear || (year === this.salaryToYear && month <= this.salaryToMonth)) {
+      rows.push({
+        year,
+        month,
+        days: 0,
+        cash: 0,
+        cashRetro: 0,
+        inKind: 0,
+        inKindRetro: 0,
+        sum: 0,
+        excluded: false
+      });
+      month++;
+      if (month > 12) {
+        year++;
+        month = 1;
+      }
+    }
+    this.calculationRows = rows;
+  }
+
+  updateRowSum(i: number) {
+    const row = this.calculationRows[i];
+    row.sum = Number(row.cash || 0) + Number(row.cashRetro || 0) + Number(row.inKind || 0) + Number(row.inKindRetro || 0);
+  }
+
+  // 算出根拠期間が変わったら自動でcalculationRowsを再生成
+  onSalaryPeriodChange() {
+    this.generateCalculationRows();
+  }
+
+  onSaveCalculation() {
+    // 保存処理をここに実装
+    alert('保存しました（ダミー）');
+  }
+
+  // チェック項目用
+  checkItems: boolean[] = Array(10).fill(false);
+  otherCheckText: string = '';
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -92,9 +154,11 @@ export class StandardMonthlyFormComponent implements OnInit {
         const grades = await firstValueFrom(this.firestoreService.getStandardMonthlyGrades());
         this.standardMonthlyGrades = grades || [];
         this.standardMonthlyDecisions = await this.firestoreService.getStandardMonthlyDecisionsByCompanyKey(this.companyKey);
+        this.attendances = await this.firestoreService.getAttendancesByCompanyKey(this.companyKey);
         if (this.editMode && this.decisionToEdit) {
           this.setFormForEdit(this.decisionToEdit);
         }
+        this.generateCalculationRows();
       });
   }
 
@@ -194,6 +258,45 @@ export class StandardMonthlyFormComponent implements OnInit {
       this.onEntryDecision();
       this.isConfirmed = false;
       return;
+    }
+    // 決定時：支払い基礎日数自動計算
+    const emp = this.employees.find(e => e.employeeId === this.selectedEmployeeId);
+    console.log('選択従業員:', emp);
+    if (emp) {
+      console.log('emp.employeeType:', emp.employeeType);
+    }
+    // パート・アルバイトの場合は勤怠から取得
+    if (emp && (emp.employeeType === 'parttime' || emp.employeeType === 'parttimejob')) {
+      this.calculationRows.forEach((row, idx) => {
+        // 勤怠データから該当月のactualWorkDaysを取得（employeeId, year, monthをすべて文字列で比較）
+        const att = this.attendances.find(a => String(a.employeeId) === String(emp.employeeId) && String(a.year) === String(row.year) && String(a.month) === String(row.month));
+        console.log(`【${row.year}年${row.month}月】attendance:`, att);
+        if (att) {
+          console.log(`actualWorkDays:`, att.actualWorkDays);
+        } else {
+          console.log('attendanceデータが見つかりません');
+        }
+        row.days = att && att.actualWorkDays != null ? att.actualWorkDays : 0;
+      });
+    } else if (emp && (emp.employeeType === 'regular' || emp.employeeType === 'contract')) {
+      const office = this.offices.find(o => o.id === emp.officeId);
+      console.log('従業員のoffice:', office);
+      const closingDay = office && office.salaryClosingDate ? Number(office.salaryClosingDate) : null;
+      console.log('salaryClosingDate:', closingDay);
+      if (closingDay && this.calculationRows.length > 0) {
+        this.calculationRows.forEach((row, idx) => {
+          const year = row.year;
+          const month = row.month;
+          let prevYear = month === 1 ? year - 1 : year;
+          let prevMonth = month === 1 ? 12 : month - 1;
+          const fromDate = new Date(prevYear, prevMonth - 1, closingDay + 1);
+          const toDate = new Date(year, month - 1, closingDay);
+          const diff = (toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24) + 1;
+          console.log(`【${year}年${month}月】from:`, fromDate, 'to:', toDate, 'diff:', diff);
+          row.days = diff;
+        });
+        console.log('calculationRows after days set:', this.calculationRows);
+      }
     }
     // 定時決定・随時改定など
     let filteredEmployees = this.employees;
@@ -932,20 +1035,23 @@ export class StandardMonthlyFormComponent implements OnInit {
   }
 
   get currentDecision() {
-    if (!this.selectedEmployeeId || !this.selectedOfficeId) return null;
-    return this.standardMonthlyDecisions
-      .filter(r => r.employeeId === this.selectedEmployeeId && r.officeId === this.selectedOfficeId)
-      .sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth))[0] || null;
+    if (!this.selectedEmployeeId) return null;
+    // 事業所IDが選択されていればそれで絞り込むが、未選択なら従業員IDのみで取得
+    let filtered = this.standardMonthlyDecisions.filter(r => r.employeeId === this.selectedEmployeeId);
+    if (this.selectedOfficeId) {
+      filtered = filtered.filter(r => r.officeId === this.selectedOfficeId);
+    }
+    return filtered.sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth))[0] || null;
   }
 
   get hasNextDecision(): boolean {
-    if (!this.selectedEmployeeId || !this.selectedOfficeId) return false;
+    if (!this.selectedEmployeeId) return false;
     const current = this.currentDecision;
     if (!current) return false;
-    // 次回等級＝現等級より後のapplyYearMonthが存在するか
+    // 事業所IDが選択されていればそれで絞り込むが、未選択なら従業員IDのみで判定
     return this.standardMonthlyDecisions.some(r =>
       r.employeeId === this.selectedEmployeeId &&
-      r.officeId === this.selectedOfficeId &&
+      (!this.selectedOfficeId || r.officeId === this.selectedOfficeId) &&
       r.applyYearMonth > current.applyYearMonth
     );
   }

@@ -80,7 +80,42 @@
         </div>
         <div class="salary-input-row">
           <label>その他手当</label>
-          <span>¥ <input type="number" [(ngModel)]="salaryForm.otherAllowance" (ngModelChange)="calculateTotalSalary()"></span>
+          <div *ngFor="let item of otherAllowances; let i = index" style="display:flex;align-items:center;gap:4px;">
+            <input type="text" [(ngModel)]="item.name" placeholder="名称" style="width:120px;">
+            <input type="number" [(ngModel)]="item.amount" (ngModelChange)="calculateTotalSalary()" placeholder="金額" style="width:100px;">
+            <button type="button" (click)="removeOtherAllowance(i)">削除</button>
+          </div>
+          <button type="button" (click)="addOtherAllowance()">＋追加</button>
+        </div>
+        <!-- 現物支給ブロック -->
+        <div class="salary-input-row">
+          <label>現物支給</label>
+          <div *ngFor="let item of inKindAllowances; let i = index" style="display:flex;align-items:center;gap:4px;">
+            <input type="text" [(ngModel)]="item.name" placeholder="名称" style="width:120px;">
+            <input type="number" [(ngModel)]="item.amount" (ngModelChange)="calculateTotalSalary()" placeholder="金額" style="width:100px;">
+            <button type="button" (click)="removeInKindAllowance(i)">削除</button>
+          </div>
+          <button type="button" (click)="addInKindAllowance()">＋追加</button>
+        </div>
+        <!-- 遡及ブロック -->
+        <div class="salary-input-row">
+          <label>遡及</label>
+          <div *ngFor="let item of retroAllowances; let i = index" style="display:flex;align-items:center;gap:4px;">
+            <input type="text" [(ngModel)]="item.name" placeholder="名称" style="width:120px;">
+            <input type="number" [(ngModel)]="item.amount" (ngModelChange)="calculateTotalSalary()" placeholder="金額" style="width:100px;">
+            <button type="button" (click)="removeRetroAllowance(i)">削除</button>
+          </div>
+          <button type="button" (click)="addRetroAllowance()">＋追加</button>
+        </div>
+        <!-- 実費精算ブロック -->
+        <div class="salary-input-row">
+          <label>実費精算</label>
+          <div *ngFor="let item of actualExpenses; let i = index" style="display:flex;align-items:center;gap:4px;">
+            <input type="text" [(ngModel)]="item.name" placeholder="名称" style="width:120px;">
+            <input type="number" [(ngModel)]="item.amount" (ngModelChange)="calculateTotalSalary()" placeholder="金額" style="width:100px;">
+            <button type="button" (click)="removeActualExpense(i)">削除</button>
+          </div>
+          <button type="button" (click)="addActualExpense()">＋追加</button>
         </div>
       </div>
       <div class="salary-total-row">

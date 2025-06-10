@@ -2,15 +2,35 @@
 export interface Salary {
     employeeId: string;
     targetYearMonth: string;
+
+    // 基本給関連
     basicSalary: number; // 基本給
     overtimeSalary: number; // 残業手当
-    otherAllowanceName?: string; // その他手当名
-    otherAllowance?: number; // その他手当
-    // 通勤手当関連
-    commuteAllowance?: number;
+    commuteAllowance?: number; // 通勤手当
     commuteAllowanceMonths?: number; // 何か月分か
     commuteAllowancePeriodFrom?: string; // 対象期間開始（YYYY-MM）
     commuteAllowancePeriodTo?: string;   // 対象期間終了（YYYY-MM）
+    splitCurrency?: number; // 通勤費按分
+    otherAllowanceName?: string; // その他手当名
+    otherAllowance?: number; // その他手当
+    totalCurrency?: number; // 通貨合計
+  
+    // 現物支給関連
+    inKindAllowance?: number; // 現物支給
+    inKindAllowanceName?: string; // 現物支給名称
+    totalInKind?: number; // 現物合計
+
+    // 遡及手当関連
+    retroAllowance?: number; // 遡及手当
+    retroAllowanceName?: string; // 遡及手当名称
+    totalRetro?: number; // 遡及合計
+
+    // 実費精算関連
+    actualExpense?: number; // 実費精算
+    actualExpenseName?: string; // 実費精算名称
+    totalActualExpense?: number; // 実費精算合計
+
+    // 総手当関連
     totalAllowance: number; // 総手当
     totalSalary: number; // 総支給額
     remarks?: string; // 備考

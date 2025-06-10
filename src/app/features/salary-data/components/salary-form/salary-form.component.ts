@@ -45,6 +45,14 @@ export class SalaryFormComponent implements OnInit {
   showCsvImportTypeDialog = false;
   editMode: 'salary' | 'bonus' | null = null;
   editTarget: any = null;
+  otherAllowances: any[] = [];
+  totalOtherAllowance: number = 0;
+  inKindAllowances: any[] = [];
+  totalInKind: number = 0;
+  retroAllowances: any[] = [];
+  totalRetro: number = 0;
+  actualExpenses: any[] = [];
+  totalActualExpense: number = 0;
 
   get bonusTotal() {
     return this.bonusForms.reduce((sum, b) => sum + (Number(b.bonus) || 0), 0);
@@ -109,8 +117,11 @@ export class SalaryFormComponent implements OnInit {
     const overtime = Number(this.salaryForm.overtimeSalary) || 0;
     const commute = Number(this.salaryForm.commuteAllowance) || 0;
     const position = Number(this.salaryForm.positionAllowance) || 0;
-    const other = Number(this.salaryForm.otherAllowance) || 0;
-    this.totalSalary = basic + overtime + commute + position + other;
+    this.totalOtherAllowance = this.otherAllowances.reduce((sum: number, a: {name: string, amount: number}) => sum + (Number(a.amount) || 0), 0);
+    this.totalInKind = this.inKindAllowances.reduce((sum: number, a: {name: string, amount: number}) => sum + (Number(a.amount) || 0), 0);
+    this.totalRetro = this.retroAllowances.reduce((sum: number, a: {name: string, amount: number}) => sum + (Number(a.amount) || 0), 0);
+    this.totalActualExpense = this.actualExpenses.reduce((sum: number, a: {name: string, amount: number}) => sum + (Number(a.amount) || 0), 0);
+    this.totalSalary = basic + overtime + commute + position + this.totalOtherAllowance + this.totalInKind + this.totalRetro + this.totalActualExpense;
   }
 
   addBonusRow() {
@@ -119,6 +130,42 @@ export class SalaryFormComponent implements OnInit {
 
   removeBonusRow(i: number) {
     if (this.bonusForms.length > 1) this.bonusForms.splice(i, 1);
+  }
+
+  addInKindAllowance() {
+    this.inKindAllowances.push({ name: '', amount: 0 });
+  }
+
+  removeInKindAllowance(i: number) {
+    this.inKindAllowances.splice(i, 1);
+    this.calculateTotalSalary();
+  }
+
+  addRetroAllowance() {
+    this.retroAllowances.push({ name: '', amount: 0 });
+  }
+
+  removeRetroAllowance(i: number) {
+    this.retroAllowances.splice(i, 1);
+    this.calculateTotalSalary();
+  }
+
+  addActualExpense() {
+    this.actualExpenses.push({ name: '', amount: 0 });
+  }
+
+  removeActualExpense(i: number) {
+    this.actualExpenses.splice(i, 1);
+    this.calculateTotalSalary();
+  }
+
+  addOtherAllowance() {
+    this.otherAllowances.push({ name: '', amount: 0 });
+  }
+
+  removeOtherAllowance(i: number) {
+    this.otherAllowances.splice(i, 1);
+    this.calculateTotalSalary();
   }
 
   async onSave() {
@@ -144,16 +191,16 @@ export class SalaryFormComponent implements OnInit {
         alert('既に給与が登録されています。');
         return;
       }
-      // otherAllowances配列は「その他手当」のみ格納
-      const otherAllowances = [];
-      if (this.salaryForm.otherAllowance) {
-        otherAllowances.push({
-          otherAllowanceName: 'その他手当',
-          otherAllowance: Number(this.salaryForm.otherAllowance) || 0
-        });
-      }
-      const totalAllowance = (Number(this.salaryForm.commuteAllowance) || 0) + (Number(this.salaryForm.positionAllowance) || 0) + (Number(this.salaryForm.otherAllowance) || 0);
-      const totalSalary = (Number(this.salaryForm.basicSalary) || 0) + (Number(this.salaryForm.overtimeSalary) || 0) + totalAllowance;
+      // 合計値計算
+      const totalAllowance = (Number(this.salaryForm.commuteAllowance) || 0)
+        + (Number(this.salaryForm.positionAllowance) || 0)
+        + this.totalOtherAllowance;
+      const totalSalary = (Number(this.salaryForm.basicSalary) || 0)
+        + (Number(this.salaryForm.overtimeSalary) || 0)
+        + totalAllowance
+        + this.totalInKind
+        + this.totalRetro
+        + this.totalActualExpense;
       const salary = {
         companyKey: this.companyKey,
         employeeId: this.selectedEmployeeObj.employeeId,
@@ -162,8 +209,14 @@ export class SalaryFormComponent implements OnInit {
         overtimeSalary: Number(this.salaryForm.overtimeSalary) || 0,
         commuteAllowance: Number(this.salaryForm.commuteAllowance) || 0,
         positionAllowance: Number(this.salaryForm.positionAllowance) || 0,
-        otherAllowance: Number(this.salaryForm.otherAllowance) || 0,
-        otherAllowances: otherAllowances,
+        otherAllowances: this.otherAllowances,
+        totalOtherAllowance: this.totalOtherAllowance,
+        inKindAllowances: this.inKindAllowances,
+        totalInKind: this.totalInKind,
+        retroAllowances: this.retroAllowances,
+        totalRetro: this.totalRetro,
+        actualExpenses: this.actualExpenses,
+        totalActualExpense: this.totalActualExpense,
         totalAllowance,
         totalSalary,
         remarks: this.salaryForm.remarks || '',

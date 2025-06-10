@@ -1,6 +1,6 @@
 <div class="operator-header">
-  <h2>実務担当者一覧</h2>
-  <button class="add-operator-btn" [routerLink]="['/add-operator-user']">実務担当者追加</button>
+  <h2>企業管理ユーザー 一覧</h2>
+  <button class="add-operator-btn" [routerLink]="['/add-operator-user']">担当者追加</button>
 </div>
 
 <div class="company-info">
@@ -16,25 +16,27 @@
           <th>ユーザーID</th>
           <th>氏名</th>
           <th>メールアドレス</th>
+          <th>権限</th>
           <th>登録状態</th>
           <th>作成日</th>
           <th>操作</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let user of operatorUsers">
+        <tr *ngFor="let user of allUsers">
           <td>{{ user.userId }}</td>
           <td>{{ user.displayName }}</td>
           <td>{{ user.email }}</td>
+          <td>{{ user.role }}</td>
           <td>{{ user.isRegistered ? '登録済み' : '未登録' }}</td>
           <td>{{ user.createdAt | dateTimestamp:'yyyy/MM/dd' }}</td>
           <td>
-            <button class="edit-btn" [routerLink]="['/edit-operator-user', user.uid]">編集</button>
+            <button class="edit-btn" [routerLink]="[user.role === 'owner' ? '/edit-owner-user' : '/edit-operator-user', user.uid]">編集</button>
             <button class="delete-btn">削除</button>
           </td>
         </tr>
-        <tr *ngIf="operatorUsers.length === 0">
-          <td colspan="6" class="no-operator-users">実務担当者が登録されていません</td>
+        <tr *ngIf="allUsers.length === 0">
+          <td colspan="7" class="no-operator-users">ユーザーが登録されていません</td>
         </tr>
       </tbody>
     </table>

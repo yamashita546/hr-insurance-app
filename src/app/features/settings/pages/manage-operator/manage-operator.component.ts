@@ -18,6 +18,8 @@ export class ManageOperatorComponent implements OnInit {
   companyId: string = '';
   companyName: string = '';
   operatorUsers: AppUser[] = [];
+  ownerUsers: AppUser[] = [];
+  allUsers: AppUser[] = [];
 
   constructor(private firestoreService: FirestoreService, private userCompanyService: UserCompanyService) {}
 
@@ -34,5 +36,7 @@ export class ManageOperatorComponent implements OnInit {
 
   async loadOperatorUsers(companyKey: string) {
     this.operatorUsers = await this.firestoreService.getOperatorUsersByCompanyKey(companyKey);
+    this.ownerUsers = await this.firestoreService.getOwnerUsersByCompanyKey(companyKey);
+    this.allUsers = [...this.operatorUsers, ...this.ownerUsers];
   }
 }

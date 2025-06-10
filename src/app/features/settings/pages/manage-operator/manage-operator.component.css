@@ -39,6 +39,7 @@
   background: #fff;
   margin-bottom: 8px;
   table-layout: auto;
+  font-size: 0.9rem;
 }
 .operator-table th, .operator-table td {
   border: 1px solid #e0e0e0;

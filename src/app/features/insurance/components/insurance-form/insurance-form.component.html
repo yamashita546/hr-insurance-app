@@ -94,6 +94,10 @@
                           <span *ngIf="!row.salaryBreakdown.isMatch" style="color:red;">（DB合計と不一致）</span>
                         </div>
                         <div>
+                          <strong>標準報酬月額:</strong>
+                          {{ row.monthly }}（{{ row.grade }}）
+                        </div>
+                        <div>
                           <strong>控除・会社負担計算根拠:</strong><br>
                           適用都道府県: {{ row.prefectureName || 'ー' }}<br>
                           健康保険料率: {{ row.healthRate }}%<span *ngIf="row.careRate && row.careRate > 0">（介護保険料率: {{ row.careRate }}% も加算）</span><br>

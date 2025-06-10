@@ -4,7 +4,7 @@ import { AppUser } from '../../../../../core/models/user.model';
 import { Company } from '../../../../../core/models/company.model';
 import { DateTimestampPipe } from '../../../../../core/pipe/date-timestamp.pipe';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule , Router} from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
 @Component({

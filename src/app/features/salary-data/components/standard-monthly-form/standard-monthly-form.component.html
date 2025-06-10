@@ -18,17 +18,18 @@
     <div *ngIf="decisionType === 'fixed'">
       <div class="form-row">
         <label>事業所</label>
-        <select [(ngModel)]="selectedOfficeId" name="office" [disabled]="editMode">
+        <select [(ngModel)]="selectedOfficeId" name="office" [disabled]="editMode" (change)="onOfficeChange()">
           <option value="">全事業所</option>
           <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
         </select>
         <label>従業員</label>
         <select [(ngModel)]="selectedEmployeeId" name="employeeId" [disabled]="editMode">
-          <option value="">全従業員</option>
-          <option *ngFor="let emp of employeesSortedByIdName" [value]="emp.employeeId">
+          <option value="">従業員を選択</option>
+          <option *ngFor="let emp of filteredEmployeesByOffice" [value]="emp.employeeId">
             {{ emp.employeeId }} {{ emp.lastName }}{{ emp.firstName }}
           </option>
         </select>
+        <input type="text" class="input" [value]="selectedEmployeeTypeName" readonly style="margin-left:1em;min-width:120px;" placeholder="雇用形態" />
       </div>
       <div class="form-row">
         <label>適用開始年</label>
@@ -254,21 +255,40 @@
   </form>
 
   <!-- 社会保険適用状況集計（編集モード時は非表示） -->
-  <div *ngIf="decisionType === 'fixed' && isConfirmed && resultList && resultList.length > 0 && !editMode" class="summary-table-block">
-    <h4>社会保険適用状況集計</h4>
+  <div *ngIf="decisionType === 'fixed' && selectedEmployeeId && !editMode" class="summary-table-block">
+    <h4>社会保険加入状況</h4>
     <table class="summary-table">
       <tr>
-        <th>社会保険<br>加入者</th>
-        <th>定時決定<br>対象者</th>
-        <th>定時決定<br>非対象者</th>
-        <th>社会保険<br>非加入者</th>
+        <th>健康保険</th>
+        <th>介護保険</th>
+        <th>厚生年金保険</th>
+        <th>現在の等級</th>
+        <th>標準報酬月額</th>
+        <th>適用開始年月</th>
+        <th>次回等級の登録</th>
       </tr>
-      <tr>
-        <td>{{ healthInsuranceMemberCount }} 名</td>
-        <td>{{ fixedDecisionTargetCount }} 名</td>
-        <td>{{ fixedDecisionNotTargetCount }} 名</td>
-        <td>{{ healthInsuranceNotMemberCount }} 名</td>
-      </tr>
+      <ng-container *ngIf="currentDecision as cd; else noDecision">
+        <tr>
+          <td>{{ selectedEmployeeHealthInsuranceApplicable ? '〇' : '×' }}</td>
+          <td>{{ selectedEmployeeCareInsuranceApplicable ? '〇' : '×' }}</td>
+          <td>{{ selectedEmployeePensionApplicable ? '〇' : '×' }}</td>
+          <td>{{ cd.healthGrade || 'ー' }}</td>
+          <td>{{ cd.healthMonthly ? (cd.healthMonthly | currency:'JPY':'symbol':'1.0-0') : 'ー' }}</td>
+          <td>{{ cd.applyYearMonth ? (cd.applyYearMonth.replace('-', '年') + '月') : 'ー' }}</td>
+          <td>{{ hasNextDecision ? '〇' : '×' }}</td>
+        </tr>
+      </ng-container>
+      <ng-template #noDecision>
+        <tr>
+          <td>{{ selectedEmployeeHealthInsuranceApplicable ? '〇' : '×' }}</td>
+          <td>{{ selectedEmployeeCareInsuranceApplicable ? '〇' : '×' }}</td>
+          <td>{{ selectedEmployeePensionApplicable ? '〇' : '×' }}</td>
+          <td>ー</td>
+          <td>ー</td>
+          <td>ー</td>
+          <td>{{ hasNextDecision ? '〇' : '×' }}</td>
+        </tr>
+      </ng-template>
     </table>
   </div>
 

@@ -186,6 +186,10 @@ export class StandardMonthlyFormComponent implements OnInit {
 
   // 決定ボタン押下時
   async onDecision() {
+    if (!this.selectedEmployeeId) {
+      alert('従業員を選択してください');
+      return;
+    }
     if (this.decisionType === 'entry') {
       this.onEntryDecision();
       this.isConfirmed = false;
@@ -889,5 +893,60 @@ export class StandardMonthlyFormComponent implements OnInit {
     );
     alert('削除しました');
     this.router.navigate(['/manage-standard-monthly']);
+  }
+
+  get filteredEmployeesByOffice() {
+    if (!this.selectedOfficeId) return this.employeesSortedByIdName;
+    return this.employeesSortedByIdName.filter(emp => emp.officeId === this.selectedOfficeId);
+  }
+
+  onOfficeChange() {
+    // 事業所変更時に従業員選択をリセット
+    this.selectedEmployeeId = '';
+  }
+
+  get selectedEmployeeTypeName(): string {
+    if (!this.selectedEmployeeId) return '';
+    const emp = this.employees.find(e => e.employeeId === this.selectedEmployeeId);
+    if (!emp) return '';
+    const type = this.employeeTypes.find(t => t.code === emp.employeeType);
+    return type ? type.name : emp.employeeType || '';
+  }
+
+  get selectedEmployeeHealthInsuranceApplicable(): boolean {
+    if (!this.selectedEmployeeId) return false;
+    const emp = this.employees.find(e => e.employeeId === this.selectedEmployeeId);
+    return !!emp?.healthInsuranceStatus?.isApplicable;
+  }
+
+  get selectedEmployeeCareInsuranceApplicable(): boolean {
+    if (!this.selectedEmployeeId) return false;
+    const emp = this.employees.find(e => e.employeeId === this.selectedEmployeeId);
+    return !!emp?.isCareInsuranceApplicable;
+  }
+
+  get selectedEmployeePensionApplicable(): boolean {
+    if (!this.selectedEmployeeId) return false;
+    const emp = this.employees.find(e => e.employeeId === this.selectedEmployeeId);
+    return !!emp?.pensionStatus?.isApplicable;
+  }
+
+  get currentDecision() {
+    if (!this.selectedEmployeeId || !this.selectedOfficeId) return null;
+    return this.standardMonthlyDecisions
+      .filter(r => r.employeeId === this.selectedEmployeeId && r.officeId === this.selectedOfficeId)
+      .sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth))[0] || null;
+  }
+
+  get hasNextDecision(): boolean {
+    if (!this.selectedEmployeeId || !this.selectedOfficeId) return false;
+    const current = this.currentDecision;
+    if (!current) return false;
+    // 次回等級＝現等級より後のapplyYearMonthが存在するか
+    return this.standardMonthlyDecisions.some(r =>
+      r.employeeId === this.selectedEmployeeId &&
+      r.officeId === this.selectedOfficeId &&
+      r.applyYearMonth > current.applyYearMonth
+    );
   }
 }

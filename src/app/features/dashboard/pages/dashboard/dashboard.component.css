@@ -56,21 +56,48 @@
   text-decoration: underline;
   font-size: 0.97em;
 }
+.insurance-info-card {
+  max-width: 900px;
+  margin: 0 auto 2em auto;
+  padding: 2em 2em 1.5em 2em;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 .insurance-info-table {
   width: 100%;
+  max-width: 800px;
+  margin: 0 auto 1.5em auto;
   border-collapse: collapse;
-  margin-top: 0.5em;
+  font-size: 1.12em;
+  table-layout: fixed;
 }
 .insurance-info-table th, .insurance-info-table td {
   border: 1px solid #e0e0e0;
-  padding: 0.5em 0.8em;
-  text-align: center;
-  font-size: 0.98em;
+  padding: 1.1em 0.8em;
+  text-align: right;
+  font-size: 1.08em;
+  min-width: 120px;
+  word-break: keep-all;
 }
 .insurance-info-table th {
   background: #e3f2fd;
   font-weight: bold;
   color: #1976d2;
+  text-align: center;
+  font-size: 1.13em;
+}
+.insurance-info-table td:first-child, .insurance-info-table th:first-child {
+  text-align: center;
+  min-width: 70px;
+  font-size: 1.08em;
+}
+.insurance-info-table td {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
 }
 .dashboard-section {
   margin-bottom: 2.5em;
@@ -116,7 +143,7 @@
 }
 .dashboard-selector-row {
   margin: 1.2em 0 1.5em 0;
-  font-size: 1.05em;
+  font-size: 1.12em;
   display: flex;
   align-items: center;
   gap: 1.2em;
@@ -124,6 +151,21 @@
 .dashboard-selector-row label {
   font-weight: 500;
   margin-right: 0.3em;
+  font-size: 1.08em;
+}
+.dashboard-selector-row select {
+  padding: 0.4em 1.2em 0.4em 0.8em;
+  border-radius: 6px;
+  border: 1px solid #b0bec5;
+  font-size: 1.08em;
+  background: #f5faff;
+  margin-right: 0.7em;
+  min-width: 90px;
+  transition: border 0.2s;
+}
+.dashboard-selector-row select:focus {
+  border: 1.5px solid #1976d2;
+  outline: none;
 }
 @media (max-width: 900px) {
   .dashboard-main-grid {

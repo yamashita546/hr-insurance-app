@@ -31,44 +31,49 @@
     </div>
 
     <!-- 当月データ登録状況カード -->
-    <div class="dashboard-card data-status-card">
+    <div class="dashboard-card dashboard-section">
       <h3>当月データ登録状況</h3>
       <table class="data-status-table">
-        <tbody>
-          <tr>
-            <td>当月社会保険料</td>
-            <td>{{ insuranceRegistered ? '登録済み' : '未登録' }}</td>
-            <td><a *ngIf="!insuranceRegistered" routerLink="/insurance-calc">登録へ</a></td>
-          </tr>
-          <tr>
-            <td>当月給与</td>
-            <td>{{ salaryRegistered ? '登録済み' : '未登録' }}</td>
-            <td><a *ngIf="!salaryRegistered" routerLink="/payroll">登録へ</a></td>
-          </tr>
-          <tr>
-            <td>当月賞与</td>
-            <td>{{ bonusRegistered ? '登録済み' : '未登録' }}</td>
-            <td><a *ngIf="!bonusRegistered" routerLink="/payroll">登録へ</a></td>
-          </tr>
-          <tr>
-            <td>当月勤怠</td>
-            <td>{{ attendanceRegistered ? '登録済み' : '未登録' }}</td>
-            <td><a *ngIf="!attendanceRegistered" routerLink="/attendance">登録へ</a></td>
-          </tr>
-          <tr>
-            <td>有効標準報酬月額</td>
-            <td>{{ standardMonthlyRegistered ? '登録済み' : '未登録' }}</td>
-            <td><a *ngIf="!standardMonthlyRegistered" routerLink="/manage-standard-monthly">登録へ</a></td>
-          </tr>
-          <tr>
-            <td>未登録従業員数</td>
-            <td colspan="2">{{ unregisteredEmployeeCount }} 人</td>
-          </tr>
-          <tr>
-            <td>今月の新規入社</td>
-            <td colspan="2">{{ newEmployeeCount }} 人</td>
-          </tr>
-        </tbody>
+        <tr>
+          <td>社会保険料</td>
+          <td>{{ insuranceRegisteredCount }}/{{ insuranceRequiredCount }}件</td>
+          <td>
+            <a *ngIf="insuranceRegisteredCount !== insuranceRequiredCount" routerLink="/insurance/calc">登録</a>
+            <span *ngIf="insuranceRegisteredCount === insuranceRequiredCount">登録済み</span>
+          </td>
+        </tr>
+        <tr>
+          <td>給与</td>
+          <td>{{ salaryRegisteredCount }}/{{ salaryRequiredCount }}件</td>
+          <td>
+            <a *ngIf="salaryRegisteredCount !== salaryRequiredCount" routerLink="/salary">登録</a>
+            <span *ngIf="salaryRegisteredCount === salaryRequiredCount">登録済み</span>
+          </td>
+        </tr>
+        <tr>
+          <td>賞与</td>
+          <td>{{ bonusRegisteredCount }}/{{ bonusRequiredCount }}件</td>
+          <td>
+            <a *ngIf="bonusRegisteredCount !== bonusRequiredCount" routerLink="/bonus">登録</a>
+            <span *ngIf="bonusRegisteredCount === bonusRequiredCount">登録済み</span>
+          </td>
+        </tr>
+        <tr>
+          <td>勤怠</td>
+          <td>{{ attendanceRegisteredCount }}/{{ attendanceRequiredCount }}件</td>
+          <td>
+            <a *ngIf="attendanceRegisteredCount !== attendanceRequiredCount" routerLink="/attendance">登録</a>
+            <span *ngIf="attendanceRegisteredCount === attendanceRequiredCount">登録済み</span>
+          </td>
+        </tr>
+        <tr>
+          <td>標準報酬月額</td>
+          <td>{{ standardMonthlyRegisteredCount }}/{{ standardMonthlyRequiredCount }}件</td>
+          <td>
+            <a *ngIf="standardMonthlyRegisteredCount !== standardMonthlyRequiredCount" routerLink="/manage-standard-monthly">登録</a>
+            <span *ngIf="standardMonthlyRegisteredCount === standardMonthlyRequiredCount">登録済み</span>
+          </td>
+        </tr>
       </table>
     </div>
 
@@ -77,10 +82,10 @@
       <h3>保険料情報</h3>
       <div class="dashboard-selector-row">
         <label>年月：</label>
-        <select [(ngModel)]="selectedYear">
+        <select [(ngModel)]="selectedYear" (ngModelChange)="onYearMonthChange()">
           <option *ngFor="let y of years" [value]="y">{{ y }}年</option>
         </select>
-        <select [(ngModel)]="selectedMonth">
+        <select [(ngModel)]="selectedMonth" (ngModelChange)="onYearMonthChange()">
           <option *ngFor="let m of months" [value]="m">{{ m }}月</option>
         </select>
       </div>

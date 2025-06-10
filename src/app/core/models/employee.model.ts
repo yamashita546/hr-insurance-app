@@ -1,6 +1,6 @@
 // 従業員モデル
 
-import { Timestamp } from '@angular/fire/firestore';
+import { Timestamp, FieldValue } from '@angular/fire/firestore';
 import { Address } from './address.model';
 
 export type InsuranceStatus = {
@@ -65,6 +65,11 @@ export type Employee = {
     name: string;  // 氏名を追加
     extraordinaryLeaves?: ExtraordinaryLeave[];
     dependents?: any[];
+    transferPlan?: {
+      transferDate: string; // YYYY-MM-DD
+      targetOfficeId: string;
+      targetOfficeName: string;
+    } | undefined | FieldValue;
 };
 
 export type Dependent = {

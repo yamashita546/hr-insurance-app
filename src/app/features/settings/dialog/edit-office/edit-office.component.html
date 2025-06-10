@@ -60,6 +60,9 @@
       <label>有効期間（終了）
         <input type="date" class="input" [(ngModel)]="office.validTo" name="validTo" />
       </label>
+      <label>給与締め日
+        <input type="text" class="input" [(ngModel)]="office.salaryClosingDate" name="salaryClosingDate" placeholder="例：20" />
+      </label>
     </div>
     <div class="dialog-actions">
       <button type="button" class="cancel-btn" (click)="onCancel()">キャンセル</button>

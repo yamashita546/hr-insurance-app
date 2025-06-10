@@ -37,6 +37,7 @@
         </td>
       </tr>
       <tr><td [class.highlight]="isChanged('establishmentDate')">設立日</td><td [class.highlight]="isChanged('establishmentDate')">{{ company.establishmentDate }}</td></tr>
+      <tr><td [class.highlight]="isChanged('salaryClosingDate')">給与締め日</td><td [class.highlight]="isChanged('salaryClosingDate')">{{ company.salaryClosingDate }}</td></tr>
       <tr><td>作成日</td><td>{{ company.createdAt?.toDate() | date:'yyyy/MM/dd' }}</td></tr>
       <tr><td>更新日</td><td>{{ company.updatedAt?.toDate() | date:'yyyy/MM/dd' }}</td></tr>
       <tr><td [class.highlight]="isChanged('isActive')">有効</td><td [class.highlight]="isChanged('isActive')">{{ company.isActive ? '○' : '×' }}</td></tr>

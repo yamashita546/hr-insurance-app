@@ -21,6 +21,7 @@ import { Employee } from '../models/employee.model';
 import { Attendance } from '../models/attendance.model';
 import { Salary } from '../models/salary.model';
 import { InsuranceSalaryCalculation, InsuranceBonusCalculation } from '../models/insurance-calculation.model';
+import { EmployeeTransferHistory } from '../models/empoloyee.history';
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreService {
@@ -466,5 +467,18 @@ export class FirestoreService {
     const userDoc = doc(this.firestore, 'users', uid);
     const snap = await getDoc(userDoc);
     return snap.exists() ? (snap.data() as AppUser) : null;
+  }
+
+  // --- 従業員異動履歴 ---
+  async addEmployeeTransferHistory(history: EmployeeTransferHistory) {
+    const col = collection(this.firestore, 'employeeTransferHistory');
+    await addDoc(col, history);
+  }
+
+  async getEmployeeTransferHistory(employeeId: string): Promise<EmployeeTransferHistory[]> {
+    const colRef = collection(this.firestore, 'employeeTransferHistory');
+    const q_ = query(colRef, where('employeeId', '==', employeeId));
+    const snap = await getDocs(q_);
+    return snap.docs.map(doc => doc.data() as EmployeeTransferHistory).sort((a, b) => (b.transferDate || '').localeCompare(a.transferDate || ''));
   }
 }

@@ -49,6 +49,9 @@
         <input type="date" class="input" formControlName="establishmentDate" />
         <div class="error" *ngIf="form.get('establishmentDate')?.invalid && form.get('establishmentDate')?.touched">設立日は必須です</div>
       </label>
+      <label>給与締め日
+        <input type="text" class="input" formControlName="salaryClosingDate" placeholder="例：20" />
+      </label>
     </div>
     <div class="dialog-actions">
       <button type="button" class="cancel-btn" (click)="onCancel()" [disabled]="loading">キャンセル</button>

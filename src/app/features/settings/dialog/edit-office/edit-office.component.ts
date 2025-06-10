@@ -49,6 +49,10 @@ export class EditOfficeComponent implements OnInit {
     if (typeof this.office.industryClassification === 'object' && this.office.industryClassification?.code) {
       this.office.industryClassification = this.office.industryClassification.code;
     }
+    // 給与締め日が未定義なら空文字で初期化
+    if (!this.office.salaryClosingDate) {
+      this.office.salaryClosingDate = '';
+    }
   }
 
   onSave() {

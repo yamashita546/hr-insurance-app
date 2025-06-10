@@ -38,7 +38,8 @@ export class EditCompanyComponent implements OnInit {
         buildingName: [this.data.headOfficeAddress?.buildingName],
         countryCode: [this.data.headOfficeAddress?.countryCode || 'JP']
       }),
-      establishmentDate: [this.data.establishmentDate, Validators.required]
+      establishmentDate: [this.data.establishmentDate, Validators.required],
+      salaryClosingDate: [this.data.salaryClosingDate]
     });
   }
 

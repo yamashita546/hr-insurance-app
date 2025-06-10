@@ -5,12 +5,16 @@ import { UserCompanyService } from '../../../../core/services/user-company.servi
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { filter, take } from 'rxjs/operators';
 import { RouterModule } from '@angular/router';
+import { ChartConfiguration, ChartType } from 'chart.js';
+import { BaseChartDirective } from 'ng2-charts';
+import { Chart, registerables } from 'chart.js';
 
+Chart.register(...registerables);
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, BaseChartDirective],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
@@ -71,6 +75,25 @@ export class DashboardComponent implements OnInit {
   attendanceRequiredCount = 0;
   standardMonthlyRegisteredCount = 0;
   standardMonthlyRequiredCount = 0;
+  // グラフ用
+  graphPeriodOptions = [
+    { label: '1年', value: 12 },
+    { label: '半年', value: 6 },
+    { label: '3ヶ月', value: 3 }
+  ];
+  selectedGraphPeriod = 12;
+  graphLabels: string[] = [];
+  salaryData: number[] = [];
+  insuranceData: number[] = [];
+  employeeDeductionData: number[] = [];
+  companyShareData: number[] = [];
+  chartData: ChartConfiguration<'line'>['data'] = { labels: [], datasets: [] };
+  chartOptions: ChartConfiguration<'line'>['options'] = {
+    responsive: true,
+    plugins: { legend: { display: true } },
+    scales: { x: {}, y: { beginAtZero: true } }
+  };
+  chartType: 'line' = 'line';
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -198,6 +221,47 @@ export class DashboardComponent implements OnInit {
     }, 0);
   }
 
+  async updateGraphData() {
+    // 選択期間分の月ラベルを生成
+    const now = new Date(this.selectedYear, this.selectedMonth - 1);
+    const months: { ym: string, label: string }[] = [];
+    for (let i = this.selectedGraphPeriod - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      months.push({ ym, label: `${d.getFullYear()}/${d.getMonth() + 1}` });
+    }
+    this.graphLabels = months.map(m => m.label);
+    // データ取得
+    const salaryCalcs = await this.firestoreService.getInsuranceSalaryCalculations();
+    // 月ごとに集計
+    this.salaryData = months.map(m =>
+      salaryCalcs.filter(c => c.companyKey === this.companyKey && c.applyYearMonth === m.ym)
+        .reduce((sum, row) => sum + (Number(row.salaryTotal) || 0), 0)
+    );
+    this.insuranceData = months.map(m =>
+      salaryCalcs.filter(c => c.companyKey === this.companyKey && c.applyYearMonth === m.ym)
+        .reduce((sum, row) => sum + (Number(row.healthInsurance) || 0) + (Number(row.pension) || 0), 0)
+    );
+    this.employeeDeductionData = months.map(m =>
+      salaryCalcs.filter(c => c.companyKey === this.companyKey && c.applyYearMonth === m.ym)
+        .reduce((sum, row) => sum + (Number(row.healthInsuranceDeduction) || 0) + (Number(row.pensionDeduction) || 0), 0)
+    );
+    this.companyShareData = months.map(m =>
+      salaryCalcs.filter(c => c.companyKey === this.companyKey && c.applyYearMonth === m.ym)
+        .reduce((sum, row) => sum + (Number(row.companyShare) || 0), 0)
+    );
+    // グラフデータセット
+    this.chartData = {
+      labels: this.graphLabels,
+      datasets: [
+        { label: '給与総額', data: this.salaryData, borderColor: '#1976d2', backgroundColor: 'rgba(25,118,210,0.08)', yAxisID: 'y' },
+        { label: '保険料総額', data: this.insuranceData, borderColor: '#43a047', backgroundColor: 'rgba(67,160,71,0.08)', yAxisID: 'y' },
+        { label: '従業員控除額', data: this.employeeDeductionData, borderColor: '#ffa000', backgroundColor: 'rgba(255,160,0,0.08)', yAxisID: 'y' },
+        { label: '会社負担額', data: this.companyShareData, borderColor: '#d32f2f', backgroundColor: 'rgba(211,47,47,0.08)', yAxisID: 'y' }
+      ]
+    };
+  }
+
   async ngOnInit() {
     this.userCompanyService.company$.subscribe(company => {
       if (company) {
@@ -258,10 +322,16 @@ export class DashboardComponent implements OnInit {
 
         // 当月データ登録状況を取得
         await this.updateCurrentMonthStatus();
+        await this.updateGraphData();
       });
   }
 
-  onYearMonthChange() {
-    this.updateCurrentMonthStatus();
+  async onGraphPeriodChange() {
+    await this.updateGraphData();
+  }
+
+  async onYearMonthChange() {
+    await this.updateCurrentMonthStatus();
+    await this.updateGraphData();
   }
 }

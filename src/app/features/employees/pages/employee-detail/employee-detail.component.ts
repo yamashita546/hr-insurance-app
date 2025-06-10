@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router  ,RouterModule} from '@angular/router';
-import { Firestore, doc, getDoc } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, deleteField } from '@angular/fire/firestore';
 import { CommonModule } from '@angular/common';
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { FormsModule } from '@angular/forms';
@@ -13,6 +13,7 @@ import { UserCompanyService } from '../../../../core/services/user-company.servi
 import { firstValueFrom, Subscription } from 'rxjs';
 import { PREFECTURES } from '../../../../core/models/prefecture.model';
 import { RELATIONSHIP_TYPES, CERTIFICATION_TYPES } from '../../../../core/models/dependents.relationship.model';
+import { EmployeeTransferHistory } from '../../../../core/models/empoloyee.history';
 
 @Component({
   selector: 'app-employee-detail',
@@ -42,6 +43,9 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   saveMessage: string = '';
   relationshipTypes = RELATIONSHIP_TYPES;
   certificationTypes = CERTIFICATION_TYPES;
+  transferPlanDialogOpen = false;
+  transferPlan: any = { transferDate: '', targetOfficeId: '', targetOfficeName: '' };
+  transferHistory: EmployeeTransferHistory[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -83,6 +87,12 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
         }
         // console.log('[ngOnInit] selectedOfficeId:', this.selectedOfficeId, 'selectedEmployeeId:', this.selectedEmployeeId);
         await this.onEmployeeChange();
+        // 履歴取得
+        if (this.selectedEmployeeId) {
+          this.transferHistory = await this.firestoreService.getEmployeeTransferHistory(this.selectedEmployeeId);
+        }
+        // 異動予定の自動反映
+        this.checkAndApplyTransferPlan();
       }
     });
   }
@@ -336,6 +346,12 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
       queryParamsHandling: 'merge',
       replaceUrl: true
     });
+    // 履歴取得
+    if (this.employee?.employeeId) {
+      this.transferHistory = await this.firestoreService.getEmployeeTransferHistory(this.employee.employeeId);
+    }
+    // 異動予定の自動反映
+    this.checkAndApplyTransferPlan();
   }
 
   onNextEmployee() {
@@ -384,6 +400,97 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   onHealthInsuranceChange() {
     if (!this.editEmployee.healthInsuranceStatus?.isApplicable) {
       this.editEmployee.isCareInsuranceApplicable = false;
+    }
+  }
+
+  openTransferPlanDialog() {
+    this.transferPlanDialogOpen = true;
+    this.transferPlan = {
+      transferDate: '',
+      targetOfficeId: '',
+      targetOfficeName: ''
+    };
+  }
+
+  closeTransferPlanDialog() {
+    this.transferPlanDialogOpen = false;
+  }
+
+  async saveTransferPlan() {
+    if (!this.employee) return;
+    const targetOffice = this.offices.find(o => o.id === this.transferPlan.targetOfficeId);
+    if (!targetOffice) return;
+    // 予定を保存
+    await this.firestoreService.updateEmployee(this.employee.id, {
+      transferPlan: {
+        transferDate: this.transferPlan.transferDate,
+        targetOfficeId: targetOffice.id,
+        targetOfficeName: targetOffice.name
+      }
+    });
+    // 履歴に仮登録（キャンセル時はcancelled=trueで保存）
+    await this.firestoreService.addEmployeeTransferHistory({
+      employeeId: this.employee.employeeId,
+      fromOfficeId: this.employee.officeId,
+      fromOfficeName: this.employee.officeName,
+      toOfficeId: targetOffice.id,
+      toOfficeName: targetOffice.name,
+      transferDate: this.transferPlan.transferDate,
+      registeredAt: new Date().toISOString(),
+      cancelled: false
+    });
+    alert('異動予定を登録しました');
+    window.location.reload();
+  }
+
+  async cancelTransferPlan() {
+    if (!this.employee?.transferPlan) {
+      alert('異動予定がありません');
+      return;
+    }
+    // 履歴にキャンセル記録
+    await this.firestoreService.addEmployeeTransferHistory({
+      employeeId: this.employee.employeeId,
+      fromOfficeId: this.employee.officeId,
+      fromOfficeName: this.employee.officeName,
+      toOfficeId: this.employee.transferPlan.targetOfficeId,
+      toOfficeName: this.employee.transferPlan.targetOfficeName,
+      transferDate: this.employee.transferPlan.transferDate,
+      registeredAt: new Date().toISOString(),
+      cancelled: true
+    });
+    // 異動予定をFirestoreから削除
+    await this.firestoreService.updateEmployee(this.employee.id, { transferPlan: deleteField() });
+    alert('異動予定をキャンセルしました');
+    window.location.reload();
+  }
+
+  async checkAndApplyTransferPlan() {
+    if (!this.employee?.transferPlan) {
+      // 対象がなければ何もしない
+      return;
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    if (this.employee.transferPlan.transferDate && today >= this.employee.transferPlan.transferDate) {
+      // 異動予定日になったら自動反映
+      await this.firestoreService.updateEmployee(this.employee.id, {
+        officeId: this.employee.transferPlan.targetOfficeId,
+        officeName: this.employee.transferPlan.targetOfficeName,
+        transferPlan: deleteField()
+      });
+      // 履歴に本登録
+      await this.firestoreService.addEmployeeTransferHistory({
+        employeeId: this.employee.employeeId,
+        fromOfficeId: this.employee.officeId,
+        fromOfficeName: this.employee.officeName,
+        toOfficeId: this.employee.transferPlan.targetOfficeId,
+        toOfficeName: this.employee.transferPlan.targetOfficeName,
+        transferDate: this.employee.transferPlan.transferDate,
+        registeredAt: new Date().toISOString(),
+        cancelled: false
+      });
+      // ここではリロードしない
+      await this.onEmployeeChange();
     }
   }
 }

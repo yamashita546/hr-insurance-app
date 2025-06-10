@@ -28,6 +28,8 @@
     <button *ngIf="!isEditMode" class="edit-btn" (click)="startEdit()">編集</button>
     <button *ngIf="isEditMode" class="edit-btn" (click)="saveEdit()">保存</button>
     <button *ngIf="isEditMode" class="edit-btn" (click)="cancelEdit()">キャンセル</button>
+    <button class="edit-btn" (click)="openTransferPlanDialog()">異動予定登録</button>
+    <button *ngIf="employee?.transferPlan" class="edit-btn" (click)="cancelTransferPlan()">異動予定キャンセル</button>
   </div>
 
   <div *ngIf="isEditMode && validationErrors.length > 0" style="color: red; margin-bottom: 16px;">
@@ -588,4 +590,53 @@
     <div *ngIf="!isEditMode">{{ employee.remarks || '未入力' }}</div>
     <div *ngIf="isEditMode"><textarea [(ngModel)]="editEmployee.remarks"></textarea></div>
   </section>
+
+  <!-- 異動履歴 -->
+  <section class="detail-section">
+    <h3>異動履歴</h3>
+    <table class="detail-table">
+      <thead>
+        <tr>
+          <th>異動日</th>
+          <th>元事業所</th>
+          <th>移動先事業所</th>
+          <th>登録日時</th>
+          <th>キャンセル</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let h of transferHistory">
+          <td>{{ h.transferDate }}</td>
+          <td>{{ h.fromOfficeName }}</td>
+          <td>{{ h.toOfficeName }}</td>
+          <td>{{ h.registeredAt | date:'yyyy-MM-dd HH:mm' }}</td>
+          <td>{{ h.cancelled ? '○' : '' }}</td>
+        </tr>
+        <tr *ngIf="transferHistory.length === 0">
+          <td colspan="5">履歴なし</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 異動予定ダイアログ -->
+  <div *ngIf="transferPlanDialogOpen">
+    <div class="transfer-plan-overlay" (click)="closeTransferPlanDialog()"></div>
+    <div class="transfer-plan-dialog">
+      <h3>異動予定登録</h3>
+      <label>異動予定日
+        <input type="date" [(ngModel)]="transferPlan.transferDate">
+      </label>
+      <label>移動先事業所
+        <select [(ngModel)]="transferPlan.targetOfficeId">
+          <option value="">選択してください</option>
+          <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
+        </select>
+      </label>
+      <div style="margin-top:1em;">
+        <button (click)="saveTransferPlan()">保存</button>
+        <button (click)="closeTransferPlanDialog()">キャンセル</button>
+      </div>
+    </div>
+  </div>
 </div>

@@ -13,6 +13,7 @@ export type Company = {
     companyOwner?: string; // ※代表者名
     headOfficeAddress?: Address; // ※本社所在地
     establishmentDate?: string; // ※設立日
+    salaryClosingDate?: string; // 給与締め日（例: "20"）
     createdAt: Timestamp;
     updatedAt: Timestamp;
     isActive: boolean;
@@ -32,6 +33,7 @@ export type Company = {
     industryClassification?: IndustryClassification; // 業種分類
     businessCategoryId?: string; // 労災保険用の業種分類
     officeCode?: string;      // 社会保険・労災などの事業所番号
+    salaryClosingDate?: string; // 給与締め日
     validFrom: string;
     validTo?: string;
     createdAt: Timestamp;

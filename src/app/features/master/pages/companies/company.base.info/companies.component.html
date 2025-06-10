@@ -20,6 +20,7 @@
           <th>業種</th>
           <th>代表者</th>
           <th>本社所在地</th>
+          <th>給与締め日</th>
           <th>設立日</th>
           <th>作成日</th>
           <th>更新日</th>
@@ -45,6 +46,7 @@
               {{ company.headOfficeAddress?.town || '' }}{{ company.headOfficeAddress?.streetAddress || '' }}{{ company.headOfficeAddress?.buildingName || '' }}
             </div>
           </td>
+          <td>{{ company.salaryClosingDate }}</td>
           <td [class.highlight]="isChangedEstablishmentDate(company)">{{ company.establishmentDate }}</td>
           <td>{{ company.createdAt.toDate() | date:'yyyy/MM/dd' }}</td>
           <td>{{ company.updatedAt.toDate() | date:'yyyy/MM/dd' }}</td>

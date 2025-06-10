@@ -57,7 +57,8 @@ export class AddOfficeComponent implements OnInit {
         officeCode: [''],
         validFrom: [''],
         validTo: [''],
-        isActive: [true]
+        isActive: [true],
+        salaryClosingDate: ['']
       });
 
       // 本社フラグの変更を監視し、チェック時に本社住所を自動入力
@@ -87,6 +88,7 @@ export class AddOfficeComponent implements OnInit {
       createdAt: new Date(),
       updatedAt: new Date(),
       id: '', // Firestoreで自動生成 or 保存時に付与
+      salaryClosingDate: this.form.value.salaryClosingDate
     };
     this.saved.emit(office);
   }

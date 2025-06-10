@@ -220,3 +220,27 @@
 .employee-link-btn:hover {
   background: #1565c0;
 }
+.graph-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  margin-bottom: 1em;
+  font-size: 1.08em;
+}
+.graph-toolbar label {
+  font-weight: 500;
+  margin-right: 0.3em;
+}
+.chart-area {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
+  padding: 1.5em 1.5em 1em 1.5em;
+  min-height: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

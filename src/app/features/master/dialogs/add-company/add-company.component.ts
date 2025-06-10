@@ -64,7 +64,8 @@ export class AddCompanyComponent {
         buildingName: [''],
         countryCode: ['JP']
       }),
-      establishmentDate: ['', Validators.required]
+      establishmentDate: ['', Validators.required],
+      salaryClosingDate: [''],
     });
 
     // valueChangesで自動正規化
@@ -130,6 +131,7 @@ export class AddCompanyComponent {
         companyOwner: this.form.value.companyOwner,
         headOfficeAddress: this.form.value.headOfficeAddress,
         establishmentDate: this.form.value.establishmentDate,
+        salaryClosingDate: this.form.value.salaryClosingDate,
         isActive: true
       });
       alert('追加が完了しました');

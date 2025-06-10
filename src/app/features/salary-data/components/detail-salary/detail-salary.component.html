@@ -57,7 +57,42 @@
             </td>
           </tr>
           <tr><th>役職手当</th><td><input type="number" [(ngModel)]="editSalaryForm.positionAllowance" name="positionAllowance"></td></tr>
-          <tr><th>その他手当</th><td><input type="number" [(ngModel)]="editSalaryForm.otherAllowance" name="otherAllowance"></td></tr>
+          <tr><th>その他手当</th><td>
+            <div *ngFor="let item of editSalaryForm.otherAllowances; let i = index" style="display:flex;align-items:center;gap:4px;">
+              <input type="text" [(ngModel)]="item.name" name="otherAllowanceName{{i}}" placeholder="名称" style="width:120px;" (ngModelChange)="calcEditTotalSalary()">
+              <input type="number" [(ngModel)]="item.amount" name="otherAllowanceAmount{{i}}" placeholder="金額" style="width:100px;" (ngModelChange)="calcEditTotalSalary()">
+              <button type="button" (click)="removeOtherAllowance(i)">削除</button>
+            </div>
+            <button type="button" (click)="addOtherAllowance()">＋追加</button>
+            <div>合計: {{ editSalaryForm.totalOtherAllowance | number }} 円</div>
+          </td></tr>
+          <tr><th>現物支給</th><td>
+            <div *ngFor="let item of editSalaryForm.inKindAllowances; let i = index" style="display:flex;align-items:center;gap:4px;">
+              <input type="text" [(ngModel)]="item.name" name="inKindAllowanceName{{i}}" placeholder="名称" style="width:120px;" (ngModelChange)="calcEditTotalSalary()">
+              <input type="number" [(ngModel)]="item.amount" name="inKindAllowanceAmount{{i}}" placeholder="金額" style="width:100px;" (ngModelChange)="calcEditTotalSalary()">
+              <button type="button" (click)="removeInKindAllowance(i)">削除</button>
+            </div>
+            <button type="button" (click)="addInKindAllowance()">＋追加</button>
+            <div>合計: {{ editSalaryForm.totalInKind | number }} 円</div>
+          </td></tr>
+          <tr><th>遡及</th><td>
+            <div *ngFor="let item of editSalaryForm.retroAllowances; let i = index" style="display:flex;align-items:center;gap:4px;">
+              <input type="text" [(ngModel)]="item.name" name="retroAllowanceName{{i}}" placeholder="名称" style="width:120px;" (ngModelChange)="calcEditTotalSalary()">
+              <input type="number" [(ngModel)]="item.amount" name="retroAllowanceAmount{{i}}" placeholder="金額" style="width:100px;" (ngModelChange)="calcEditTotalSalary()">
+              <button type="button" (click)="removeRetroAllowance(i)">削除</button>
+            </div>
+            <button type="button" (click)="addRetroAllowance()">＋追加</button>
+            <div>合計: {{ editSalaryForm.totalRetro | number }} 円</div>
+          </td></tr>
+          <tr><th>実費精算</th><td>
+            <div *ngFor="let item of editSalaryForm.actualExpenses; let i = index" style="display:flex;align-items:center;gap:4px;">
+              <input type="text" [(ngModel)]="item.name" name="actualExpenseName{{i}}" placeholder="名称" style="width:120px;" (ngModelChange)="calcEditTotalSalary()">
+              <input type="number" [(ngModel)]="item.amount" name="actualExpenseAmount{{i}}" placeholder="金額" style="width:100px;" (ngModelChange)="calcEditTotalSalary()">
+              <button type="button" (click)="removeActualExpense(i)">削除</button>
+            </div>
+            <button type="button" (click)="addActualExpense()">＋追加</button>
+            <div>合計: {{ editSalaryForm.totalActualExpense | number }} 円</div>
+          </td></tr>
           <tr><th>総支給額</th><td>{{ calcEditTotalSalary() | number }} 円</td></tr>
           <tr><th>備考</th><td><input type="text" [(ngModel)]="editSalaryForm.remarks" name="remarks"></td></tr>
         </table>
@@ -75,7 +110,30 @@
           </td>
         </tr>
         <tr><th>役職手当</th><td>{{ salary?.positionAllowance | number }} 円</td></tr>
-        <tr><th>その他手当</th><td>{{ salary?.otherAllowance | number }} 円</td></tr>
+        <tr><th>その他手当</th><td>
+          <div *ngFor="let item of salary?.otherAllowances">
+            {{ item.name }}：{{ item.amount | number }} 円
+          </div>
+          <div>合計: {{ salary?.totalOtherAllowance | number }} 円</div>
+        </td></tr>
+        <tr><th>現物支給</th><td>
+          <div *ngFor="let item of salary?.inKindAllowances">
+            {{ item.name }}：{{ item.amount | number }} 円
+          </div>
+          <div>合計: {{ salary?.totalInKind | number }} 円</div>
+        </td></tr>
+        <tr><th>遡及</th><td>
+          <div *ngFor="let item of salary?.retroAllowances">
+            {{ item.name }}：{{ item.amount | number }} 円
+          </div>
+          <div>合計: {{ salary?.totalRetro | number }} 円</div>
+        </td></tr>
+        <tr><th>実費精算</th><td>
+          <div *ngFor="let item of salary?.actualExpenses">
+            {{ item.name }}：{{ item.amount | number }} 円
+          </div>
+          <div>合計: {{ salary?.totalActualExpense | number }} 円</div>
+        </td></tr>
         <tr><th>総支給額</th><td>{{ salary?.totalSalary | number }} 円</td></tr>
         <tr><th>備考</th><td>{{ salary?.remarks }}</td></tr>
       </table>

@@ -28,7 +28,16 @@ export class DetailSalaryComponent implements OnInit {
   activeTab: 'salary' | 'bonus' = 'salary';
   companyKey: string = '';
   editMode: 'salary' | 'bonus' | null = null;
-  editSalaryForm: any = {};
+  editSalaryForm: any = {
+    otherAllowances: [],
+    inKindAllowances: [],
+    retroAllowances: [],
+    actualExpenses: [],
+    totalOtherAllowance: 0,
+    totalInKind: 0,
+    totalRetro: 0,
+    totalActualExpense: 0
+  };
   editBonusForms: any[] = [{}];
   historyList: any[] = [];
   currentUser: any = null;
@@ -188,11 +197,18 @@ export class DetailSalaryComponent implements OnInit {
         overtimeSalary: this.salary.overtimeSalary,
         commuteAllowance: this.salary.commuteAllowance ?? 0,
         positionAllowance: this.salary.positionAllowance ?? 0,
-        otherAllowance: this.salary.otherAllowance ?? 0,
         remarks: this.salary.remarks || '',
         commuteAllowancePeriodFrom: this.salary.commuteAllowancePeriodFrom || '',
         commuteAllowancePeriodTo: this.salary.commuteAllowancePeriodTo || '',
-        commuteAllowanceMonths: this.salary.commuteAllowanceMonths || 1
+        commuteAllowanceMonths: this.salary.commuteAllowanceMonths || 1,
+        otherAllowances: this.salary.otherAllowances ? JSON.parse(JSON.stringify(this.salary.otherAllowances)) : [],
+        inKindAllowances: this.salary.inKindAllowances ? JSON.parse(JSON.stringify(this.salary.inKindAllowances)) : [],
+        retroAllowances: this.salary.retroAllowances ? JSON.parse(JSON.stringify(this.salary.retroAllowances)) : [],
+        actualExpenses: this.salary.actualExpenses ? JSON.parse(JSON.stringify(this.salary.actualExpenses)) : [],
+        totalOtherAllowance: this.salary.totalOtherAllowance || 0,
+        totalInKind: this.salary.totalInKind || 0,
+        totalRetro: this.salary.totalRetro || 0,
+        totalActualExpense: this.salary.totalActualExpense || 0
       };
     } else if (type === 'bonus') {
       this.editBonusForms = this.bonuses.length > 0 ? this.bonuses.map(b => ({
@@ -206,7 +222,16 @@ export class DetailSalaryComponent implements OnInit {
 
   onCancelEdit() {
     this.editMode = null;
-    this.editSalaryForm = {};
+    this.editSalaryForm = {
+      otherAllowances: [],
+      inKindAllowances: [],
+      retroAllowances: [],
+      actualExpenses: [],
+      totalOtherAllowance: 0,
+      totalInKind: 0,
+      totalRetro: 0,
+      totalActualExpense: 0
+    };
     this.editBonusForms = [{}];
   }
 
@@ -215,8 +240,11 @@ export class DetailSalaryComponent implements OnInit {
     const overtime = Number(this.editSalaryForm.overtimeSalary) || 0;
     const commute = Number(this.editSalaryForm.commuteAllowance) || 0;
     const position = Number(this.editSalaryForm.positionAllowance) || 0;
-    const other = Number(this.editSalaryForm.otherAllowance) || 0;
-    return basic + overtime + commute + position + other;
+    this.editSalaryForm.totalOtherAllowance = this.editSalaryForm.otherAllowances.reduce((sum: number, a: any) => sum + (Number(a.amount) || 0), 0);
+    this.editSalaryForm.totalInKind = this.editSalaryForm.inKindAllowances.reduce((sum: number, a: any) => sum + (Number(a.amount) || 0), 0);
+    this.editSalaryForm.totalRetro = this.editSalaryForm.retroAllowances.reduce((sum: number, a: any) => sum + (Number(a.amount) || 0), 0);
+    this.editSalaryForm.totalActualExpense = this.editSalaryForm.actualExpenses.reduce((sum: number, a: any) => sum + (Number(a.amount) || 0), 0);
+    return basic + overtime + commute + position + this.editSalaryForm.totalOtherAllowance + this.editSalaryForm.totalInKind + this.editSalaryForm.totalRetro + this.editSalaryForm.totalActualExpense;
   }
 
   addBonusRow() {
@@ -226,27 +254,61 @@ export class DetailSalaryComponent implements OnInit {
     if (this.editBonusForms.length > 1) this.editBonusForms.splice(i, 1);
   }
 
+  addOtherAllowance() {
+    this.editSalaryForm.otherAllowances.push({ name: '', amount: 0 });
+  }
+  removeOtherAllowance(i: number) {
+    this.editSalaryForm.otherAllowances.splice(i, 1);
+    this.calcEditTotalSalary();
+  }
+  addInKindAllowance() {
+    this.editSalaryForm.inKindAllowances.push({ name: '', amount: 0 });
+  }
+  removeInKindAllowance(i: number) {
+    this.editSalaryForm.inKindAllowances.splice(i, 1);
+    this.calcEditTotalSalary();
+  }
+  addRetroAllowance() {
+    this.editSalaryForm.retroAllowances.push({ name: '', amount: 0 });
+  }
+  removeRetroAllowance(i: number) {
+    this.editSalaryForm.retroAllowances.splice(i, 1);
+    this.calcEditTotalSalary();
+  }
+  addActualExpense() {
+    this.editSalaryForm.actualExpenses.push({ name: '', amount: 0 });
+  }
+  removeActualExpense(i: number) {
+    this.editSalaryForm.actualExpenses.splice(i, 1);
+    this.calcEditTotalSalary();
+  }
+
   async onSaveSalaryEdit() {
     if (!this.salary || !this.employee) return;
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
-    // otherAllowances配列は「その他手当」のみ格納
-    const otherAllowances = [];
-    if (this.editSalaryForm.otherAllowance) {
-      otherAllowances.push({
-        otherAllowanceName: 'その他手当',
-        otherAllowance: Number(this.editSalaryForm.otherAllowance) || 0
-      });
-    }
-    const totalAllowance = (Number(this.editSalaryForm.commuteAllowance) || 0) + (Number(this.editSalaryForm.positionAllowance) || 0) + (Number(this.editSalaryForm.otherAllowance) || 0);
-    const totalSalary = (Number(this.editSalaryForm.basicSalary) || 0) + (Number(this.editSalaryForm.overtimeSalary) || 0) + totalAllowance;
+    const totalAllowance = (Number(this.editSalaryForm.commuteAllowance) || 0)
+      + (Number(this.editSalaryForm.positionAllowance) || 0)
+      + this.editSalaryForm.totalOtherAllowance;
+    const totalSalary = (Number(this.editSalaryForm.basicSalary) || 0)
+      + (Number(this.editSalaryForm.overtimeSalary) || 0)
+      + totalAllowance
+      + this.editSalaryForm.totalInKind
+      + this.editSalaryForm.totalRetro
+      + this.editSalaryForm.totalActualExpense;
     const newSalary = {
       ...this.salary,
       basicSalary: Number(this.editSalaryForm.basicSalary) || 0,
       overtimeSalary: Number(this.editSalaryForm.overtimeSalary) || 0,
       commuteAllowance: Number(this.editSalaryForm.commuteAllowance) || 0,
       positionAllowance: Number(this.editSalaryForm.positionAllowance) || 0,
-      otherAllowance: Number(this.editSalaryForm.otherAllowance) || 0,
-      otherAllowances: otherAllowances,
+      otherAllowances: this.editSalaryForm.otherAllowances,
+      totalOtherAllowance: this.editSalaryForm.totalOtherAllowance,
+      inKindAllowances: this.editSalaryForm.inKindAllowances,
+      totalInKind: this.editSalaryForm.totalInKind,
+      retroAllowances: this.editSalaryForm.retroAllowances,
+      totalRetro: this.editSalaryForm.totalRetro,
+      actualExpenses: this.editSalaryForm.actualExpenses,
+      totalActualExpense: this.editSalaryForm.totalActualExpense,
       totalAllowance,
       totalSalary,
       remarks: this.editSalaryForm.remarks || '',
@@ -302,7 +364,7 @@ export class DetailSalaryComponent implements OnInit {
     const date = new Date();
     const targetYearMonth = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
     if (type === 'salary') {
-      for (const key of ['basicSalary','overtimeSalary','commuteAllowance','positionAllowance','otherAllowance','totalSalary','remarks','commuteAllowancePeriodFrom','commuteAllowancePeriodTo','commuteAllowanceMonths']) {
+      for (const key of ['basicSalary','overtimeSalary','commuteAllowance','positionAllowance','totalSalary','remarks','commuteAllowancePeriodFrom','commuteAllowancePeriodTo','commuteAllowanceMonths']) {
         const fieldName = SalaryFieldNameMap[key] || key;
         if ((before?.[key] ?? '') !== (after?.[key] ?? '')) {
           await this.firestoreService.addSalaryHistory(this.companyKey, this.employeeId, {

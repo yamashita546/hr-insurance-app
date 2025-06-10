@@ -1,43 +1,180 @@
 .dashboard-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2em;
+  padding: 2em 1em;
 }
-.kpi-cards {
+.dashboard-main-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.5em;
-  margin-bottom: 2em;
+  gap: 2em;
+  margin-bottom: 2.5em;
 }
-.kpi-card {
-  background: #f5faff;
+.dashboard-card {
+  background: #fff;
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  padding: 1.5em 2em;
-  min-width: 200px;
-  flex: 1 1 200px;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
+  padding: 1.5em 2em 1.2em 2em;
+  min-width: 320px;
+  flex: 1 1 320px;
+  max-width: 420px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
 }
-.kpi-title {
-  font-size: 1.1em;
-  color: #0077b6;
+.dashboard-card h3 {
+  font-size: 1.15em;
+  font-weight: bold;
+  margin-bottom: 1em;
+  color: #1976d2;
+}
+.employee-info-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.employee-info-card li {
+  font-size: 1.05em;
   margin-bottom: 0.5em;
 }
-.kpi-value {
-  font-size: 2em;
+.data-status-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0.5em;
+}
+.data-status-table td {
+  border: 1px solid #e0e0e0;
+  padding: 0.5em 0.8em;
+  text-align: center;
+  font-size: 0.98em;
+}
+.data-status-table tr td:first-child {
+  font-weight: 500;
+  background: #f5f5f5;
+}
+.data-status-table a {
+  color: #1976d2;
+  text-decoration: underline;
+  font-size: 0.97em;
+}
+.insurance-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5em;
+}
+.insurance-info-table th, .insurance-info-table td {
+  border: 1px solid #e0e0e0;
+  padding: 0.5em 0.8em;
+  text-align: center;
+  font-size: 0.98em;
+}
+.insurance-info-table th {
+  background: #e3f2fd;
   font-weight: bold;
-  color: #222;
+  color: #1976d2;
 }
 .dashboard-section {
-  margin-bottom: 2em;
+  margin-bottom: 2.5em;
 }
-.chart-placeholder, .ranking-placeholder {
-  background: #e9ecef;
-  border-radius: 8px;
-  padding: 2em;
-  text-align: center;
-  color: #888;
-  font-size: 1.2em;
+.dashboard-section h2 {
+  font-size: 1.15em;
+  color: #1976d2;
+  margin-bottom: 1em;
+}
+.activity-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5em 0 1.5em 0;
+}
+.activity-list li {
+  font-size: 0.98em;
+  color: #1976d2;
+  margin-bottom: 0.4em;
+  display: flex;
+  align-items: center;
+}
+.activity-icon {
+  margin-right: 0.5em;
+  color: #1976d2;
+}
+.dashboard-alerts {
+  margin: 1.2em 0 1.5em 0;
+  padding: 0.8em 1.2em;
+  background: #fff3e0;
+  border-left: 5px solid #ff9800;
+  border-radius: 6px;
+}
+.alert-item {
+  color: #b85c00;
+  font-size: 1em;
+  margin-bottom: 0.3em;
+  display: flex;
+  align-items: center;
+}
+.alert-icon {
+  margin-right: 0.5em;
+  color: #ff9800;
+}
+.dashboard-selector-row {
+  margin: 1.2em 0 1.5em 0;
+  font-size: 1.05em;
+  display: flex;
+  align-items: center;
+  gap: 1.2em;
+}
+.dashboard-selector-row label {
+  font-weight: 500;
+  margin-right: 0.3em;
+}
+@media (max-width: 900px) {
+  .dashboard-main-grid {
+    flex-direction: column;
+    gap: 1.2em;
+  }
+  .dashboard-card {
+    min-width: 0;
+    max-width: 100%;
+    padding: 1.2em 1em 1em 1em;
+  }
+}
+.dashboard-company-info {
+  background: #f5faff;
+  border: 1px solid #e3f2fd;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.04);
+  padding: 1.2em 2em 1em 2em;
+  max-width: 600px;
+  margin: 0 auto 2em auto;
+}
+.dashboard-company-info ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.dashboard-company-info li {
+  font-size: 1.08em;
+  margin-bottom: 0.5em;
+}
+.dashboard-company-info strong {
+  color: #1976d2;
+  margin-right: 0.5em;
+}
+.employee-link-btn-row {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.2em;
+}
+.employee-link-btn {
+  background: #1976d2;
+  color: #fff;
+  padding: 0.5em 1.5em;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1em;
+  box-shadow: 0 2px 6px rgba(25, 118, 210, 0.08);
+  transition: background 0.2s;
+}
+.employee-link-btn:hover {
+  background: #1565c0;
 }

@@ -1,47 +1,134 @@
 <div class="dashboard-container">
-  <h1>ダッシュボード</h1>
-
-  <!-- KPIカード -->
-  <div class="kpi-cards">
-    <div class="kpi-card">
-      <div class="kpi-title">従業員数</div>
-      <div class="kpi-value">{{ employeeCount | number }} 人</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-title">支社数</div>
-      <div class="kpi-value">{{ officeCount | number }} 箇所</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-title">今月の総給与</div>
-      <div class="kpi-value">{{ salaryTotal | number }} 円</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-title">今月の保険料総額</div>
-      <div class="kpi-value">{{ insuranceTotal | number }} 円</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-title">従業員控除額合計</div>
-      <div class="kpi-value">{{ employeeDeductionTotal | number }} 円</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-title">会社負担額合計</div>
-      <div class="kpi-value">{{ companyShareTotal | number }} 円</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-title">端数処理誤差合計</div>
-      <div class="kpi-value">{{ roundingErrorTotal | number:'1.0-2' }} 円</div>
+  <!-- アラート一覧 -->
+  <div class="dashboard-alerts" *ngIf="alerts && alerts.length">
+    <div class="alert-item" *ngFor="let alert of alerts">
+      <i class="fas fa-exclamation-triangle alert-icon"></i> {{ alert }}
     </div>
   </div>
 
-  <!-- 月別給与・保険料推移グラフ（プレースホルダー） -->
+  <div class="dashboard-company-info dashboard-card" style="margin-bottom: 2em;">
+    <h3>会社情報</h3>
+    <ul>
+      <li><strong>会社ID:</strong> {{ companyId }}</li>
+      <li><strong>会社名:</strong> {{ companyName }}</li>
+    </ul>
+  </div>
+
+  <div class="dashboard-main-grid">
+    <!-- 従業員情報カード -->
+    <div class="dashboard-card employee-info-card">
+      <h3>従業員情報</h3>
+      <ul>
+        <li>在籍従業員数：{{ employeeCount }}名（うち今月入社{{ newEmployeeCount }}名／退職{{ retiredEmployeeCount }}名）</li>
+        <li>正社員：{{ fullTimeCount }}名　パート：{{ partTimeCount }}名　契約社員：{{ contractCount }}名</li>
+        <li>男性：{{ maleCount }}名　女性：{{ femaleCount }}名</li>
+        <li>社会保険加入：{{ insuredEmployeeCount }}名／未加入：{{ uninsuredEmployeeCount }}名</li>
+        <li>被扶養家族数：{{ familyCount }}名</li>
+      </ul>
+      <div class="employee-link-btn-row">
+        <a routerLink="/employee" class="employee-link-btn">従業員一覧へ</a>
+      </div>
+    </div>
+
+    <!-- 当月データ登録状況カード -->
+    <div class="dashboard-card data-status-card">
+      <h3>当月データ登録状況</h3>
+      <table class="data-status-table">
+        <tbody>
+          <tr>
+            <td>当月社会保険料</td>
+            <td>{{ insuranceRegistered ? '登録済み' : '未登録' }}</td>
+            <td><a *ngIf="!insuranceRegistered" routerLink="/insurance-calc">登録へ</a></td>
+          </tr>
+          <tr>
+            <td>当月給与</td>
+            <td>{{ salaryRegistered ? '登録済み' : '未登録' }}</td>
+            <td><a *ngIf="!salaryRegistered" routerLink="/payroll">登録へ</a></td>
+          </tr>
+          <tr>
+            <td>当月賞与</td>
+            <td>{{ bonusRegistered ? '登録済み' : '未登録' }}</td>
+            <td><a *ngIf="!bonusRegistered" routerLink="/payroll">登録へ</a></td>
+          </tr>
+          <tr>
+            <td>当月勤怠</td>
+            <td>{{ attendanceRegistered ? '登録済み' : '未登録' }}</td>
+            <td><a *ngIf="!attendanceRegistered" routerLink="/attendance">登録へ</a></td>
+          </tr>
+          <tr>
+            <td>有効標準報酬月額</td>
+            <td>{{ standardMonthlyRegistered ? '登録済み' : '未登録' }}</td>
+            <td><a *ngIf="!standardMonthlyRegistered" routerLink="/manage-standard-monthly">登録へ</a></td>
+          </tr>
+          <tr>
+            <td>未登録従業員数</td>
+            <td colspan="2">{{ unregisteredEmployeeCount }} 人</td>
+          </tr>
+          <tr>
+            <td>今月の新規入社</td>
+            <td colspan="2">{{ newEmployeeCount }} 人</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 保険料情報カード -->
+    <div class="dashboard-card insurance-info-card">
+      <h3>保険料情報</h3>
+      <div class="dashboard-selector-row">
+        <label>年月：</label>
+        <select [(ngModel)]="selectedYear">
+          <option *ngFor="let y of years" [value]="y">{{ y }}年</option>
+        </select>
+        <select [(ngModel)]="selectedMonth">
+          <option *ngFor="let m of months" [value]="m">{{ m }}月</option>
+        </select>
+      </div>
+      <table class="insurance-info-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>総額</th>
+            <th>保険料総額</th>
+            <th>従業員控除額</th>
+            <th>会社負担額</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>給与</td>
+            <td>{{ salaryTotal | number }} 円</td>
+            <td>{{ salaryInsuranceTotal | number }} 円</td>
+            <td>{{ salaryEmployeeDeduction | number }} 円</td>
+            <td>{{ salaryCompanyShare | number }} 円</td>
+          </tr>
+          <tr>
+            <td>賞与</td>
+            <td>{{ bonusTotal | number }} 円</td>
+            <td>{{ bonusInsuranceTotal | number }} 円</td>
+            <td>{{ bonusEmployeeDeduction | number }} 円</td>
+            <td>{{ bonusCompanyShare | number }} 円</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 月別給与・保険料推移グラフ -->
   <div class="dashboard-section">
     <h2>月別給与・保険料推移</h2>
-    <div class="chart-placeholder">グラフ（今後実装）</div>
+    <div class="chart-area">
+      <div class="chart-placeholder">グラフ（今後実装）</div>
+    </div>
   </div>
 
-  <!-- 支社別ランキング（プレースホルダー） -->
+  <!-- 直近のアクティビティ・履歴エリア -->
   <div class="dashboard-section">
-    <h2>支社別ランキング</h2>
-    <div class="ranking-placeholder">ランキング表（今後実装）</div>
+    <h2>直近のアクティビティ・履歴</h2>
+    <ul class="activity-list">
+      <li *ngFor="let activity of activities">
+        <i class="fas fa-history activity-icon"></i> {{ activity }}
+      </li>
+    </ul>
   </div>
 </div>

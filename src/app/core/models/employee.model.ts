@@ -64,6 +64,7 @@ export type Employee = {
 
     name: string;  // 氏名を追加
     extraordinaryLeaves?: ExtraordinaryLeave[];
+    dependents?: any[];
 };
 
 export type Dependent = {

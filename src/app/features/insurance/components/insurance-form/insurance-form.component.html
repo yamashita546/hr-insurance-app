@@ -78,40 +78,41 @@
                       <td>{{ row.childcare }}</td>
                       <td>{{ row.companyShare }}</td>
                       <td>
-                        <button type="button" (click)="row.showDetail = !row.showDetail">計算根拠</button>
-                      </td>
-                    </tr>
-                    <tr *ngIf="row.showDetail">
-                      <td colspan="14">
-                        <div>
-                          <strong>給与内訳:</strong>
-                          基本給: {{ row.salaryBreakdown.basic | number }}円 /
-                          残業代: {{ row.salaryBreakdown.overtime | number }}円 /
-                          通勤費: {{ row.salaryBreakdown.commute | number }}円 /
-                          役職手当: {{ row.salaryBreakdown.position | number }}円 /
-                          その他手当: {{ row.salaryBreakdown.other | number }}円<br>
-                          <strong>合計:</strong> {{ row.salaryBreakdown.calcTotal | number }}円
-                          <span *ngIf="!row.salaryBreakdown.isMatch" style="color:red;">（DB合計と不一致）</span>
+                        <button type="button" (click)="selectedPopoverIndex = (selectedPopoverIndex === i ? null : i)">計算根拠</button>
+                        <div *ngIf="selectedPopoverIndex === i" class="popover-overlay" (click)="closePopover()"></div>
+                        <div *ngIf="selectedPopoverIndex === i" class="popover-content">
+                          <button class="popover-close" (click)="closePopover()">×</button>
+                          <div>
+                            <strong>給与内訳:</strong>
+                            基本給: {{ row.salaryBreakdown.basic | number }}円 /
+                            残業代: {{ row.salaryBreakdown.overtime | number }}円 /
+                            通勤費: {{ row.salaryBreakdown.commute | number }}円 /
+                            役職手当: {{ row.salaryBreakdown.position | number }}円 /
+                            その他手当: {{ row.salaryBreakdown.other | number }}円<br>
+                            <strong>合計:</strong> {{ row.salaryBreakdown.calcTotal | number }}円
+                            <span *ngIf="!row.salaryBreakdown.isMatch" style="color:red;">（DB合計と不一致）</span>
+                          </div>
+                          <div style="margin-top:0.5em;">
+                            <strong>標準報酬月額:</strong>
+                            {{ row.monthly }}（{{ row.grade }}）
+                          </div>
+                          <div style="margin-top:0.5em;">
+                            <strong>控除・会社負担計算根拠:</strong><br>
+                            適用都道府県: {{ row.prefectureName || 'ー' }}<br>
+                            健康保険料率: {{ row.healthRate }}%<span *ngIf="row.careRate && row.careRate > 0">（介護保険料率: {{ row.careRate }}% も加算）</span><br>
+                            厚生年金保険料率: {{ row.pensionRate }}%<br>
+                            子ども子育て拠出金率: {{ row.childcareRate }}%<br>
+                            保険料総額: {{ row.insuranceTotal | number:'1.0-2' }}円（健康保険料＋厚生年金保険料＋子ども子育て拠出金）<br>
+                            健康保険料: {{ row.healthInsurance }}円（標準報酬月額×料率）<br>
+                            健康保険料控除額: {{ row.healthInsuranceDeduction }}円（健康保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
+                            厚生年金保険料: {{ row.pension }}円（標準報酬月額×料率）<br>
+                            厚生年金保険料控除額: {{ row.pensionDeduction }}円（厚生年金保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
+                            控除額合計: {{ row.deductionTotal }}円<br>
+                            子ども子育て拠出金: {{ row.childcare }}円（標準報酬月額×子ども子育て拠出金率）<br>
+                            会社負担: {{ row.companyShare }}円（保険料総額－労働者負担額＋子ども子育て拠出金）
+                          </div>
                         </div>
-                        <div>
-                          <strong>標準報酬月額:</strong>
-                          {{ row.monthly }}（{{ row.grade }}）
-                        </div>
-                        <div>
-                          <strong>控除・会社負担計算根拠:</strong><br>
-                          適用都道府県: {{ row.prefectureName || 'ー' }}<br>
-                          健康保険料率: {{ row.healthRate }}%<span *ngIf="row.careRate && row.careRate > 0">（介護保険料率: {{ row.careRate }}% も加算）</span><br>
-                          厚生年金保険料率: {{ row.pensionRate }}%<br>
-                          子ども子育て拠出金率: {{ row.childcareRate }}%<br>
-                          保険料総額: {{ row.insuranceTotal | number:'1.0-2' }}円（健康保険料＋厚生年金保険料＋子ども子育て拠出金）<br>
-                          健康保険料: {{ row.healthInsurance }}円（標準報酬月額×料率）<br>
-                          健康保険料控除額: {{ row.healthInsuranceDeduction }}円（健康保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
-                          厚生年金保険料: {{ row.pension }}円（標準報酬月額×料率）<br>
-                          厚生年金保険料控除額: {{ row.pensionDeduction }}円（厚生年金保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
-                          控除額合計: {{ row.deductionTotal }}円<br>
-                          子ども子育て拠出金: {{ row.childcare }}円（標準報酬月額×子ども子育て拠出金率）<br>
-                          会社負担: {{ row.companyShare }}円（保険料総額－労働者負担額＋子ども子育て拠出金）
-                        </div>
+                        <button type="button" class="remove-row-btn" (click)="removeSalaryRow(i)">削除</button>
                       </td>
                     </tr>
                   </ng-container>

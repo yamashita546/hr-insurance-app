@@ -78,3 +78,63 @@ button:hover {
   text-align: right;
   margin-top: 24px;
 }
+
+.popover-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.12);
+  z-index: 1001;
+}
+.popover-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1002;
+  background: #fff;
+  color: #222;
+  border: 1.5px solid #1976d2;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(25, 118, 210, 0.18);
+  padding: 18px 24px 14px 24px;
+  min-width: 480px;
+  max-width: 720px;
+  max-height: 340px;
+  font-size: 0.92em;
+  white-space: normal;
+  text-align: left;
+  overflow-y: auto;
+  animation: popover-fadein 0.18s;
+}
+@keyframes popover-fadein {
+  from { opacity: 0; transform: translate(-50%, -60%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+.popover-close {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.3em;
+  color: #1976d2;
+  cursor: pointer;
+  z-index: 1003;
+}
+.popover-content strong {
+  color: #1976d2;
+  margin-right: 0.5em;
+}
+/* .popover-content div {
+  display: inline;
+}
+.popover-content br {
+  display: none;
+} */
+@media (max-width: 900px) {
+  .popover-content {
+    min-width: 320px;
+    max-width: 98vw;
+    font-size: 0.88em;
+  }
+}

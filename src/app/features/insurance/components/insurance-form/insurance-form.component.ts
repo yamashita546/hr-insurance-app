@@ -37,6 +37,7 @@ export class InsuranceFormComponent implements OnInit {
   registeredEmployeeIds: Set<string> = new Set();
   insuranceSalaryCalculations: any[] = [];
   insuranceBonusCalculations: any[] = [];
+  selectedPopoverIndex: number | null = null;
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -630,6 +631,23 @@ export class InsuranceFormComponent implements OnInit {
     const msg = `本当に「${row.officeName} ${row.employeeName}」を削除してよろしいですか？`;
     if (confirm(msg)) {
       this.previewList.splice(index, 1);
+    }
+  }
+
+  closePopover() {
+    this.selectedPopoverIndex = null;
+  }
+
+  removeSalaryRow(index: number) {
+    const row = this.previewList[index];
+    const msg = `本当に「${row.officeName} ${row.employeeName}」を削除してよろしいですか？`;
+    if (confirm(msg)) {
+      this.previewList.splice(index, 1);
+      if (this.selectedPopoverIndex === index) {
+        this.selectedPopoverIndex = null;
+      } else if (this.selectedPopoverIndex !== null && this.selectedPopoverIndex > index) {
+        this.selectedPopoverIndex--;
+      }
     }
   }
 }

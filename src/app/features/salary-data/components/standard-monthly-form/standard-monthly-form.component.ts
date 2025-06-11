@@ -80,14 +80,20 @@ export class StandardMonthlyFormComponent implements OnInit {
     let year = this.salaryFromYear;
     let month = this.salaryFromMonth;
     while (year < this.salaryToYear || (year === this.salaryToYear && month <= this.salaryToMonth)) {
+      // 対象年月の給与データを取得
+      const ym = `${year}-${String(month).padStart(2, '0')}`;
+      const salary = this.salaries.find(s => s.targetYearMonth === ym && (!this.selectedEmployeeId || s.employeeId === this.selectedEmployeeId));
+      const inKind = salary ? (salary.totalInKind || 0) : 0;
+      const inKindRetro = salary ? (salary.totalRetro || 0) : 0;
+      console.log(`[generateCalculationRows] ym: ${ym}, salary:`, salary, 'inKind:', inKind, 'inKindRetro:', inKindRetro);
       rows.push({
         year,
         month,
         days: 0,
         cash: 0,
         cashRetro: 0,
-        inKind: 0,
-        inKindRetro: 0,
+        inKind,
+        inKindRetro,
         sum: 0,
         excluded: false
       });

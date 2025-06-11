@@ -27,7 +27,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let row of getCurrentStandardMonthlyList()">
-          <td>{{ getOfficeName(row.officeId) }}</td>
+          <td>{{ getOfficeName(getLatestOfficeId(row.employeeId) || '') }}</td>
           <td>{{ getEmployeeName(row.employeeId) }}</td>
           <td>
             <ng-container *ngIf="getCurrentDecision(row) as current; else noCurrent">
@@ -61,7 +61,7 @@
             <ng-template #noNext>ー</ng-template>
           </td>
           <td>
-            <button [routerLink]="['/detail-standard-monthly']" [queryParams]="{ employeeId: row.employeeId, officeId: row.officeId }">詳細</button>
+            <button [routerLink]="['/detail-standard-monthly']" [queryParams]="{ employeeId: row.employeeId, officeId: getLatestOfficeId(row.employeeId) || '' }">詳細</button>
           </td>
         </tr>
       </tbody>

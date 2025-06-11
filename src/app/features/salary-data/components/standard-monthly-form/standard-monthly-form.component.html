@@ -24,7 +24,7 @@
           <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
         </select>
         <label>従業員</label>
-        <select [(ngModel)]="selectedEmployeeId" name="employeeId" [disabled]="editMode">
+        <select [(ngModel)]="selectedEmployeeId" name="employeeId" [disabled]="editMode" (change)="onEmployeeChange()">
           <option value="">従業員を選択</option>
           <option *ngFor="let emp of filteredEmployeesByOffice" [value]="emp.employeeId">
             {{ emp.employeeId }} {{ emp.lastName }}{{ emp.firstName }}
@@ -62,21 +62,10 @@
         <button type="button" (click)="onDecision()">決定</button>
       </div>
     </div>
-  
-
-    
-    <!-- <div *ngIf="decisionType === 're'">
-      <!- 再決定用フォーム（今後調整） -->
-      <!-- <div style="color:#1976d2;">再決定用フォーム（今後調整）</div> -->
-    <!-- </div> -->
-    <!-- <div *ngIf="decisionType === 'other'"> -->
-      <!-- その他用フォーム（今後調整） -->
-      <!-- <div style="color:#1976d2;">その他用フォーム（今後調整）</div> -->
-    <!-- </div> --> 
   </form>
 
   <!-- 社会保険適用状況集計 -->
-  <div *ngIf="decisionType !== 'entry' " class="summary-table-block">
+  <div *ngIf="decisionType !== 'entry' && isConfirmed" class="summary-table-block">
     <h4>社会保険加入状況</h4>
     <table class="summary-table">
       <tr>
@@ -96,7 +85,7 @@
           <td>{{ cd.healthGrade || 'ー' }}({{ cd.pensionGrade || 'ー' }})</td>
           <td>{{ cd.healthMonthly != null ? (cd.healthMonthly | currency:'JPY':'symbol':'1.0-0') : 'ー' }}</td>
           <td>{{ cd.applyYearMonth ? (cd.applyYearMonth.split('-')[0] + '年' + cd.applyYearMonth.split('-')[1] + '月') : 'ー' }}</td>
-          <td>{{ hasNextDecision ? '〇' : '×' }}</td>
+          <td>{{ nextDecision ? '〇' : '×' }}</td>
         </tr>
       </ng-container>
       <ng-template #noDecision>
@@ -107,14 +96,14 @@
           <td>ー</td>
           <td>ー</td>
           <td>ー</td>
-          <td>{{ hasNextDecision ? '〇' : '×' }}</td>
+          <td>{{ nextDecision ? '〇' : '×' }}</td>
         </tr>
       </ng-template>
     </table>
   </div>
 
   <!-- 算定基礎情報 -->
-  <div *ngIf="decisionType !== 'entry'" class="calculation-table-block">
+  <div *ngIf="decisionType !== 'entry' && isConfirmed" class="calculation-table-block">
     <h3>算定基礎情報</h3>
     <table class="calculation-table">
       <thead>
@@ -143,7 +132,7 @@
   </div>
 
   <!-- 算出根拠入力テーブル -->
-  <div *ngIf="decisionType !== 'entry'" class="calculation-table-block">
+  <div *ngIf="decisionType !== 'entry' && isConfirmed" class="calculation-table-block">
     <h3>算出根拠入力（健康保険 算定基礎届参照）</h3>
     <table class="calculation-table">
       <thead>
@@ -186,7 +175,7 @@
   </div>
 
   <!-- チェック項目パート -->
-  <div *ngIf="decisionType !== 'entry'" class="check-items-block">
+  <div *ngIf="decisionType !== 'entry' && isConfirmed" class="check-items-block">
     <h4>該当する項目にチェックしてください</h4>
     <div class="check-items-list">
       <label><input type="checkbox" [(ngModel)]="checkItems[1]" name="check1" /> 1. 70歳以上被用者算定</label>
@@ -203,13 +192,13 @@
   </div>
 
   <div class="form-actions">
-    <button type="button" (click)="onStandardMonthlyDecision()">算定</button>
+    <button type="button" *ngIf="decisionType !== 'entry' && isConfirmed" (click)="onStandardMonthlyDecision()">算定</button>
   </div> 
 
 
 
   <!-- 判定結果一覧（定時決定）は常に表示 -->
-  <div *ngIf="decisionType !== 'entry' && resultList && resultList.length > 0" class="result-table-block">
+  <div *ngIf="decisionType !== 'entry' && isCalculated" class="result-table-block">
     <h3>判定結果一覧（定時決定）</h3>
     <table class="result-table">
       <thead>
@@ -301,7 +290,6 @@
             <td><input type="number" [(ngModel)]="row.estimatedPositionAllowance" name="positionAllowance{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
             <td><input type="number" [(ngModel)]="row.estimatedOtherAllowance" name="otherAllowance{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
             <td><input type="number" [(ngModel)]="row.estimatedInKind" name="inKind{{i}}" (input)="updateRowSum(i)" /></td>
-            <td><input type="number" [(ngModel)]="row.estimatedInKindRetro" name="inKindRetro{{i}}" (input)="updateRowSum(i)" /></td>
             <td>{{ row.estimatedTotal | currency:'JPY':'symbol':'1.0-0' }}</td>
           </tr>
         </tbody>

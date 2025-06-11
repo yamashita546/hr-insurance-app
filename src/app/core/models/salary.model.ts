@@ -13,6 +13,7 @@ export interface Salary {
     splitCurrency?: number; // 通勤費按分
     otherAllowanceName?: string; // その他手当名
     otherAllowance?: number; // その他手当
+    totalOtherAllowance?: number; // その他手当合計
     totalCurrency?: number; // 通貨合計
   
     // 現物支給関連

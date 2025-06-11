@@ -192,11 +192,11 @@ export class SalaryFormComponent implements OnInit {
         return;
       }
       // 合計値計算
-      const totalAllowance = (Number(this.salaryForm.commuteAllowance) || 0)
-        + (Number(this.salaryForm.positionAllowance) || 0)
-        + this.totalOtherAllowance;
+      const totalOtherAllowance = (this.otherAllowances || []).reduce((sum, item) => sum + (Number(item.otherAllowance) || 0), 0);
+      const totalAllowance = (Number(this.salaryForm.overtimeSalary) || 0)
+        + (Number(this.salaryForm.commuteAllowance) || 0)
+        + totalOtherAllowance;
       const totalSalary = (Number(this.salaryForm.basicSalary) || 0)
-        + (Number(this.salaryForm.overtimeSalary) || 0)
         + totalAllowance
         + this.totalInKind
         + this.totalRetro
@@ -210,7 +210,7 @@ export class SalaryFormComponent implements OnInit {
         commuteAllowance: Number(this.salaryForm.commuteAllowance) || 0,
         positionAllowance: Number(this.salaryForm.positionAllowance) || 0,
         otherAllowances: this.otherAllowances,
-        totalOtherAllowance: this.totalOtherAllowance,
+        totalOtherAllowance: totalOtherAllowance,
         inKindAllowances: this.inKindAllowances,
         totalInKind: this.totalInKind,
         retroAllowances: this.retroAllowances,

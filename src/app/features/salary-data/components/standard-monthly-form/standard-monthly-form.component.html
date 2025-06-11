@@ -113,11 +113,38 @@
     </table>
   </div>
 
-  
+  <!-- 算定基礎情報 -->
+  <div *ngIf="decisionType !== 'entry'" class="calculation-table-block">
+    <h3>算定基礎情報</h3>
+    <table class="calculation-table">
+      <thead>
+        <tr>
+          <th>従業員情報</th>
+          <th [attr.colspan]="calculationRows.length">勤怠情報</th>
+          <th [attr.colspan]="calculationRows.length">給与情報</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><button (click)="onEmployeeInfo()">従業員情報</button></td>
+          <td [attr.colspan]="calculationRows.length">
+            <ng-container *ngFor="let row of calculationRows">
+              <button (click)="onAttendanceInfo(row.year, row.month)">{{ row.month }}月</button>
+            </ng-container>
+          </td>
+          <td [attr.colspan]="calculationRows.length">
+            <ng-container *ngFor="let row of calculationRows">
+              <button (click)="onSalaryInfo(row.year, row.month)">{{ row.month }}月</button>
+            </ng-container>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <!-- 算出根拠入力テーブル -->
   <div *ngIf="decisionType !== 'entry'" class="calculation-table-block">
-    <h3>算出根拠入力（健康保険 算定基礎届）</h3>
+    <h3>算出根拠入力（健康保険 算定基礎届参照）</h3>
     <table class="calculation-table">
       <thead>
         <tr>

@@ -91,7 +91,6 @@ export class StandardMonthlyFormComponent implements OnInit {
       const salary = this.salaries.find(s => s.targetYearMonth === ym && (!this.selectedEmployeeId || s.employeeId === this.selectedEmployeeId));
       const inKind = salary ? (salary.totalInKind || 0) : 0;
       const inKindRetro = salary ? (salary.totalRetro || 0) : 0;
-      console.log(`[generateCalculationRows] ym: ${ym}, salary:`, salary, 'inKind:', inKind, 'inKindRetro:', inKindRetro);
       rows.push({
         year,
         month,
@@ -208,7 +207,6 @@ export class StandardMonthlyFormComponent implements OnInit {
   getCurrentDecisionForEmployee(employeeId: string, officeId: string): StandardMonthlyDecision | null {
     const today = new Date();
     const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-    // console.log('currentYm:', currentYm, 'employeeId:', employeeId, 'officeId:', officeId);
     const candidates = this.standardMonthlyDecisions
       .filter(r =>
         r.employeeId === employeeId &&
@@ -216,7 +214,6 @@ export class StandardMonthlyFormComponent implements OnInit {
         r.applyYearMonth <= currentYm
       )
       .sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth));
-    // console.log('candidates:', candidates);
     return candidates[0] || null;
   }
 
@@ -259,6 +256,23 @@ export class StandardMonthlyFormComponent implements OnInit {
       return `${year}-${String(month + 1).padStart(2, '0')}`;
     }
   }
+
+  onEmployeeInfo() {
+    console.log('従業員情報');
+  }
+
+  onAttendanceInfo(year: number, month: number) {
+    console.log(`勤怠情報: ${year}年${month}月`);
+  }
+
+  onSalaryInfo(year: number, month: number) {
+    console.log(`給与情報: ${year}年${month}月`);
+  }
+
+
+
+
+
 
   // 決定ボタン押下時
   async onDecision() {
@@ -402,17 +416,13 @@ export class StandardMonthlyFormComponent implements OnInit {
 
   // 算定ボタン押下時
   onStandardMonthlyDecision() {
-    console.log('onStandardMonthlyDecision');
     this.isConfirmed = true;
     const officeId = this.selectedOfficeId || this.getOfficeIdForSelectedEmployee();
     if (!this.selectedEmployeeId || !officeId) return;
-    console.log('selectedEmployeeId:', this.selectedEmployeeId);
-    console.log('officeId:', officeId);
     const avg = this.modifiedAverage;
     const office = this.offices.find((o: any) => o.id === officeId);
     const insuranceType = office && office.insuranceType ? office.insuranceType : '1';
     const applyYm = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
-    console.log('applyYm:', applyYm);
     const health = this.judgeStandardMonthlyGrade(avg, 'health', insuranceType, applyYm);
     const pension = this.judgeStandardMonthlyGrade(avg, 'pension', insuranceType, applyYm);
 
@@ -433,7 +443,6 @@ export class StandardMonthlyFormComponent implements OnInit {
       pensionJudgedGrade: pension.grade,
       pensionJudgedMonthly: pension.compensation
     }];
-    console.log('判定結果 resultList:', this.resultList);
   }
 
   // 等級判定：与えられた値に対して標準報酬月額グレードから等級・月額を返す

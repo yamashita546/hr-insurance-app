@@ -286,11 +286,14 @@ export class DetailSalaryComponent implements OnInit {
   async onSaveSalaryEdit() {
     if (!this.salary || !this.employee) return;
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
-    const totalAllowance = (Number(this.editSalaryForm.commuteAllowance) || 0)
-      + (Number(this.editSalaryForm.positionAllowance) || 0)
-      + this.editSalaryForm.totalOtherAllowance;
+    // totalOtherAllowance: otherAllowances配列内のamountの合計
+    const totalOtherAllowance = (this.editSalaryForm.otherAllowances || []).reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0);
+    // totalAllowance: overtimeSalary + commuteAllowance + totalOtherAllowance
+    const totalAllowance = (Number(this.editSalaryForm.overtimeSalary) || 0)
+      + (Number(this.editSalaryForm.commuteAllowance) || 0)
+      + totalOtherAllowance;
+    // totalSalary: basicSalary + totalAllowance + totalInKind + totalRetro + totalActualExpense
     const totalSalary = (Number(this.editSalaryForm.basicSalary) || 0)
-      + (Number(this.editSalaryForm.overtimeSalary) || 0)
       + totalAllowance
       + this.editSalaryForm.totalInKind
       + this.editSalaryForm.totalRetro
@@ -302,7 +305,7 @@ export class DetailSalaryComponent implements OnInit {
       commuteAllowance: Number(this.editSalaryForm.commuteAllowance) || 0,
       positionAllowance: Number(this.editSalaryForm.positionAllowance) || 0,
       otherAllowances: this.editSalaryForm.otherAllowances,
-      totalOtherAllowance: this.editSalaryForm.totalOtherAllowance,
+      totalOtherAllowance: totalOtherAllowance,
       inKindAllowances: this.editSalaryForm.inKindAllowances,
       totalInKind: this.editSalaryForm.totalInKind,
       retroAllowances: this.editSalaryForm.retroAllowances,

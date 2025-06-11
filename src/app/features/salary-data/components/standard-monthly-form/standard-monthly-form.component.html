@@ -4,6 +4,7 @@
     <div>企業ID：{{ companyId }}</div>
     <div>企業名：{{ companyName }}</div>
   </div>
+
   <div *ngIf="editMode" class="edit-banner">
     <span>編集モード（再登録）</span>
     <button (click)="onDelete()" style="margin-left:2em;color:#b71c1c;">削除</button>
@@ -15,7 +16,7 @@
         <option *ngFor="let t of decisionTypes" [value]="t">{{ decisionTypeLabels[t] }}</option>
       </select>
     </div>
-    <div *ngIf="decisionType === 'fixed'">
+    <div *ngIf="decisionType !== 'entry'">
       <div class="form-row">
         <label>事業所</label>
         <select [(ngModel)]="selectedOfficeId" name="office" [disabled]="editMode" (change)="onOfficeChange()">
@@ -23,7 +24,7 @@
           <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
         </select>
         <label>従業員</label>
-        <select [(ngModel)]="selectedEmployeeId" name="employeeId" [disabled]="editMode">
+        <select [(ngModel)]="selectedEmployeeId" name="employeeId" [disabled]="editMode" (change)="onEmployeeChange()">
           <option value="">従業員を選択</option>
           <option *ngFor="let emp of filteredEmployeesByOffice" [value]="emp.employeeId">
             {{ emp.employeeId }} {{ emp.lastName }}{{ emp.firstName }}
@@ -61,202 +62,10 @@
         <button type="button" (click)="onDecision()">決定</button>
       </div>
     </div>
-    <div *ngIf="decisionType === 'occasional'">
-      <div class="form-row">
-        <label>事業所</label>
-        <select [(ngModel)]="selectedOfficeId" name="office_occasional">
-          <option value="">全事業所</option>
-          <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
-        </select>
-        <label>従業員</label>
-        <select [(ngModel)]="selectedEmployeeId" name="employeeId_occasional">
-          <option value="">全従業員</option>
-          <option *ngFor="let emp of employeesSortedByIdName" [value]="emp.employeeId">
-            {{ emp.employeeId }} {{ emp.lastName }}{{ emp.firstName }}
-          </option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label>適用開始年</label>
-        <select [(ngModel)]="startYear" name="startYear_occasional">
-          <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
-        </select>
-        <label>適用開始月</label>
-        <select [(ngModel)]="startMonth" name="startMonth_occasional" (change)="onOccasionalStartMonthChange()">
-          <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label>算出根拠：支給年月（開始）</label>
-        <select [(ngModel)]="salaryFromYear" name="salaryFromYear_occasional">
-          <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
-        </select>
-        <select [(ngModel)]="salaryFromMonth" name="salaryFromMonth_occasional">
-          <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
-        </select>
-        <span>～</span>
-        <select [(ngModel)]="salaryToYear" name="salaryToYear_occasional">
-          <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
-        </select>
-        <select [(ngModel)]="salaryToMonth" name="salaryToMonth_occasional">
-          <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
-        </select>
-      </div>
-      <div class="form-actions">
-        <button type="button" (click)="onOccasionalDecision()">決定</button>
-      </div>
-      <div *ngIf="decisionType === 'occasional' && isConfirmed && resultList && resultList.length > 0" class="result-table-block">
-        <div class="summary-table-block">
-          <h4>社会保険適用状況集計</h4>
-          <table class="summary-table">
-            <tr>
-              <th>社会保険<br>加入者</th>
-              <th>定時決定<br>対象者</th>
-              <th>定時決定<br>非対象者</th>
-              <th>社会保険<br>非加入者</th>
-            </tr>
-            <tr>
-              <td>{{ healthInsuranceMemberCount }} 名</td>
-              <td>{{ fixedDecisionTargetCount }} 名</td>
-              <td>{{ fixedDecisionNotTargetCount }} 名</td>
-              <td>{{ healthInsuranceNotMemberCount }} 名</td>
-            </tr>
-          </table>
-        </div>
-        <h3>判定結果一覧（随時改定）</h3>
-        <table class="result-table">
-          <thead>
-            <tr>
-              <th>従業員名</th>
-              <th>所属事業所</th>
-              <th>現等級</th>
-              <th>現月額</th>
-              <th>4月給与</th>
-              <th>5月給与</th>
-              <th>6月給与</th>
-              <th>対象月</th>
-              <th>対象期間<br>給与合計</th>
-              <th>平均</th>
-              <th>健康保険<br>等級</th>
-              <th>健康保険<br>新月額</th>
-              <th>厚生年金<br>等級</th>
-              <th>厚生年金<br>新月額</th>
-              <th>適用開始日</th>
-              <th>削除</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let row of resultList; let i = index">
-              <td>{{ row.employeeName }}</td>
-              <td>{{ getOfficeName(row.officeId) }}</td>
-              <td>
-                <ng-container *ngIf="getCurrentDecisionForEmployee(row.employeeId, row.officeId) as current; else noCurrent">
-                  {{ current.healthGrade }}（{{ current.pensionGrade }}）
-                </ng-container>
-                <ng-template #noCurrent>ー</ng-template>
-              </td>
-              <td>
-                <ng-container *ngIf="getCurrentDecisionForEmployee(row.employeeId, row.officeId) as current; else noCurrent">
-                  {{ current.healthMonthly | currency:'JPY':'symbol':'1.0-0' }}
-                </ng-container>
-                <ng-template #noCurrent>ー</ng-template>
-              </td>
-              <td>{{ row.aprilSalary != null ? (row.aprilSalary | currency:'JPY':'symbol':'1.0-0') : 'ー' }}</td>
-              <td>{{ row.maySalary != null ? (row.maySalary | currency:'JPY':'symbol':'1.0-0') : 'ー' }}</td>
-              <td>{{ row.juneSalary != null ? (row.juneSalary | currency:'JPY':'symbol':'1.0-0') : 'ー' }}</td>
-              <td>{{ row.usedMonths || 'ー' }}</td>
-              <td>{{ row.salaryTotal | currency:'JPY':'symbol':'1.0-0' }}</td>
-              <td>{{ row.salaryAvg | currency:'JPY':'symbol':'1.0-0' }}</td>
-              <td>{{ row.judgedGrade }}</td>
-              <td>{{ row.judgedMonthly | currency:'JPY':'symbol':'1.0-0' }}</td>
-              <td>{{ row.pensionJudgedGrade }}</td>
-              <td>{{ row.pensionJudgedMonthly | currency:'JPY':'symbol':'1.0-0' }}</td>
-              <td>{{ startYear }}年{{ startMonth }}月</td>
-              <td>
-                <button type="button" (click)="onRemoveRow(i)">削除</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="form-actions">
-          <button type="button" (click)="onSaveOccasional()">保存</button>
-        </div>
-      </div>
-    </div>
-    <div *ngIf="decisionType === 'entry'">
-      <div class="form-row">
-        <label>支社</label>
-        <select [(ngModel)]="selectedOfficeId" name="office_entry" [disabled]="editMode">
-          <option value="">全支社</option>
-          <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
-        </select>
-        <label>従業員</label>
-        <select [(ngModel)]="selectedEmployeeId" name="employeeId" [disabled]="editMode">
-          <option value="">全従業員</option>
-          <option *ngFor="let emp of employeesSortedByIdName" [value]="emp.employeeId">
-            {{ emp.employeeId }} {{ emp.lastName }}{{ emp.firstName }}
-          </option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label>適用開始年</label>
-        <select [(ngModel)]="startYear" name="startYear_entry" [disabled]="editMode">
-          <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
-        </select>
-        <label>適用開始月</label>
-        <select [(ngModel)]="startMonth" name="startMonth_entry" [disabled]="editMode">
-          <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
-        </select>
-      </div>
-      <div class="form-actions">
-        <button type="button" (click)="onEntryDecision()">決定</button>
-      </div>
-      <div *ngIf="resultList && resultList.length > 0" class="result-table-block">
-        <h3>見込み報酬額入力</h3>
-        <table class="result-table">
-          <thead>
-            <tr>
-              <th>従業員名</th>
-              <th>基本給</th>
-              <th>残業代</th>
-              <th>通勤費</th>
-              <th>役職手当</th>
-              <th>その他手当</th>
-              <th>現物支給</th>
-              <th>支給総額</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let row of resultList; let i = index">
-              <td>{{ row.employeeName }}</td>
-              <td><input type="number" [(ngModel)]="row.estimatedBaseSalary" name="baseSalary{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
-              <td><input type="number" [(ngModel)]="row.estimatedOvertime" name="overtime{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
-              <td><input type="number" [(ngModel)]="row.estimatedCommute" name="commute{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
-              <td><input type="number" [(ngModel)]="row.estimatedPositionAllowance" name="positionAllowance{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
-              <td><input type="number" [(ngModel)]="row.estimatedOtherAllowance" name="otherAllowance{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
-              <td><input type="number" [(ngModel)]="row.estimatedInKind" name="inKind{{i}}" (input)="updateRowSum(i)" /></td>
-              <td><input type="number" [(ngModel)]="row.estimatedInKindRetro" name="inKindRetro{{i}}" (input)="updateRowSum(i)" /></td>
-              <td>{{ row.estimatedTotal | currency:'JPY':'symbol':'1.0-0' }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="form-actions">
-          <button type="button" (click)="onConfirmEstimated()">決定</button>
-        </div>
-      </div>
-    </div>
-    <div *ngIf="decisionType === 're'">
-      <!-- 再決定用フォーム（今後調整） -->
-      <div style="color:#1976d2;">再決定用フォーム（今後調整）</div>
-    </div>
-    <div *ngIf="decisionType === 'other'">
-      <!-- その他用フォーム（今後調整） -->
-      <div style="color:#1976d2;">その他用フォーム（今後調整）</div>
-    </div>
   </form>
 
-  <!-- 社会保険適用状況集計（編集モード時は非表示） -->
-  <div *ngIf="decisionType === 'fixed' && selectedEmployeeId && !editMode" class="summary-table-block">
+  <!-- 社会保険適用状況集計 -->
+  <div *ngIf="decisionType !== 'entry' && isConfirmed" class="summary-table-block">
     <h4>社会保険加入状況</h4>
     <table class="summary-table">
       <tr>
@@ -273,10 +82,10 @@
           <td>{{ selectedEmployeeHealthInsuranceApplicable ? '〇' : '×' }}</td>
           <td>{{ selectedEmployeeCareInsuranceApplicable ? '〇' : '×' }}</td>
           <td>{{ selectedEmployeePensionApplicable ? '〇' : '×' }}</td>
-          <td>{{ cd.healthGrade || 'ー' }}</td>
+          <td>{{ cd.healthGrade || 'ー' }}({{ cd.pensionGrade || 'ー' }})</td>
           <td>{{ cd.healthMonthly != null ? (cd.healthMonthly | currency:'JPY':'symbol':'1.0-0') : 'ー' }}</td>
           <td>{{ cd.applyYearMonth ? (cd.applyYearMonth.split('-')[0] + '年' + cd.applyYearMonth.split('-')[1] + '月') : 'ー' }}</td>
-          <td>{{ hasNextDecision ? '〇' : '×' }}</td>
+          <td>{{ nextDecision ? '〇' : '×' }}</td>
         </tr>
       </ng-container>
       <ng-template #noDecision>
@@ -287,118 +96,44 @@
           <td>ー</td>
           <td>ー</td>
           <td>ー</td>
-          <td>{{ hasNextDecision ? '〇' : '×' }}</td>
+          <td>{{ nextDecision ? '〇' : '×' }}</td>
         </tr>
       </ng-template>
     </table>
   </div>
 
-  <!-- 判定結果一覧（定時決定）は常に表示 -->
-  <div *ngIf="decisionType === 'fixed' && isConfirmed && resultList && resultList.length > 0" class="result-table-block">
-    <h3>判定結果一覧（定時決定）</h3>
-    <table class="result-table">
+  <!-- 算定基礎情報 -->
+  <div *ngIf="decisionType !== 'entry' && isConfirmed" class="calculation-table-block">
+    <h3>算定基礎情報</h3>
+    <table class="calculation-table">
       <thead>
         <tr>
-          <th>従業員名</th>
-          <th>所属事業所</th>
-          <th>現等級</th>
-          <th>現月額</th>
-          <th>4月給与</th>
-          <th>5月給与</th>
-          <th>6月給与</th>
-          <th>対象月</th>
-          <th>対象期間<br>給与合計</th>
-          <th>平均</th>
-          <th>健康保険<br>等級</th>
-          <th>健康保険<br>新月額</th>
-          <th>厚生年金<br>等級</th>
-          <th>厚生年金<br>新月額</th>
-          <th>適用開始日</th>
-          <th>修正</th>
+          <th>従業員情報</th>
+          <th [attr.colspan]="calculationRows.length">勤怠情報</th>
+          <th [attr.colspan]="calculationRows.length">給与情報</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let row of resultList; let i = index">
-          <td>{{ row.employeeName }}</td>
-          <td>{{ getOfficeName(row.officeId) }}</td>
-          <td>
-            <ng-container *ngIf="getCurrentDecisionForEmployee(row.employeeId, row.officeId) as current; else noCurrent">
-              {{ current.healthGrade }}（{{ current.pensionGrade }}）
+        <tr>
+          <td><button (click)="onEmployeeInfo()">従業員情報</button></td>
+          <td [attr.colspan]="calculationRows.length">
+            <ng-container *ngFor="let row of calculationRows">
+              <button (click)="onAttendanceInfo(row.year, row.month)">{{ row.month }}月</button>
             </ng-container>
-            <ng-template #noCurrent>ー</ng-template>
           </td>
-          <td>
-            <ng-container *ngIf="getCurrentDecisionForEmployee(row.employeeId, row.officeId) as current; else noCurrent">
-              {{ current.healthMonthly | currency:'JPY':'symbol':'1.0-0' }}
+          <td [attr.colspan]="calculationRows.length">
+            <ng-container *ngFor="let row of calculationRows">
+              <button (click)="onSalaryInfo(row.year, row.month)">{{ row.month }}月</button>
             </ng-container>
-            <ng-template #noCurrent>ー</ng-template>
-          </td>
-          <td>{{ row.aprilSalary != null ? (row.aprilSalary | currency:'JPY':'symbol':'1.0-0') : 'ー' }}</td>
-          <td>{{ row.maySalary != null ? (row.maySalary | currency:'JPY':'symbol':'1.0-0') : 'ー' }}</td>
-          <td>{{ row.juneSalary != null ? (row.juneSalary | currency:'JPY':'symbol':'1.0-0') : 'ー' }}</td>
-          <td>{{ row.usedMonths || 'ー' }}</td>
-          <td>{{ row.salaryTotal | currency:'JPY':'symbol':'1.0-0' }}</td>
-          <td>{{ row.salaryAvg | currency:'JPY':'symbol':'1.0-0' }}</td>
-          <td>
-            {{ row.judgedGrade }}
-          </td>
-          <td>
-            {{ row.judgedMonthly | currency:'JPY':'symbol':'1.0-0' }}
-          </td>
-          <td>
-            {{ row.pensionJudgedGrade }}
-          </td>
-          <td>
-            {{ row.pensionJudgedMonthly | currency:'JPY':'symbol':'1.0-0' }}
-          </td>
-          <td>{{ startYear }}年{{ startMonth }}月</td>
-          <td>
-            <button type="button" (click)="onRemoveRow(i)">削除</button>
           </td>
         </tr>
       </tbody>
     </table>
-    <div class="form-actions">
-      <button type="button" (click)="onSave()">保存</button>
-    </div>
-  </div>
-
-  <div *ngIf="decisionType === 'entry' && isConfirmed && resultList && resultList.length > 0" class="result-table-block">
-    <h3>判定結果一覧（入社時決定）</h3>
-    <table class="result-table">
-      <thead>
-        <tr>
-          <th>従業員名</th>
-          <th>所属事業所</th>
-          <th>見込み報酬合計</th>
-          <th>健康保険等級</th>
-          <th>健康保険月額</th>
-          <th>厚生年金等級</th>
-          <th>厚生年金月額</th>
-          <th>適用開始年月</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let row of resultList; let i = index">
-          <td>{{ row.employeeName }}</td>
-          <td>{{ getOfficeName(row.officeId) }}</td>
-          <td>{{ row.estimatedTotal | currency:'JPY':'symbol':'1.0-0' }}</td>
-          <td>{{ row.judgedGrade }}</td>
-          <td>{{ row.judgedMonthly | currency:'JPY':'symbol':'1.0-0' }}</td>
-          <td>{{ row.pensionJudgedGrade }}</td>
-          <td>{{ row.pensionJudgedMonthly | currency:'JPY':'symbol':'1.0-0' }}</td>
-          <td>{{ startYear }}年{{ startMonth }}月</td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="form-actions">
-      <button type="button" (click)="onSave()">保存</button>
-    </div>
   </div>
 
   <!-- 算出根拠入力テーブル -->
-  <div class="calculation-table-block">
-    <h3>算出根拠入力（健康保険 算定基礎届）</h3>
+  <div *ngIf="decisionType !== 'entry' && isConfirmed" class="calculation-table-block">
+    <h3>算出根拠入力（健康保険 算定基礎届参照）</h3>
     <table class="calculation-table">
       <thead>
         <tr>
@@ -433,17 +168,14 @@
         </tr>
         <tr>
           <th colspan="3">修正平均額</th>
-          <td><input type="number" [(ngModel)]="modifiedAverage" /></td>
+          <td>{{ modifiedAverage | currency:'JPY':'symbol':'1.0-0' }}</td>
         </tr>
       </tfoot>
     </table>
-    <div class="form-actions">
-      <button type="button" (click)="onSaveCalculation()">保存</button>
-    </div>
   </div>
 
   <!-- チェック項目パート -->
-  <div class="check-items-block">
+  <div *ngIf="decisionType !== 'entry' && isConfirmed" class="check-items-block">
     <h4>該当する項目にチェックしてください</h4>
     <div class="check-items-list">
       <label><input type="checkbox" [(ngModel)]="checkItems[1]" name="check1" /> 1. 70歳以上被用者算定</label>
@@ -456,6 +188,148 @@
       <label><input type="checkbox" [(ngModel)]="checkItems[8]" name="check8" /> 8. 年間平均</label>
       <label><input type="checkbox" [(ngModel)]="checkItems[9]" name="check9" /> 9. その他</label>
       <input type="text" [(ngModel)]="otherCheckText" name="otherCheckText" placeholder="その他の内容を入力" style="margin-left:1em;min-width:200px;" />
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" *ngIf="decisionType !== 'entry' && isConfirmed" (click)="onStandardMonthlyDecision()">算定</button>
+  </div> 
+
+
+
+  <!-- 判定結果一覧（定時決定）は常に表示 -->
+  <div *ngIf="decisionType !== 'entry' && isCalculated" class="result-table-block">
+    <h3>判定結果一覧（定時決定）</h3>
+    <table class="result-table">
+      <thead>
+        <tr>
+          <th>従業員名</th>
+          <th>所属事業所</th>
+          <th>現等級</th>
+          <th>現月額</th>
+          <th>対象期間<br>平均月額</th>
+          <th>健康保険<br>等級</th>
+          <th>健康保険<br>新月額</th>
+          <th>厚生年金<br>等級</th>
+          <th>厚生年金<br>新月額</th>
+          <th>適用開始日</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-template #noCurrent>ー</ng-template>
+        <tr *ngIf="resultList && resultList.length > 0">
+          <td>{{ resultList[0].employeeName }}</td>
+          <td>{{ getOfficeName(resultList[0].officeId) }}</td>
+          <td>{{ resultList[0].currentGrade }}</td>
+          <td>{{ resultList[0].currentMonthly | currency:'JPY':'symbol':'1.0-0' }}</td>
+          <td>{{ resultList[0].salaryAvg != null ? (resultList[0].salaryAvg | currency:'JPY':'symbol':'1.0-0') : 'ー' }}</td>
+          <td>{{ resultList[0].judgedGrade }}</td>
+          <td>{{ resultList[0].judgedMonthly | currency:'JPY':'symbol':'1.0-0' }}</td>
+          <td>{{ resultList[0].pensionJudgedGrade }}</td>
+          <td>{{ resultList[0].pensionJudgedMonthly | currency:'JPY':'symbol':'1.0-0' }}</td>
+          <td>{{ startYear }}年{{ startMonth }}月</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="form-actions">
+      <button type="button" (click)="onSave()">保存</button>
+    </div>
+  </div>
+
+
+  <!-- 入社時決定用 --> 
+  <div *ngIf="decisionType === 'entry'">
+    <div class="form-row">
+      <label>支社</label>
+      <select [(ngModel)]="selectedOfficeId" name="office_entry" [disabled]="editMode">
+        <option value="">全支社</option>
+        <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
+      </select>
+      <label>従業員</label>
+      <select [(ngModel)]="selectedEmployeeId" name="employeeId" [disabled]="editMode">
+        <option value="">全従業員</option>
+        <option *ngFor="let emp of employeesSortedByIdName" [value]="emp.employeeId">
+          {{ emp.employeeId }} {{ emp.lastName }}{{ emp.firstName }}
+        </option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>適用開始年</label>
+      <select [(ngModel)]="startYear" name="startYear_entry" [disabled]="editMode">
+        <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
+      </select>
+      <label>適用開始月</label>
+      <select [(ngModel)]="startMonth" name="startMonth_entry" [disabled]="editMode">
+        <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
+      </select>
+    </div>
+    <div class="form-actions">
+      <button type="button" (click)="onEntryDecision()">決定</button>
+    </div>
+    <div *ngIf="resultList && resultList.length > 0" class="result-table-block">
+      <h3>見込み報酬額入力</h3>
+      <table class="result-table">
+        <thead>
+          <tr>
+            <th>従業員名</th>
+            <th>基本給</th>
+            <th>残業代</th>
+            <th>通勤費</th>
+            <th>役職手当</th>
+            <th>その他手当</th>
+            <th>現物支給</th>
+            <th>支給総額</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of resultList; let i = index">
+            <td>{{ row.employeeName }}</td>
+            <td><input type="number" [(ngModel)]="row.estimatedBaseSalary" name="baseSalary{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
+            <td><input type="number" [(ngModel)]="row.estimatedOvertime" name="overtime{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
+            <td><input type="number" [(ngModel)]="row.estimatedCommute" name="commute{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
+            <td><input type="number" [(ngModel)]="row.estimatedPositionAllowance" name="positionAllowance{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
+            <td><input type="number" [(ngModel)]="row.estimatedOtherAllowance" name="otherAllowance{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
+            <td><input type="number" [(ngModel)]="row.estimatedInKind" name="inKind{{i}}" (input)="updateRowSum(i)" /></td>
+            <td>{{ row.estimatedTotal | currency:'JPY':'symbol':'1.0-0' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="form-actions">
+        <button type="button" (click)="onConfirmEstimated()">決定</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="decisionType === 'entry' && resultList && resultList.length > 0" class="result-table-block">
+    <h3>判定結果一覧（入社時決定）</h3>
+    <table class="result-table">
+      <thead>
+        <tr>
+          <th>従業員名</th>
+          <th>所属事業所</th>
+          <th>見込み報酬合計</th>
+          <th>健康保険等級</th>
+          <th>健康保険月額</th>
+          <th>厚生年金等級</th>
+          <th>厚生年金月額</th>
+          <th>適用開始年月</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of resultList; let i = index">
+          <td>{{ row.employeeName }}</td>
+          <td>{{ getOfficeName(row.officeId) }}</td>
+          <td>{{ row.estimatedTotal | currency:'JPY':'symbol':'1.0-0' }}</td>
+          <td>{{ row.judgedGrade }}</td>
+          <td>{{ row.judgedMonthly | currency:'JPY':'symbol':'1.0-0' }}</td>
+          <td>{{ row.pensionJudgedGrade }}</td>
+          <td>{{ row.pensionJudgedMonthly | currency:'JPY':'symbol':'1.0-0' }}</td>
+          <td>{{ startYear }}年{{ startMonth }}月</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="form-actions">
+      <button type="button" (click)="onSave()">保存</button>
     </div>
   </div>
 

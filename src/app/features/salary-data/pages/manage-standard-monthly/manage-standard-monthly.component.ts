@@ -45,6 +45,11 @@ export class ManageStandardMonthlyComponent implements OnInit {
     return emp ? `${emp.lastName} ${emp.firstName}` : employeeId;
   }
 
+  getLatestOfficeId(employeeId: string): string | undefined {
+    const emp = this.employees.find(e => e.employeeId === employeeId);
+    return emp?.officeId;
+  }
+
   getOfficeName(officeId: string): string {
     const office = this.offices.find(o => o.id === officeId);
     return office ? office.name : officeId;
@@ -99,7 +104,9 @@ export class ManageStandardMonthlyComponent implements OnInit {
       .filter(decision => decision.isActive !== false) // 無効データ除外
       .forEach(decision => {
         if (decision.applyYearMonth > currentYm) return; // 未来は除外
-        const key = `${decision.employeeId}_${decision.officeId}`;
+        // 最新officeIdでキーを作成
+        const latestOfficeId = this.getLatestOfficeId(decision.employeeId);
+        const key = `${decision.employeeId}_${latestOfficeId}`;
         if (!map.has(key) || map.get(key)!.applyYearMonth < decision.applyYearMonth) {
           map.set(key, decision);
         }

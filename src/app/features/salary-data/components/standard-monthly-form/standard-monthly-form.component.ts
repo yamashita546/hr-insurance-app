@@ -61,6 +61,8 @@ export class StandardMonthlyFormComponent implements OnInit {
   // 算出根拠入力用
   calculationRows: any[] = [];
 
+  
+
   get totalSum() {
     return this.calculationRows.filter(row => !row.excluded).reduce((acc, row) => acc + (row.sum || 0), 0);
   }
@@ -69,9 +71,13 @@ export class StandardMonthlyFormComponent implements OnInit {
     return includedRows.length > 0 ? Math.round(this.totalSum / includedRows.length) : 0;
   }
   get modifiedAverage() {
-    // 修正平均額も同様に対象外を除外して計算（現状は手動入力欄なので、必要ならここで自動計算も可）
     const includedRows = this.calculationRows.filter(row => !row.excluded);
-    return includedRows.length > 0 ? Math.round(this.totalSum / includedRows.length) : 0;
+    if (includedRows.length === 0) return 0;
+    // 遡及分の合計
+    const totalRetro = includedRows.reduce((sum, row) => sum + (Number(row.inKindRetro) || 0), 0);
+    // 総計から遡及分を引いた値で平均を算出
+    const modifiedTotal = this.totalSum - totalRetro;
+    return Math.round(modifiedTotal / includedRows.length);
   }
 
   // 指定した期間の月リストを生成
@@ -265,30 +271,72 @@ export class StandardMonthlyFormComponent implements OnInit {
       this.isConfirmed = false;
       return;
     }
-    // 決定時：支払い基礎日数自動計算
-    const emp = this.employees.find(e => e.employeeId === this.selectedEmployeeId);
-    console.log('選択従業員:', emp);
-    if (emp) {
-      console.log('emp.employeeType:', emp.employeeType);
+    // 1. 日数自動計算
+    this.autoSetDaysForCalculationRows();
+    // 2. 対象従業員フィルタ
+    let filteredEmployees = this.filterEmployeesForDecision();
+    // 3. 通貨欄用：各月の給与（totalSalary）をセット
+    if (this.selectedEmployeeId) {
+      this.calculationRows.forEach((row, i) => {
+        row.cash = this.getTotalSalaryForEmployeeAndPeriod(this.selectedEmployeeId, row.year, row.month);
+        row.inKind = this.getInKindTotalForEmployee(this.selectedEmployeeId, row.year, row.month);
+        row.inKindRetro = this.getRetroTotalForEmployee(this.selectedEmployeeId, row.year, row.month);
+        this.updateRowSum(i);
+        row.modifiedAverage = this.modifiedAverage;
+      });
     }
-    // パート・アルバイトの場合は勤怠から取得
-    if (emp && (emp.employeeType === 'parttime' || emp.employeeType === 'parttimejob')) {
+    this.isConfirmed = true;
+  }
+
+  // 共通：選択従業員・期間で給与情報を取得
+  private getSalaryListForSelectedEmployeeAndPeriod(employeeId: string): any[] {
+    const ymList: string[] = [];
+    let year = this.salaryFromYear;
+    let month = this.salaryFromMonth;
+    while (year < this.salaryToYear || (year === this.salaryToYear && month <= this.salaryToMonth)) {
+      ymList.push(`${year}-${String(month).padStart(2, '0')}`);
+      month++;
+      if (month > 12) {
+        year++;
+        month = 1;
+      }
+    }
+    return this.salaries.filter(s => s.employeeId === employeeId && ymList.includes(s.targetYearMonth));
+  }
+
+  // 通貨欄用：選択従業員・年月の給与情報からtotalSalaryを取得
+  private getTotalSalaryForEmployeeAndPeriod(employeeId: string, year: number, month: number): number {
+    const ym = `${year}-${String(month).padStart(2, '0')}`;
+    const salary = this.salaries.find(s => s.employeeId === employeeId && s.targetYearMonth === ym);
+    return salary ? (salary.totalSalary || 0) : 0;
+  }
+
+  // 現物：選択従業員・年月の給与情報からtotalInKindを取得
+  private getInKindTotalForEmployee(employeeId: string, year: number, month: number): number {
+    const ym = `${year}-${String(month).padStart(2, '0')}`;
+    const salary = this.salaries.find(s => s.employeeId === employeeId && s.targetYearMonth === ym);
+    return salary ? (salary.totalInKind || 0) : 0;
+  }
+
+  // 遡及：選択従業員・年月の給与情報からtotalRetroを取得
+  private getRetroTotalForEmployee(employeeId: string, year: number, month: number): number {
+    const ym = `${year}-${String(month).padStart(2, '0')}`;
+    const salary = this.salaries.find(s => s.employeeId === employeeId && s.targetYearMonth === ym);
+    return salary ? (salary.totalRetro || 0) : 0;
+  }
+
+  // 日数自動計算処理
+  private autoSetDaysForCalculationRows() {
+    const emp = this.employees.find(e => e.employeeId === this.selectedEmployeeId);
+    if (!emp) return;
+    if (emp.employeeType === 'parttime' || emp.employeeType === 'parttimejob') {
       this.calculationRows.forEach((row, idx) => {
-        // 勤怠データから該当月のactualWorkDaysを取得（employeeId, year, monthをすべて文字列で比較）
         const att = this.attendances.find(a => String(a.employeeId) === String(emp.employeeId) && String(a.year) === String(row.year) && String(a.month) === String(row.month));
-        console.log(`【${row.year}年${row.month}月】attendance:`, att);
-        if (att) {
-          console.log(`actualWorkDays:`, att.actualWorkDays);
-        } else {
-          console.log('attendanceデータが見つかりません');
-        }
         row.days = att && att.actualWorkDays != null ? att.actualWorkDays : 0;
       });
-    } else if (emp && (emp.employeeType === 'regular' || emp.employeeType === 'contract')) {
+    } else if (emp.employeeType === 'regular' || emp.employeeType === 'contract') {
       const office = this.offices.find(o => o.id === emp.officeId);
-      console.log('従業員のoffice:', office);
       const closingDay = office && office.salaryClosingDate ? Number(office.salaryClosingDate) : null;
-      console.log('salaryClosingDate:', closingDay);
       if (closingDay && this.calculationRows.length > 0) {
         this.calculationRows.forEach((row, idx) => {
           const year = row.year;
@@ -298,13 +346,14 @@ export class StandardMonthlyFormComponent implements OnInit {
           const fromDate = new Date(prevYear, prevMonth - 1, closingDay + 1);
           const toDate = new Date(year, month - 1, closingDay);
           const diff = (toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24) + 1;
-          console.log(`【${year}年${month}月】from:`, fromDate, 'to:', toDate, 'diff:', diff);
           row.days = diff;
         });
-        console.log('calculationRows after days set:', this.calculationRows);
       }
     }
-    // 定時決定・随時改定など
+  }
+
+  // 対象従業員フィルタ処理
+  private filterEmployeesForDecision() {
     let filteredEmployees = this.employees;
     if (this.selectedOfficeId) {
       filteredEmployees = filteredEmployees.filter(emp => emp.officeId === this.selectedOfficeId);
@@ -312,146 +361,83 @@ export class StandardMonthlyFormComponent implements OnInit {
     if (this.selectedEmployeeId) {
       filteredEmployees = filteredEmployees.filter(emp => emp.employeeId === this.selectedEmployeeId);
     }
-    // 社会保険適用者のみ対象
     filteredEmployees = filteredEmployees.filter(emp => emp.healthInsuranceStatus?.isApplicable);
-    // 定時決定のみ：6月1日以降の資格取得者、6月30日以前の退職/喪失者を除外
     const year = this.startYear;
     const june1 = new Date(`${year}-06-01`);
     const june30 = new Date(`${year}-06-30`);
     filteredEmployees = filteredEmployees.filter(emp => {
-      // 社会保険資格取得日
       const acqDateRaw = emp.healthInsuranceStatus?.acquisitionDate;
       if (acqDateRaw) {
         const acqDate = new Date(acqDateRaw);
         if (!isNaN(acqDate.getTime()) && acqDate >= june1) {
-          return false; // 6/1以降に資格取得→対象外
+          return false;
         }
       }
-      // 契約終了日
       if (emp.contractEndDate) {
         const endDate = new Date(emp.contractEndDate);
         if (!isNaN(endDate.getTime()) && endDate <= june30) {
-          return false; // 6/30以前に退職→対象外
+          return false;
         }
       }
-      // 社会保険喪失日
       const lossDateRaw = emp.healthInsuranceStatus?.lossDate;
       if (lossDateRaw) {
         const lossDate = new Date(lossDateRaw);
         if (!isNaN(lossDate.getTime()) && lossDate <= june30) {
-          return false; // 6/30以前に喪失→対象外
+          return false;
         }
       }
       return true;
     });
-    // 2. 期間指定（YYYY-MM形式の文字列で比較）
-    const fromYm = `${this.salaryFromYear}-${String(this.salaryFromMonth).padStart(2, '0')}`;
-    const toYm = `${this.salaryToYear}-${String(this.salaryToMonth).padStart(2, '0')}`;
-    // 3. 各従業員ごとに期間内の給与データを集計
-    this.resultList = filteredEmployees.map(emp => {
-      // 1. 給与データの抽出
-      let salaryList = this.salaries.filter((sal: any) => {
-        return sal.employeeId === emp.employeeId &&
-          sal.targetYearMonth >= fromYm &&
-          sal.targetYearMonth <= toYm;
-      });
-      // 通勤手当を月割りで分配して加算
-      const salaryMap = this.distributeCommuteAllowance(salaryList, fromYm, toYm);
-      // 2. 契約開始日が4月1日～5月31日か判定
-      if (emp.contractStartDate) {
-        const start = new Date(emp.contractStartDate);
-        const startYear = start.getFullYear();
-        const startMonth = start.getMonth() + 1; // 1月=0
-        if (
-          startYear === this.salaryFromYear &&
-          (startMonth === 4 || startMonth === 5)
-        ) {
-          // 3. 契約開始月の給与データがある場合
-          const ym = `${start.getFullYear()}-${String(startMonth).padStart(2, '0')}`;
-          if (salaryMap[ym] !== undefined) {
-            // 4. 契約開始日から月末までの日数を計算
-            const lastDay = new Date(start.getFullYear(), startMonth, 0).getDate();
-            const days = lastDay - start.getDate() + 1;
-            if (days < 17) {
-              // 5. 17日未満ならその月の給与を除外
-              salaryMap[ym] = 0;
-            }
-          }
-        }
-      }
-      // 追加: 4月・5月・6月の給与金額
-      const aprilYm = `${this.salaryFromYear}-04`;
-      const mayYm = `${this.salaryFromYear}-05`;
-      const juneYm = `${this.salaryFromYear}-06`;
-      const aprilSalary = salaryMap[aprilYm] ?? null;
-      const maySalary = salaryMap[mayYm] ?? null;
-      const juneSalary = salaryMap[juneYm] ?? null;
-      // 算定に利用した月
-      const usedMonthsArr: string[] = [];
-      if (salaryMap[aprilYm]) usedMonthsArr.push('4');
-      if (salaryMap[mayYm]) usedMonthsArr.push('5');
-      if (salaryMap[juneYm]) usedMonthsArr.push('6');
-      const usedMonths = usedMonthsArr.join(',');
-      // 6. 残ったsalaryMapで合計・平均を算出
-      const salaryValues = Object.values(salaryMap).filter(v => v > 0);
-      const salaryTotal = salaryValues.reduce((sum: number, s: number) => sum + s, 0);
-      const salaryAvg = salaryValues.length > 0 ? Math.round(salaryTotal / salaryValues.length) : 0;
-      const office = this.offices.find((o: any) => o.id === emp.officeId);
-      const insuranceType = office && office.insuranceType ? office.insuranceType : '1';
-      const applyYm = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
-      const healthGrades = this.standardMonthlyGrades.filter((grade: any) => {
-        return grade.gradeType === 'health' &&
-          grade.insuranceType === insuranceType &&
-          grade.validFrom <= applyYm &&
-          (!grade.validTo || grade.validTo >= applyYm);
-      });
-      const matchedHealthGrade = healthGrades.find((grade: any) => {
-        if (grade.upperLimit == null || grade.upperLimit === '') {
-          return grade.lowerLimit <= salaryAvg;
-        }
-        return grade.lowerLimit <= salaryAvg && salaryAvg < grade.upperLimit;
-      });
-      const judgedGrade = matchedHealthGrade ? matchedHealthGrade.grade : '';
-      const judgedMonthly = matchedHealthGrade ? matchedHealthGrade.compensation : 0;
-      const pensionGrades = this.standardMonthlyGrades.filter((grade: any) => {
-        return grade.gradeType === 'pension' &&
-          grade.insuranceType === insuranceType &&
-          grade.validFrom <= applyYm &&
-          (!grade.validTo || grade.validTo >= applyYm);
-      });
-      const matchedPensionGrade = pensionGrades.find((grade: any) => {
-        if (grade.upperLimit == null || grade.upperLimit === '') {
-          return grade.lowerLimit <= salaryAvg;
-        }
-        return grade.lowerLimit <= salaryAvg && salaryAvg < grade.upperLimit;
-      });
-      const pensionJudgedGrade = matchedPensionGrade ? matchedPensionGrade.grade : '';
-      const pensionJudgedMonthly = matchedPensionGrade ? matchedPensionGrade.compensation : 0;
-      return {
-        employeeId: emp.employeeId,
-        officeId: emp.officeId,
-        employeeName: emp.lastName + ' ' + emp.firstName,
-        currentGrade: emp.grade || '',
-        currentMonthly: emp.monthly || 0,
-        aprilSalary,
-        maySalary,
-        juneSalary,
-        usedMonths,
-        salaryTotal,
-        salaryAvg,
-        judgedGrade,
-        judgedMonthly,
-        pensionJudgedGrade,
-        pensionJudgedMonthly
-      };
-    });
-    this.isConfirmed = true;
+    return filteredEmployees;
   }
 
-  // 行修正ボタン（現状はダミー）
-  onEditRow(index: number) {
-    // 必要に応じて編集用ダイアログ等を実装
-    alert(`${this.resultList[index].employeeName} の修正ボタンが押されました`);
+  
+
+  // 等級判定：与えられた値に対して標準報酬月額グレードから等級・月額を返す
+  private judgeStandardMonthlyGrade(value: number, gradeType: 'health' | 'pension', insuranceType: string, applyYm: string): { grade: string, compensation: number } {
+    const grades = this.standardMonthlyGrades.filter((grade: any) => {
+      return grade.gradeType === gradeType &&
+        grade.insuranceType === insuranceType &&
+        grade.validFrom <= applyYm &&
+        (!grade.validTo || grade.validTo >= applyYm);
+    });
+    const matchedGrade = grades.find((grade: any) => {
+      if (grade.upperLimit == null || grade.upperLimit === '') {
+        return grade.lowerLimit <= value;
+      }
+      return grade.lowerLimit <= value && value < grade.upperLimit;
+    });
+    return {
+      grade: matchedGrade ? matchedGrade.grade : '',
+      compensation: matchedGrade ? matchedGrade.compensation : 0
+    };
+  }
+
+  // aggregateSalaryDataForEmployeeを分割・整理
+  private aggregateSalaryDataForEmployee(emp: any) {
+    // 1. 通貨欄用：給与合計
+    const totalSalary = this.getTotalSalaryForEmployeeAndPeriod(emp.employeeId, this.startYear, this.startMonth);
+    // 2. 契約開始日取得（判定のみ残す）
+    const contractStartDate = emp.contractStartDate ? new Date(emp.contractStartDate) : null;
+    // 3. 等級判定（judgeStandardMonthlyGradeで一元化）
+    const office = this.offices.find((o: any) => o.id === emp.officeId);
+    const insuranceType = office && office.insuranceType ? office.insuranceType : '1';
+    const applyYm = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
+    const healthResult = this.judgeStandardMonthlyGrade(totalSalary, 'health', insuranceType, applyYm);
+    const pensionResult = this.judgeStandardMonthlyGrade(totalSalary, 'pension', insuranceType, applyYm);
+    return {
+      employeeId: emp.employeeId,
+      officeId: emp.officeId,
+      employeeName: emp.lastName + ' ' + emp.firstName,
+      currentGrade: emp.grade || '',
+      currentMonthly: emp.monthly || 0,
+      contractStartDate,
+      totalSalary,
+      judgedGrade: healthResult.grade,
+      judgedMonthly: healthResult.compensation,
+      pensionJudgedGrade: pensionResult.grade,
+      pensionJudgedMonthly: pensionResult.compensation
+    };
   }
 
   // 保存ボタン押下時

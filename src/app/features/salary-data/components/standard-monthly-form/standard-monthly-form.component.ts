@@ -602,8 +602,18 @@ export class StandardMonthlyFormComponent implements OnInit {
     const isEntry = this.decisionType === 'entry';
     const userId = this.currentUser?.uid || '';
     const userName = this.currentUser?.displayName || '';
+    // 異常値チェック
+    const row = this.resultList[0];
+    const abnormal =
+      (row.judgedMonthly <= 0 || row.judgedMonthly >= 1000000) ||
+      (row.pensionJudgedMonthly <= 0 || row.pensionJudgedMonthly >= 1000000) ||
+      (row.salaryAvg <= 0 || row.salaryAvg >= 1000000);
+    if (abnormal) {
+      if (!confirm('標準報酬月額または平均月額が異常な値です。本当に保存しますか？')) {
+        return;
+      }
+    }
     if (this.editMode && this.editingDecisionId) {
-      const row = this.resultList[0];
       const decision = {
         companyKey: this.companyKey,
         officeId: this.selectedOfficeId,
@@ -764,17 +774,6 @@ export class StandardMonthlyFormComponent implements OnInit {
       return acqYm === applyYm;
     });
 
-    // // 3. 現在有効な標準報酬月額が未登録の従業員のみ
-    // const today = new Date();
-    // const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-    // filteredEmployees = filteredEmployees.filter(emp => {
-    //   const hasCurrentDecision = this.standardMonthlyDecisions.some(dec =>
-    //     dec.employeeId === emp.employeeId &&
-    //     dec.officeId === emp.officeId &&
-    //     dec.applyYearMonth <= currentYm
-    //   );
-    //   return !hasCurrentDecision;
-    // });
 
     // 4. リスト生成
     this.resultList = filteredEmployees.map(emp => ({

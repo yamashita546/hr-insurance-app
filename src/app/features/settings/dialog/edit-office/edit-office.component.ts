@@ -25,6 +25,7 @@ export class EditOfficeComponent implements OnInit {
   offices: any[] = [];
   headOfficeError: string = '';
   industryClassifications = INDUSTRY_CLASSIFICATIONS;
+  postalCodeError: boolean = false;
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: any) {}
 
@@ -53,9 +54,21 @@ export class EditOfficeComponent implements OnInit {
     if (!this.office.salaryClosingDate) {
       this.office.salaryClosingDate = '';
     }
+    // 郵便番号を分割
+    if (this.office.address?.postalCode) {
+      const [first, last] = this.office.address.postalCode.split('-');
+      this.office.address.postalCodeFirst = first || '';
+      this.office.address.postalCodeLast = last || '';
+    }
   }
 
   onSave() {
+    // 郵便番号バリデーション
+    const first = this.office.address.postalCodeFirst || '';
+    const last = this.office.address.postalCodeLast || '';
+    this.postalCodeError = !/^\d{3}$/.test(first) || !/^\d{4}$/.test(last);
+    if (this.postalCodeError) return;
+    this.office.address.postalCode = `${first}-${last}`;
     this.saved.emit(this.office);
   }
 

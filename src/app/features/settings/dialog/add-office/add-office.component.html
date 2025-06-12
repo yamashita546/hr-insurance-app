@@ -14,7 +14,18 @@
       </label>
       <div formGroupName="address">
         <label>郵便番号
-          <input type="text" class="input" formControlName="postalCode" placeholder="例：100-0001" />
+          <div style="display: flex; gap: 4px; align-items: center;">
+            <input type="text" class="input" formControlName="postalCodeFirst" maxlength="3"  style="width: 60px;" inputmode="numeric" />
+            －
+            <input type="text" class="input" formControlName="postalCodeLast" maxlength="4"  style="width: 70px;" inputmode="numeric" />
+          </div>
+          <div class="error"
+            *ngIf="
+              (postalCodeFirstCtrl?.invalid && (postalCodeFirstCtrl?.dirty || postalCodeFirstCtrl?.touched)) ||
+              (postalCodeLastCtrl?.invalid && (postalCodeLastCtrl?.dirty || postalCodeLastCtrl?.touched))
+            ">
+            郵便番号は半角数字で3桁-4桁で入力してください
+          </div>
         </label>
         <label>都道府県
           <select class="input" formControlName="prefecture">

@@ -20,63 +20,64 @@
   </div>
 </div>
 
-<!-- 保険適用状況 -->
-<div class="insurance-status-row" *ngIf="employeeInfo">
-  <div class="insurance-card" [class.active]="employeeInfo.healthInsuranceStatus?.isApplicable">
-    <span class="icon health"></span> 健康保険
-  </div>
-  <div class="insurance-card" [class.active]="employeeInfo.pensionStatus?.isApplicable">
-    <span class="icon pension"></span> 厚生年金
-  </div>
-  <div class="insurance-card" [class.active]="employeeInfo.isCareInsuranceApplicable">
-    <span class="icon care"></span> 介護保険
-  </div>
-</div>
-
-<!-- 現在の保険等級・計算根拠 -->
-<div class="grade-cards">
-  <div class="grade-card current">
-    <h3>現在適用中の保険等級</h3>
-    <ng-container *ngIf="currentInsuranceInfo; else noCurrent">
-      <div>等級: {{ currentInsuranceInfo.healthGrade }}（{{ currentInsuranceInfo.pensionGrade }}）</div>
-      <div>月額: {{ currentInsuranceInfo.healthMonthly | currency:'JPY':'symbol':'1.0-0' }}（{{ currentInsuranceInfo.pensionMonthly | currency:'JPY':'symbol':'1.0-0' }}）</div>
-      <div>適用年月: {{ currentInsuranceInfo.applyYearMonth }}</div>
-      <div>適用都道府県: {{ currentInsuranceInfo.prefectureName }}</div>
-      <div>健康保険料率: {{ currentInsuranceInfo.healthRate }}%</div>
-      <div>介護保険料率: {{ currentInsuranceInfo.careRate }}%</div>
-      <div>厚生年金保険料率: {{ currentInsuranceInfo.pensionRate }}%</div>
-      <div>算出根拠: {{ currentInsuranceInfo.basisText || 'ー' }}</div>
-    </ng-container>
-    <ng-template #noCurrent><div>該当なし</div></ng-template>
-  </div>
-</div>
-
-<!-- 適用履歴テーブル -->
+<!-- 給与計算結果テーブル -->
 <div class="history-table">
-  <h3>保険料適用履歴</h3>
-  <table *ngIf="insuranceHistoryList.length > 0">
+  <h3>給与計算結果</h3>
+  <table *ngIf="selectedEmployeeSalaryCalculations.length > 0">
     <thead>
       <tr>
-        <th>適用年月</th>
+        <th>対象年月</th>
+        <th>支社</th>
         <th>等級</th>
-        <th>月額</th>
-        <th>健康保険料率</th>
-        <th>介護保険料率</th>
-        <th>厚生年金保険料率</th>
-        <th>適用都道府県</th>
+        <th>標準報酬月額</th>
+        <th>健康保険料</th>
+        <th>厚生年金保険料</th>
+        <th>控除額合計</th>
+        <th>会社負担</th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let h of insuranceHistoryList">
-        <td>{{ h.applyYearMonth }}</td>
-        <td>{{ h.healthGrade }}（{{ h.pensionGrade }}）</td>
-        <td>{{ h.healthMonthly | currency:'JPY':'symbol':'1.0-0' }}（{{ h.pensionMonthly | currency:'JPY':'symbol':'1.0-0' }}）</td>
-        <td>{{ h.healthRate }}%</td>
-        <td>{{ h.careRate }}%</td>
-        <td>{{ h.pensionRate }}%</td>
-        <td>{{ h.prefectureName }}</td>
+      <tr *ngFor="let row of selectedEmployeeSalaryCalculations">
+        <td>{{ row.applyYearMonth }}</td>
+        <td>{{ getOfficeName(row.officeId) }}</td>
+        <td>{{ row.healthGrade }}</td>
+        <td>{{ row.healthMonthly | currency:'JPY':'symbol':'1.0-0' }}</td>
+        <td>{{ row.healthInsurance | number }}</td>
+        <td>{{ row.pension | number }}</td>
+        <td>{{ row.deductionTotal | number }}</td>
+        <td>{{ row.companyShare | number }}</td>
       </tr>
     </tbody>
   </table>
-  <div *ngIf="insuranceHistoryList.length === 0">履歴なし</div>
+  <div *ngIf="selectedEmployeeSalaryCalculations.length === 0">該当データなし</div>
+</div>
+
+<!-- 賞与計算結果テーブル -->
+<div class="history-table">
+  <h3>賞与計算結果</h3>
+  <table *ngIf="selectedEmployeeBonusCalculations.length > 0">
+    <thead>
+      <tr>
+        <th>対象年月</th>
+        <th>支社</th>
+        <th>標準賞与額</th>
+        <th>健康保険料</th>
+        <th>厚生年金保険料</th>
+        <th>控除額合計</th>
+        <th>会社負担</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of selectedEmployeeBonusCalculations">
+        <td>{{ row.applyYearMonth }}</td>
+        <td>{{ getOfficeName(row.officeId) }}</td>
+        <td>{{ row.standardBonus | number }}</td>
+        <td>{{ row.healthInsurance | number }}</td>
+        <td>{{ row.pension | number }}</td>
+        <td>{{ row.deductionTotal | number }}</td>
+        <td>{{ row.companyShare | number }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <div *ngIf="selectedEmployeeBonusCalculations.length === 0">該当データなし</div>
 </div>

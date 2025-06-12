@@ -38,7 +38,8 @@ export class ManageOfficeComponent {
 
   async fetchOffices() {
     if (!this.company) return;
-    this.offices = await this.firestoreService.getOffices(this.company.companyKey);
+    const allOffices = await this.firestoreService.getOffices(this.company.companyKey);
+    this.offices = allOffices.filter(o => o.isActive !== false);
     this.originalOffices = this.offices.map(o => ({ ...o }));
   }
 
@@ -96,7 +97,9 @@ export class ManageOfficeComponent {
   onDeleteOffice() {
     if (this.selectedOffices.length === 0) return;
     if (!window.confirm('選択した事業所を削除しますか？')) return;
-    this.offices = this.offices.filter(b => !this.selectedOffices.includes(b));
+    this.selectedOffices.forEach(office => {
+      office.isActive = false;
+    });
     this.selectedOffices = [];
   }
 

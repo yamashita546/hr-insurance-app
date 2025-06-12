@@ -481,4 +481,20 @@ export class FirestoreService {
     const snap = await getDocs(q_);
     return snap.docs.map(doc => doc.data() as EmployeeTransferHistory).sort((a, b) => (b.transferDate || '').localeCompare(a.transferDate || ''));
   }
+
+  // 会社IDで給与計算結果一覧取得
+  async getInsuranceSalaryCalculationsByCompanyKey(companyKey: string): Promise<InsuranceSalaryCalculation[]> {
+    const colRef = collection(this.firestore, 'insuranceSalaryCalculations');
+    const q = query(colRef, where('companyKey', '==', companyKey));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ ...(doc.data() as InsuranceSalaryCalculation) }));
+  }
+
+  // 会社IDで賞与計算結果一覧取得
+  async getInsuranceBonusCalculationsByCompanyKey(companyKey: string): Promise<InsuranceBonusCalculation[]> {
+    const colRef = collection(this.firestore, 'insuranceBonusCalculations');
+    const q = query(colRef, where('companyKey', '==', companyKey));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ ...(doc.data() as InsuranceBonusCalculation) }));
+  }
 }

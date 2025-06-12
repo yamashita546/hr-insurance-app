@@ -12,7 +12,14 @@
       <div class="error" *ngIf="headOfficeError">{{ headOfficeError }}</div>
       <div>
         <label>郵便番号
-          <input type="text" class="input" [(ngModel)]="office.address.postalCode" name="postalCode" />
+          <div style="display: flex; gap: 4px; align-items: center;">
+            <input type="text" class="input" [(ngModel)]="office.address.postalCodeFirst" name="postalCodeFirst" maxlength="3" pattern="\\d{3}" inputmode="numeric" style="width: 60px;" />
+            －
+            <input type="text" class="input" [(ngModel)]="office.address.postalCodeLast" name="postalCodeLast" maxlength="4" pattern="\\d{4}" inputmode="numeric" style="width: 70px;" />
+          </div>
+          <div class="error" *ngIf="postalCodeError">
+            郵便番号は半角数字で3桁-4桁で入力してください
+          </div>
         </label>
         <label>都道府県
           <select class="input" [(ngModel)]="office.address.prefecture" name="prefecture">

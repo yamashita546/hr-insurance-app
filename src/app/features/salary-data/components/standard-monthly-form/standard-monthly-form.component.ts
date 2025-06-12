@@ -355,16 +355,48 @@ export class StandardMonthlyFormComponent implements OnInit {
     alert(info);
   }
 
-
-
-
-
+  private isFixedDecisionTarget(emp: any): boolean {
+    if (!emp.healthInsuranceStatus?.isApplicable) return false;
+    const year = this.startYear;
+    const june1 = new Date(`${year}-06-01`);
+    const june30 = new Date(`${year}-06-30`);
+    // 6/1以降の資格取得者は除外
+    const acqDateRaw = emp.healthInsuranceStatus?.acquisitionDate;
+    if (acqDateRaw) {
+      const acqDate = new Date(acqDateRaw);
+      if (!isNaN(acqDate.getTime()) && acqDate >= june1) {
+        return false;
+      }
+    }
+    // 6/30以前の退職者
+    if (emp.contractEndDate) {
+      const endDate = new Date(emp.contractEndDate);
+      if (!isNaN(endDate.getTime()) && endDate <= june30) {
+        return false;
+      }
+    }
+    // 6/30以前の喪失者
+    const lossDateRaw = emp.healthInsuranceStatus?.lossDate;
+    if (lossDateRaw) {
+      const lossDate = new Date(lossDateRaw);
+      if (!isNaN(lossDate.getTime()) && lossDate <= june30) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   // 決定ボタン押下時
   async onDecision() {
     if (!this.selectedEmployeeId) {
       alert('従業員を選択してください');
       return;
+    }
+    const emp = this.employees.find(e => e.employeeId === this.selectedEmployeeId);
+    if (emp && !this.isFixedDecisionTarget(emp)) {
+      if (!confirm('定時算定の非対象者が選択されています。続けて操作をしますか？')) {
+        return;
+      }
     }
     if (this.decisionType === 'entry') {
       this.onEntryDecision();

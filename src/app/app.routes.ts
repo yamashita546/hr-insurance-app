@@ -42,6 +42,7 @@ import { AddOwnerUserComponent } from './features/master/components/add-owner-us
 import { EditOwnerUserComponent } from './features/master/components/edit-owner-user/edit-owner-user.component';
 import { AddOperatorUserComponent } from './features/settings/components/add-operator-user/add-operator-user.component'; 
 import { EditOperatorUserComponent } from './features/settings/components/edit-operator-user/edit-operator-user.component';
+import { InsuranceDetailComponent } from './features/insurance/pages/insurance-detail/insurance-detail.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -90,6 +91,7 @@ export const routes: Routes = [
       { path: 'edit-owner-user/:uid', component: EditOwnerUserComponent, canDeactivate: [CanDeactivateDialogGuard ] , canActivate: [adminGuard]   },
       { path: 'add-operator-user', component: AddOperatorUserComponent, canDeactivate: [CanDeactivateDialogGuard] },
       { path: 'edit-operator-user/:uid', component: EditOperatorUserComponent, canDeactivate: [CanDeactivateDialogGuard] },
+      { path: 'insurance-detail', component: InsuranceDetailComponent, canDeactivate: [CanDeactivateDialogGuard] },
     ],
   },
 ];

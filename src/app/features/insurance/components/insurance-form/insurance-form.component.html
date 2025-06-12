@@ -111,6 +111,13 @@
                             子ども子育て拠出金: {{ row.childcare }}円（標準報酬月額×子ども子育て拠出金率）<br>
                             会社負担: {{ row.companyShare }}円（保険料総額－労働者負担額＋子ども子育て拠出金）
                           </div>
+                          <div style="margin-top:0.5em;">
+                            <strong>適用された免除特例:</strong>
+                            <ul *ngIf="row.appliedExemptions.length > 0">
+                              <li *ngFor="let ex of row.appliedExemptions">{{ ex }}</li>
+                            </ul>
+                            <span *ngIf="row.appliedExemptions.length === 0">なし</span>
+                          </div>
                         </div>
                         <button type="button" class="remove-row-btn" (click)="removeSalaryRow(i)">削除</button>
                       </td>
@@ -136,7 +143,7 @@
                     <th>控除額合計</th>
                     <th>子ども子育て拠出金</th>
                     <th>会社負担</th>
-                    <th></th>
+                    <th>免除特例</th>
                 </tr>
             </thead>
             <tbody>
@@ -154,7 +161,13 @@
                     <td>{{ row.deductionTotal }}</td>
                     <td>{{ row.childcare }}</td>
                     <td>{{ row.companyShare }}</td>
-                    <td><button type="button" (click)="removeBonusRow(i)">削除</button></td>
+                    <td>
+                      <strong>免除特例:</strong>
+                      <ul *ngIf="row.appliedExemptions.length > 0">
+                        <li *ngFor="let ex of row.appliedExemptions">{{ ex }}</li>
+                      </ul>
+                      <span *ngIf="row.appliedExemptions.length === 0">なし</span>
+                    </td>
                 </tr>
             </tbody>
         </table>

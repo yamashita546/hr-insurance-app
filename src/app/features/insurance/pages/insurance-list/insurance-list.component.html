@@ -7,9 +7,9 @@
       <label style="margin-left: 1em;"><input type="radio" [(ngModel)]="selectedType" name="type" value="bonus" (ngModelChange)="updateResultList()"> 賞与</label>
     </div>
     <div class="form-row">
-      <label>支社</label>
+      <label>事業所</label>
       <select [(ngModel)]="selectedOfficeId" name="office" (ngModelChange)="updateResultList()">
-        <option value="">全支社</option>
+        <option value="">全事業所</option>
         <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
       </select>
       <label>従業員</label>
@@ -24,7 +24,10 @@
       <select [(ngModel)]="selectedMonth" name="month" (ngModelChange)="updateResultList()">
         <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
       </select>
+    </div>
+    <div class="button-container">
       <button type="button" routerLink="/insurance-form">社会保険料登録</button>
+      <button type="button" routerLink="/insurance-detail">従業員詳細</button>
     </div>
   </form>
 
@@ -34,31 +37,31 @@
         <tr *ngIf="selectedType === 'salary'">
           <th>支社</th>
           <th>従業員名</th>
-          <th>介護保険適用</th>
-          <th>当月給与総支給</th>
+          <th>介護保険<br>適用</th>
+          <th>当月給与<br>総支給</th>
           <th>等級</th>
-          <th>標準報酬月額</th>
+          <th>標準報酬<br>月額</th>
           <th>健康保険料</th>
-          <th>健康保険料控除額</th>
+          <th>健康保険料<br>控除額</th>
           <th>厚生年金保険料</th>
-          <th>厚生年金保険料控除額</th>
+          <th>厚生年金保険料<br>控除額</th>
           <th>控除額合計</th>
-          <th>子ども子育て拠出金</th>
+          <th>子ども子育て<br>拠出金</th>
           <th>会社負担</th>
         </tr>
         <tr *ngIf="selectedType === 'bonus'">
           <th>支社</th>
           <th>従業員名</th>
-          <th>介護保険適用</th>
+          <th>介護保険<br>適用</th>
           <th>当月賞与</th>
           <th>標準賞与額</th>
-          <th>年度賞与合計</th>
+          <th>年度賞与<br>合計</th>
           <th>健康保険料</th>
-          <th>健康保険料控除額</th>
+          <th>健康保険料<br>控除額</th>
           <th>厚生年金保険料</th>
-          <th>厚生年金保険料控除額</th>
+          <th>厚生年金保険料<br>控除額</th>
           <th>控除額合計</th>
-          <th>子ども子育て拠出金</th>
+          <th>子ども子育て<br>拠出金</th>
           <th>会社負担</th>
         </tr>
       </thead>

@@ -713,7 +713,23 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       }
       const row: any = {};
       for (let j = 0; j < keys.length; j++) {
-        row[keys[j]] = cols[j];
+        const key = keys[j];
+        const value = cols[j];
+        // dependents[0].lastName など配列フィールド対応
+        const arrayFieldMatch = key.match(/^(.+)\[(\d+)\]\.(.+)$/);
+        if (arrayFieldMatch) {
+          const [, arrName, idxStr, child] = arrayFieldMatch;
+          const idx = parseInt(idxStr, 10);
+          row[arrName] = row[arrName] || [];
+          row[arrName][idx] = row[arrName][idx] || {};
+          row[arrName][idx][child] = value;
+        } else if (key.includes('.')) {
+          const [parent, child] = key.split('.');
+          row[parent] = row[parent] || {};
+          row[parent][child] = value;
+        } else {
+          row[key] = value;
+        }
       }
       // 都道府県コード・名称変換
       if (row['address.prefecture']) {
@@ -795,6 +811,10 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       } else {
         emp.officeId = '';
         console.warn(`displayOfficeId「${emp.displayOfficeId}」に一致する事業所がありません`);
+      }
+      // 扶養家族有がfalseまたは未設定ならdependents配列を保存しない
+      if (!emp.hasDependents || emp.hasDependents === 'false' || emp.hasDependents === false) {
+        delete emp.dependents;
       }
       // 保険適用フラット→ネスト変換
       if ('isHealthInsuranceApplicable' in emp) {

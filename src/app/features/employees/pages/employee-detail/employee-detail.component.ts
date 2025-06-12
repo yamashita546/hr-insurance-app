@@ -14,11 +14,12 @@ import { firstValueFrom, Subscription } from 'rxjs';
 import { PREFECTURES } from '../../../../core/models/prefecture.model';
 import { RELATIONSHIP_TYPES } from '../../../../core/models/dependents.relationship.model';
 import { EmployeeTransferHistory } from '../../../../core/models/empoloyee.history';
+import { RelationshipNamePipe } from '../../../../core/pipe/relationship.pipe';
 
 @Component({
   selector: 'app-employee-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, RelationshipNamePipe],
   templateUrl: './employee-detail.component.html',
   styleUrl: './employee-detail.component.css'
 })

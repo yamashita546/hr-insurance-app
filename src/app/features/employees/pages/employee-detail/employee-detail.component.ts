@@ -12,7 +12,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { firstValueFrom, Subscription } from 'rxjs';
 import { PREFECTURES } from '../../../../core/models/prefecture.model';
-import { RELATIONSHIP_TYPES, CERTIFICATION_TYPES } from '../../../../core/models/dependents.relationship.model';
+import { RELATIONSHIP_TYPES } from '../../../../core/models/dependents.relationship.model';
 import { EmployeeTransferHistory } from '../../../../core/models/empoloyee.history';
 
 @Component({
@@ -42,7 +42,6 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   validationErrors: string[] = [];
   saveMessage: string = '';
   relationshipTypes = RELATIONSHIP_TYPES;
-  certificationTypes = CERTIFICATION_TYPES;
   transferPlanDialogOpen = false;
   transferPlan: any = { transferDate: '', targetOfficeId: '', targetOfficeName: '' };
   transferHistory: EmployeeTransferHistory[] = [];
@@ -204,9 +203,6 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
       if (!this.editEmployee.pensionStatus?.isApplicable) {
         this.validationErrors.push('正社員の場合、厚生年金適用は必須です');
       }
-      if (!this.editEmployee.employmentInsuranceStatus?.isApplicable) {
-        this.validationErrors.push('正社員の場合、雇用保険適用は必須です');
-      }
     }
     // console.log('[saveEdit] validationErrors:', this.validationErrors);
     if (this.validationErrors.length > 0) {
@@ -214,6 +210,14 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
       return;
     }
     // console.log('[saveEdit] updateEmployee実行:', this.docId, this.editEmployee);
+    // companyIdがなければ補完
+    if (!this.editEmployee.companyId && this.companyKey) {
+      this.userCompanyService.company$.subscribe(company => {
+        if (company && company.companyId) {
+          this.editEmployee.companyId = company.companyId;
+        }
+      });
+    }
     await this.firestoreService.updateEmployee(this.docId, this.editEmployee);
     this.employee = JSON.parse(JSON.stringify(this.editEmployee));
     this.isEditMode = false;
@@ -272,10 +276,6 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     return found ? found.name : code || '未入力';
   }
 
-  getCertificationTypeName(code: string): string {
-    const found = this.certificationTypes.find(c => c.code === code);
-    return found ? found.name : code || '未入力';
-  }
 
   updateFilteredEmployees() {
     if (this.selectedOfficeId === 'ALL') {
@@ -331,6 +331,14 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
           streetAddress: this.employee['address.streetAddress'] || '',
           buildingName: this.employee['address.buildingName'] || ''
         };
+      }
+      // companyIdがなければ補完
+      if (!this.employee.companyId && this.companyKey) {
+        this.userCompanyService.company$.subscribe(company => {
+          if (company && company.companyId) {
+            this.employee.companyId = company.companyId;
+          }
+        });
       }
     }
     this.isEditMode = false;

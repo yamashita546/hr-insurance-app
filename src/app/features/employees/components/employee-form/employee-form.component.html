@@ -11,6 +11,21 @@
     <li *ngFor="let err of validationErrors">{{ err }}</li>
   </ul>
 </div>
+<div *ngIf="duplicateEmployees.length > 0">
+  <h4>重複従業員リスト</h4>
+  <table class="duplicate-employee-table">
+    <tr>
+      <th>従業員ID</th>
+      <th>氏名</th>
+      <th>上書き</th>
+    </tr>
+    <tr *ngFor="let emp of duplicateEmployees">
+      <td>{{ emp.employeeId }}</td>
+      <td>{{ emp.lastName }} {{ emp.firstName }}</td>
+      <td><input type="checkbox" [(ngModel)]="emp.overwrite" (change)="onDuplicateOverwriteChange()"></td>
+    </tr>
+  </table>
+</div>
 <!-- CSV追加UIここから -->
 <div class="csv-toolbar" style="margin-bottom: 24px; display: flex; gap: 16px; align-items: center;">
   <button class="csv-btn" type="button" (click)="onExportCsv()">CSVひな型出力</button>
@@ -61,6 +76,12 @@
         </div>
         <div class="form-row">
           <div class="form-item">
+            <label>被保険者整理番号</label>
+            <input formControlName="insuranceNumber" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-item">
             <label>姓</label>
             <input formControlName="lastName" />
           </div>
@@ -103,18 +124,35 @@
           <div class="form-item">
             <label>Email</label>
             <input formControlName="email" />
+            <div class="error" *ngIf="form.get('email')?.invalid && (form.get('email')?.dirty || form.get('email')?.touched)">
+              <ng-container *ngIf="form.get('email')?.errors?.['email']">メールアドレスの形式で入力してください</ng-container>
+            </div>
           </div>
         </div>
         <div class="form-row">
           <div class="form-item">
             <label>電話番号</label>
             <input formControlName="phoneNumber" />
+            <div class="error" *ngIf="form.get('phoneNumber')?.invalid && (form.get('phoneNumber')?.dirty || form.get('phoneNumber')?.touched)">
+              <ng-container *ngIf="form.get('phoneNumber')?.errors?.['pattern']">半角数字のみで入力してください（ハイフン不要）</ng-container>
+            </div>
           </div>
         </div>
         <div class="form-row" formGroupName="address">
           <div class="form-item">
             <label>郵便番号</label>
-            <input formControlName="postalCode" />
+            <div style="display: flex; gap: 4px; align-items: center;">
+              <input type="text" class="input" formControlName="postalCodeFirst" maxlength="3" style="width: 60px;" inputmode="numeric" />
+              －
+              <input type="text" class="input" formControlName="postalCodeLast" maxlength="4" style="width: 70px;" inputmode="numeric" />
+            </div>
+            <div class="error"
+              *ngIf="
+                (postalCodeFirstCtrl?.invalid && (postalCodeFirstCtrl?.dirty || postalCodeFirstCtrl?.touched)) ||
+                (postalCodeLastCtrl?.invalid && (postalCodeLastCtrl?.dirty || postalCodeLastCtrl?.touched))
+              ">
+              郵便番号は半角数字で3桁-4桁で入力してください
+            </div>
           </div>
         </div>
         <div class="form-row" formGroupName="address">
@@ -232,13 +270,22 @@
             <div class="form-input"><input id="healthApplicable" type="checkbox" formControlName="isApplicable" /></div>
           </div>
           <div class="form-row" *ngIf="form.get('healthInsuranceStatus.isApplicable')?.value">
-            <div class="form-label"><label for="healthNumber">被保険者番号</label></div>
-            <div class="form-input"><input id="healthNumber" formControlName="insuranceNumber" /></div>
+            <div class="form-label"><label for="healthSymbol">記号</label></div>
+            <div class="form-input"><input id="healthSymbol" formControlName="healthInsuranceSymbol" /></div>
+          </div>
+          <div class="form-row" *ngIf="form.get('healthInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="healthNumber">番号</label></div>
+            <div class="form-input"><input id="healthNumber" formControlName="healthInsuranceNumber" /></div>
           </div>
           <div class="form-row" *ngIf="form.get('healthInsuranceStatus.isApplicable')?.value">
             <div class="form-label"><label for="healthAcq">資格取得日</label></div>
             <div class="form-input"><input id="healthAcq" type="date" formControlName="acquisitionDate" /></div>
           </div>
+          <div class="form-row" *ngIf="form.get('healthInsuranceStatus.isApplicable')?.value">
+            <div class="form-label"><label for="healthCertIssued">保険証発行済み</label></div>
+            <div class="form-input"><input id="healthCertIssued" type="checkbox" formControlName="certificateIssued" /></div>
+          </div>
+  
           <div class="form-row" *ngIf="form.get('healthInsuranceStatus.isApplicable')?.value">
             <div class="form-label"><label for="healthAcqRep">取得手続き済み</label></div>
             <div class="form-input"><input id="healthAcqRep" type="checkbox" formControlName="acquisitionReported" /></div>
@@ -251,10 +298,7 @@
             <div class="form-label"><label for="healthLossRep">喪失届提出済み</label></div>
             <div class="form-input"><input id="healthLossRep" type="checkbox" formControlName="lossReported" /></div>
           </div>
-          <div class="form-row" *ngIf="form.get('healthInsuranceStatus.isApplicable')?.value">
-            <div class="form-label"><label for="healthCertIssued">保険証発行済み</label></div>
-            <div class="form-input"><input id="healthCertIssued" type="checkbox" formControlName="certificateIssued" /></div>
-          </div>
+          
           <div class="form-row" *ngIf="form.get('healthInsuranceStatus.isApplicable')?.value">
             <div class="form-label"><label for="healthCertCollected">保険証回収済み</label></div>
             <div class="form-input"><input id="healthCertCollected" type="checkbox" formControlName="certificateCollected" /></div>
@@ -271,8 +315,13 @@
             <div class="form-input"><input id="pensionApplicable" type="checkbox" formControlName="isApplicable" /></div>
           </div>
           <div class="form-row" *ngIf="form.get('pensionStatus.isApplicable')?.value">
-            <div class="form-label"><label for="pensionNumber">被保険者番号</label></div>
-            <div class="form-input"><input id="pensionNumber" formControlName="insuranceNumber" /></div>
+            <div class="form-label"><label for="pensionBase">基礎年金番号</label></div>
+            <div class="form-input">
+              <input id="pensionBase" formControlName="baseNumber" maxlength="10" inputmode="numeric" />
+              <div class="error" *ngIf="form.get('pensionStatus.baseNumber')?.invalid && (form.get('pensionStatus.baseNumber')?.dirty || form.get('pensionStatus.baseNumber')?.touched)">
+                基礎年金番号は10桁の半角数字で入力してください
+              </div>
+            </div>
           </div>
           <div class="form-row" *ngIf="form.get('pensionStatus.isApplicable')?.value">
             <div class="form-label"><label for="pensionAcq">資格取得日</label></div>
@@ -293,37 +342,6 @@
           <div class="form-row" *ngIf="form.get('pensionStatus.isApplicable')?.value">
             <div class="form-label"><label for="pensionRemarks">備考</label></div>
             <div class="form-input"><input id="pensionRemarks" formControlName="remarks" /></div>
-          </div>
-        </div>
-        <!-- 雇用保険 -->
-        <div formGroupName="employmentInsuranceStatus" class="insurance-block">
-          <div class="form-row">
-            <div class="form-label"><label for="empApplicable">雇用保険適用</label></div>
-            <div class="form-input"><input id="empApplicable" type="checkbox" formControlName="isApplicable" /></div>
-          </div>
-          <div class="form-row" *ngIf="form.get('employmentInsuranceStatus.isApplicable')?.value">
-            <div class="form-label"><label for="empNumber">被保険者番号</label></div>
-            <div class="form-input"><input id="empNumber" formControlName="insuranceNumber" /></div>
-          </div>
-          <div class="form-row" *ngIf="form.get('employmentInsuranceStatus.isApplicable')?.value">
-            <div class="form-label"><label for="empAcq">資格取得日</label></div>
-            <div class="form-input"><input id="empAcq" type="date" formControlName="acquisitionDate" /></div>
-          </div>
-          <div class="form-row" *ngIf="form.get('employmentInsuranceStatus.isApplicable')?.value">
-            <div class="form-label"><label for="empAcqRep">取得手続き済み</label></div>
-            <div class="form-input"><input id="empAcqRep" type="checkbox" formControlName="acquisitionReported" /></div>
-          </div>
-          <div class="form-row" *ngIf="form.get('employmentInsuranceStatus.isApplicable')?.value">
-            <div class="form-label"><label for="empLoss">資格喪失日</label></div>
-            <div class="form-input"><input id="empLoss" type="date" formControlName="lossDate" /></div>
-          </div>
-          <div class="form-row" *ngIf="form.get('employmentInsuranceStatus.isApplicable')?.value">
-            <div class="form-label"><label for="empLossRep">喪失届提出済み</label></div>
-            <div class="form-input"><input id="empLossRep" type="checkbox" formControlName="lossReported" /></div>
-          </div>
-          <div class="form-row" *ngIf="form.get('employmentInsuranceStatus.isApplicable')?.value">
-            <div class="form-label"><label for="empRemarks">備考</label></div>
-            <div class="form-input"><input id="empRemarks" formControlName="remarks" /></div>
           </div>
         </div>
         <div class="form-row">
@@ -387,11 +405,10 @@
                 <th>同居</th>
                 <th>学生</th>
                 <th>障害者</th>
-                <th>現役</th>
                 <th>認定日</th>
-                <th>認定区分</th>
                 <th>資格喪失日</th>
                 <th>備考</th>
+                <th>現役</th>
                 <th>操作</th>
               </tr>
             </thead>
@@ -423,19 +440,14 @@
                 <td><input type="checkbox" formControlName="isLivingTogether" /></td>
                 <td><input type="checkbox" formControlName="isStudent" /></td>
                 <td><input type="checkbox" formControlName="isDisabled" /></td>
+               
+                <td><input type="date" formControlName="certificationDate" style="width: 8em;" /></td>
+                <td><input type="date" formControlName="lossDate" style="width: 8em;" /></td>
+                <td><input formControlName="remarks" style="width: 8em;" /></td>
                 <td>
                   <span *ngIf="!dep.get('lossDate')?.value">現役</span>
                   <span *ngIf="dep.get('lossDate')?.value">-</span>
                 </td>
-                <td><input type="date" formControlName="certificationDate" style="width: 8em;" /></td>
-                <td>
-                  <select formControlName="certificationType">
-                    <option value="">選択</option>
-                    <option *ngFor="let c of certificationTypes" [value]="c.code">{{ c.name }}</option>
-                  </select>
-                </td>
-                <td><input type="date" formControlName="lossDate" style="width: 8em;" /></td>
-                <td><input formControlName="remarks" style="width: 8em;" /></td>
                 <td>
                   <button type="button" (click)="removeDependent(i)">削除</button>
                 </td>
@@ -573,28 +585,16 @@
               <input formControlName="leaveReason" />
             </div>
             <div class="form-row">
-              <label>社会保険料免除対象</label>
+              <label>健康保険料免除対象</label>
               <input type="checkbox" formControlName="isHealthInsuranceExempted" />
             </div>
             <div class="form-row">
-              <label>雇用保険給付対象</label>
+              <label>厚生年金保険料免除対象</label>
               <input type="checkbox" formControlName="isPensionExempted" />
             </div>
             <div class="form-row">
-              <label>給与支給有無</label>
-              <input type="checkbox" formControlName="isEmploymentInsuranceExempted" />
-            </div>
-            <div class="form-row">
-              <label>就労制限有無</label>
+              <label>介護保険料免除対象</label>
               <input type="checkbox" formControlName="isCareInsuranceExempted" />
-            </div>
-            <div class="form-row">
-              <label>医師の診断書有無</label>
-              <input type="checkbox" formControlName="isChildcareLeave" />
-            </div>
-            <div class="form-row">
-              <label>特例適用有無</label>
-              <input type="checkbox" formControlName="isNursingCareLeave" />
             </div>
             <div class="form-row">
               <button type="button" (click)="removeExtraordinaryLeave(i)">削除</button>

@@ -1,5 +1,5 @@
 import { Component, Inject, Output, EventEmitter, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { PREFECTURES } from '../../../../core/models/prefecture.model';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -26,6 +26,13 @@ export class EditMyCompanyComponent implements OnInit {
 
   ngOnInit() {
     this.originalData = { ...this.data };
+    let postalCodeFirst = '';
+    let postalCodeLast = '';
+    if (this.data.headOfficeAddress?.postalCode) {
+      const [first, last] = this.data.headOfficeAddress.postalCode.split('-');
+      postalCodeFirst = first || '';
+      postalCodeLast = last || '';
+    }
     this.form = this.fb.group({
       companyId: [{ value: this.data.companyId, disabled: true }],
       corporateNumber: [this.data.corporateNumber],
@@ -33,7 +40,8 @@ export class EditMyCompanyComponent implements OnInit {
       industry: [this.data.industry],
       companyOwner: [this.data.companyOwner],
       headOfficeAddress: this.fb.group({
-        postalCode: [this.data.headOfficeAddress?.postalCode],
+        postalCodeFirst: [postalCodeFirst, [Validators.required, EditMyCompanyComponent.postalCodeFirstValidator]],
+        postalCodeLast: [postalCodeLast, [Validators.required, EditMyCompanyComponent.postalCodeLastValidator]],
         prefecture: [this.data.headOfficeAddress?.prefecture],
         city: [this.data.headOfficeAddress?.city],
         town: [this.data.headOfficeAddress?.town],
@@ -42,7 +50,7 @@ export class EditMyCompanyComponent implements OnInit {
         countryCode: [this.data.headOfficeAddress?.countryCode || 'JP']
       }),
       establishmentDate: [this.data.establishmentDate, Validators.required],
-      salaryClosingDate: [this.data.salaryClosingDate]
+      salaryClosingDate: [this.data.salaryClosingDate, Validators.required]
     });
   }
 
@@ -53,10 +61,33 @@ export class EditMyCompanyComponent implements OnInit {
       ...this.form.getRawValue(),
       name: this.form.value.companyName
     };
+    const address = { ...updated.headOfficeAddress };
+    address.postalCode = `${address.postalCodeFirst}-${address.postalCodeLast}`;
+    delete address.postalCodeFirst;
+    delete address.postalCodeLast;
+    updated.headOfficeAddress = address;
     this.saved.emit(updated);
   }
 
   onCancel() {
     this.cancelled.emit();
+  }
+
+  get postalCodeFirstCtrl() {
+    return this.form.get('headOfficeAddress.postalCodeFirst');
+  }
+  get postalCodeLastCtrl() {
+    return this.form.get('headOfficeAddress.postalCodeLast');
+  }
+
+  static postalCodeFirstValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+    if (!/^[0-9]{3}$/.test(value)) return { pattern: true };
+    return null;
+  }
+  static postalCodeLastValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+    if (!/^[0-9]{4}$/.test(value)) return { pattern: true };
+    return null;
   }
 }

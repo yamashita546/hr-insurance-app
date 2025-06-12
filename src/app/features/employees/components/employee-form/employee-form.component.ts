@@ -15,20 +15,23 @@ import { Subscription } from 'rxjs';
 import { ForeignWorker } from '../../../../core/models/foreign.workers';
 import { EXTRAORDINARY_LEAVE_TYPES } from '../../../../core/models/extraordinary.leave';
 import { RouterModule, Router } from '@angular/router';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { Company, Office } from '../../../../core/models/company.model';
 import { Prefecture, PREFECTURES } from '../../../../core/models/prefecture.model';
 import { EMPLOYEE_CSV_FIELD_LABELS } from '../../../../core/models/employee.model';
-import { RELATIONSHIP_TYPES, CERTIFICATION_TYPES } from '../../../../core/models/dependents.relationship.model';
+import { RELATIONSHIP_TYPES } from '../../../../core/models/dependents.relationship.model';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-employee-form',
   standalone: true,
-  imports: [MatExpansionModule, ReactiveFormsModule, CommonModule,
-            MatInputModule, MatSelectModule, MatDatepickerModule, 
-            MatNativeDateModule, MatButtonModule, MatTabsModule, RouterModule
-                
+  imports: [
+    MatExpansionModule, ReactiveFormsModule, CommonModule,
+    MatInputModule, MatSelectModule, MatDatepickerModule, 
+    MatNativeDateModule, MatButtonModule, MatTabsModule, RouterModule,
+    FormsModule
   ],
   templateUrl: './employee-form.component.html',
   styleUrl: './employee-form.component.css'
@@ -69,7 +72,8 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   public EMPLOYEE_CSV_FIELD_LABELS = EMPLOYEE_CSV_FIELD_LABELS;
 
   relationshipTypes = RELATIONSHIP_TYPES;
-  certificationTypes = CERTIFICATION_TYPES;
+
+  duplicateEmployees: any[] = []; // 重複従業員リスト
 
   get dependents(): FormArray {
     return this.form.get('dependents') as FormArray;
@@ -88,6 +92,14 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       return Object.keys(this.pendingImportData[0]);
     }
     return [];
+  }
+
+  // 郵便番号分割用
+  get postalCodeFirstCtrl() {
+    return this.form.get('address.postalCodeFirst');
+  }
+  get postalCodeLastCtrl() {
+    return this.form.get('address.postalCodeLast');
   }
 
   constructor(
@@ -119,10 +131,12 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       contractEndDate: [''],
       resignationDate: [''],
       resignationReason: [''],
-      email: [''],
-      phoneNumber: [''],
+      email: ['', [Validators.email]],
+      phoneNumber: ['', [Validators.pattern(/^\d+$/)]],
+      insuranceNumber: ['', [Validators.pattern(/^[0-9]+$/)]],
       address: this.fb.group({
-        postalCode: [''],
+        postalCodeFirst: ['', [Validators.required, Validators.pattern(/^\d{3}$/)]],
+        postalCodeLast: ['', [Validators.required, Validators.pattern(/^\d{4}$/)]],
         prefecture: [''],
         city: [''],
         town: [''],
@@ -131,6 +145,8 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       // 保険情報をInsuranceStatus型で管理
       healthInsuranceStatus: this.fb.group({
         isApplicable: [false],
+        healthInsuranceSymbol: [''],
+        healthInsuranceNumber: [''],
         insuranceNumber: [''],
         acquisitionDate: [''],
         acquisitionReported: [false],
@@ -147,15 +163,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
         acquisitionReported: [false],
         lossDate: [''],
         lossReported: [false],
-        remarks: ['']
-      }),
-      employmentInsuranceStatus: this.fb.group({
-        isApplicable: [false],
-        insuranceNumber: [''],
-        acquisitionDate: [''],
-        acquisitionReported: [false],
-        lossDate: [''],
-        lossReported: [false],
+        baseNumber: ['', [Validators.pattern(/^\d{10}$/)]],
         remarks: ['']
       }),
       isCareInsuranceApplicable: [false],
@@ -256,6 +264,17 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
         this.loadOffices(company.companyKey);
       }
     });
+
+    // 既存のlocalStorage復元処理の後に郵便番号分割
+    const address = this.form.get('address');
+    if (address && address.get('postalCode')) {
+      const postalCode = address.get('postalCode')?.value;
+      if (postalCode && typeof postalCode === 'string' && postalCode.includes('-')) {
+        const [first, last] = postalCode.split('-');
+        address.get('postalCodeFirst')?.setValue(first);
+        address.get('postalCodeLast')?.setValue(last);
+      }
+    }
   }
 
   ngOnDestroy() {
@@ -282,7 +301,6 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       isLivingTogether: [false],
       income: [''],
       certificationDate: [''],
-      certificationType: [''],
       lossDate: [''],
       remarks: [''],
       isActive: [true],
@@ -303,10 +321,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       leaveReason: [''],
       isHealthInsuranceExempted: [false],
       isPensionExempted: [false],
-      isEmploymentInsuranceExempted: [false],
       isCareInsuranceExempted: [false],
-      isChildcareLeave: [false],
-      isNursingCareLeave: [false],
     }));
   }
 
@@ -325,8 +340,50 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     const employee = {
       ...this.form.value,
       companyKey: this.companyKey,
+      companyId: this.companyId,
       officeId: this.form.get('officeId')!.value
     };
+    // 郵便番号を結合
+    if (employee.address && employee.address.postalCodeFirst && employee.address.postalCodeLast) {
+      employee.address.postalCode = `${employee.address.postalCodeFirst}-${employee.address.postalCodeLast}`;
+      delete employee.address.postalCodeFirst;
+      delete employee.address.postalCodeLast;
+    }
+    // healthInsuranceStatusのsymbol, numberをネストで保存
+    if (this.form.get('healthInsuranceStatus')) {
+      const his = this.form.get('healthInsuranceStatus')!.value;
+      employee.healthInsuranceStatus = {
+        ...employee.healthInsuranceStatus,
+        healthInsuranceSymbol: his.healthInsuranceSymbol ?? '',
+        healthInsuranceNumber: his.healthInsuranceNumber ?? '',
+      };
+    }
+    // 基礎年金番号（pensionStatus.baseNumber）は文字列として保存（先頭0も保持）
+    if (employee.pensionStatus) {
+      if (typeof employee.pensionStatus.baseNumber === 'string' && employee.pensionStatus.baseNumber.length > 0) {
+        employee.pensionStatus.baseNumber = employee.pensionStatus.baseNumber.padStart(10, '0');
+      } else {
+        delete employee.pensionStatus.baseNumber;
+      }
+    }
+    // 被保険者整理番号も保存
+    employee.insuranceNumber = this.form.get('insuranceNumber')?.value;
+    // 被保険者整理番号の重複チェック
+    if (employee.insuranceNumber) {
+      const employeesCollection = collection(this.firestore, 'employees');
+      const snap = await getDocs(employeesCollection);
+      const insuranceNumberExists = snap.docs.find(doc => {
+        const data = doc.data();
+        return (
+          data['companyKey'] === this.companyKey &&
+          data['insuranceNumber'] === employee.insuranceNumber
+        );
+      });
+      if (insuranceNumberExists) {
+        alert(`被保険者整理番号「${employee.insuranceNumber}」は既に登録されています。`);
+        return;
+      }
+    }
     // genderをコード値に変換
     if (employee.gender) {
       if (employee.gender === 'M') employee.gender = 'male';
@@ -381,9 +438,6 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       if (formGroup.errors['pensionRequired']) {
         errors.push('正社員の場合、厚生年金適用は必須です');
       }
-      if (formGroup.errors['employmentInsuranceRequired']) {
-        errors.push('正社員の場合、雇用保険適用は必須です');
-      }
     }
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);
@@ -429,6 +483,54 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   }
 
   goToNextTab() {
+    // 扶養家族タブ（index=2）でのみチェック
+    if (this.selectedTabIndex === 2) {
+      const dependents = this.dependents.controls;
+      let hasWarning = false;
+      for (const dep of dependents) {
+        const isLivingTogether = dep.get('isLivingTogether')?.value;
+        const income = Number(dep.get('income')?.value || 0);
+        const isDisabled = dep.get('isDisabled')?.value;
+        const birthday = dep.get('birthday')?.value;
+        const relationshipCode = dep.get('relationshipCode')?.value;
+
+        // 年齢計算
+        let age = 0;
+        if (birthday) {
+          const birthDate = new Date(birthday);
+          const today = new Date();
+          age = today.getFullYear() - birthDate.getFullYear();
+          const m = today.getMonth() - birthDate.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+        }
+
+        let incomeLimit = 130;
+        if (age >= 60 || isDisabled) incomeLimit = 180;
+
+        if (isLivingTogether) {
+          if (income >= incomeLimit) {
+            hasWarning = true;
+            break;
+          }
+        } else {
+          if (income >= incomeLimit) {
+            hasWarning = true;
+            break;
+          }
+          // 続柄コードが01～06以外はNG
+          if (!['01','02','03','04','05','06'].includes(relationshipCode)) {
+            hasWarning = true;
+            break;
+          }
+        }
+      }
+      if (hasWarning) {
+        const proceed = window.confirm('扶養に該当しない可能性があります。操作を続けますか？');
+        if (!proceed) return;
+      }
+    }
     if (this.selectedTabIndex < this.tabCount - 1) {
       this.selectedTabIndex++;
     }
@@ -450,6 +552,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     const snap = await getDocs(officesCol);
     this.offices = snap.docs
       .map(doc => ({ id: doc.id, ...doc.data() } as Office))
+      .filter(office => office.isActive)
       .sort((a, b) => a.id.localeCompare(b.id, 'ja'));
   }
 
@@ -477,18 +580,39 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       'lastName', 'firstName', 'lastNameKana', 'firstNameKana',
       'relationship', 'relationshipCode', 'birthday', 'myNumber',
       'isSpouse', 'isChild', 'isDisabled', 'isStudent', 'isLivingTogether',
-      'income', 'certificationDate', 'certificationType', 'lossDate', 'remarks', 'isActive'
+      'income', 'certificationDate', 'lossDate', 'remarks', 'isActive'
     ];
     const headers = [
       'companyKey',
-      'employeeId', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana', 'gender', 'birthday', 'myNumber',
+      'employeeId', 'insuranceNumber',
+      'lastName', 'firstName', 'lastNameKana', 'firstNameKana', 'gender', 'birthday', 'myNumber',
       'email', 'phoneNumber',
       'address.postalCode', 'address.prefecture', 'address.city', 'address.town', 'address.streetAddress',
       'officeName',
       'displayOfficeId',
       'department', 'position', 'employeeType', 'workStyle', 'contractStartDate', 'contractEndDate', 'resignationReason',
-      'healthInsuranceNumber', 'pensionNumber', 'employmentInsuranceNumber',
-      'isHealthInsuranceApplicable', 'isPensionApplicable', 'isEmploymentInsuranceApplicable', 'isCareInsuranceApplicable',
+      // 健康保険（ネスト構造）
+      'healthInsuranceStatus.isApplicable',
+      'healthInsuranceStatus.baseNumber',
+      'healthInsuranceStatus.healthInsuranceSymbol',
+      'healthInsuranceStatus.healthInsuranceNumber',
+      'healthInsuranceStatus.acquisitionDate',
+      'healthInsuranceStatus.lossDate',
+      'healthInsuranceStatus.acquisitionReported',
+      'healthInsuranceStatus.lossReported',
+      'healthInsuranceStatus.certificateIssued',
+      'healthInsuranceStatus.certificateCollected',
+      'healthInsuranceStatus.remarks',
+      // 厚生年金（ネスト構造）
+      'pensionStatus.isApplicable',
+      'pensionStatus.baseNumber',
+      'pensionStatus.acquisitionDate',
+      'pensionStatus.lossDate',
+      'pensionStatus.acquisitionReported',
+      'pensionStatus.lossReported',
+      'pensionStatus.remarks',
+      // 介護保険
+      'isCareInsuranceApplicable',
       'emergencyContactName', 'emergencyContactRelationship', 'emergencyContactPhone', 'emergencyContactIsActive',
       'hasDependents', 'remarks',
       ...[0,1,2,3].flatMap(i => dependentFields.map(f => `dependents[${i}].${f}`)),
@@ -532,7 +656,6 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
           // 保険適用フラット→ネスト変換
           if (h === 'isHealthInsuranceApplicable') return emp['healthInsuranceStatus']?.isApplicable ?? '';
           if (h === 'isPensionApplicable') return emp['pensionStatus']?.isApplicable ?? '';
-          if (h === 'isEmploymentInsuranceApplicable') return emp['employmentInsuranceStatus']?.isApplicable ?? '';
           if (h === 'isCareInsuranceApplicable') return emp['isCareInsuranceApplicable'] ?? '';
           return emp[h] ?? '';
         });
@@ -590,6 +713,17 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       for (let j = 0; j < keys.length; j++) {
         row[keys[j]] = cols[j];
       }
+      // 都道府県コード・名称変換
+      if (row['address.prefecture']) {
+        const pref = PREFECTURES.find(
+          p => p.code === row['address.prefecture'] || p.name === row['address.prefecture']
+        );
+        if (pref) {
+          row['address.prefecture'] = pref.code;
+        } else {
+          errors.push(`${i+1}行目: address.prefecture（${row['address.prefecture']}）が不正です`);
+        }
+      }
       // 保険適用フラット→ネスト変換
       if ('isHealthInsuranceApplicable' in row) {
         row.healthInsuranceStatus = row.healthInsuranceStatus || {};
@@ -598,10 +732,6 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       if ('isPensionApplicable' in row) {
         row.pensionStatus = row.pensionStatus || {};
         row.pensionStatus.isApplicable = row.isPensionApplicable === 'true' || row.isPensionApplicable === true;
-      }
-      if ('isEmploymentInsuranceApplicable' in row) {
-        row.employmentInsuranceStatus = row.employmentInsuranceStatus || {};
-        row.employmentInsuranceStatus.isApplicable = row.isEmploymentInsuranceApplicable === 'true' || row.isEmploymentInsuranceApplicable === true;
       }
       if ('isCareInsuranceApplicable' in row) {
         row.isCareInsuranceApplicable = row.isCareInsuranceApplicable === 'true' || row.isCareInsuranceApplicable === true;
@@ -613,8 +743,16 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       if (row['birthday'] && !/^\d{4}-\d{2}-\d{2}$/.test(row['birthday'])) {
         errors.push(`${i+1}行目: birthdayの日付形式が不正です`);
       }
-      if (row['gender'] && !['male','female','other'].includes(row['gender'])) {
-        errors.push(`${i+1}行目: genderが不正です`);
+      // 性別コード・名称変換
+      if (row['gender']) {
+        const gender = GENDER_TYPES.find(
+          g => g.code === row['gender'] || g.name === row['gender']
+        );
+        if (gender) {
+          row['gender'] = gender.code;
+        } else {
+          errors.push(`${i+1}行目: gender（${row['gender']}）が不正です`);
+        }
       }
       data.push(row);
     }
@@ -622,8 +760,12 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   }
 
   async confirmImport() {
+    console.log('--- confirmImport start ---');
+    console.log('importErrors:', this.importErrors);
+    console.log('duplicateEmployees:', this.duplicateEmployees);
     if (this.importErrors.length > 0) {
       alert('エラーがあります。修正してください。');
+      console.log('importErrorsが残っているためreturn');
       return;
     }
     // 1. 事前に全オフィスを取得
@@ -635,8 +777,16 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       displayOfficeIdToId[data['displayOfficeId']] = docSnap.id;
     });
 
-    // 2. 各従業員データにofficeIdを付与して保存
+    // 2. 既存従業員リスト取得
+    const employeesCol = collection(this.firestore, 'employees');
+    const employeesSnap = await getDocs(employeesCol);
+    const existingEmployees = employeesSnap.docs.map(docSnap => ({ ...docSnap.data(), _docId: docSnap.id }));
+
+    // 3. 重複チェック
+    const toAdd: any[] = [];
+    const toUpdate: any[] = [];
     for (const emp of this.pendingImportData) {
+      emp.companyId = this.companyId;
       const officeId = displayOfficeIdToId[emp.displayOfficeId];
       if (officeId) {
         emp.officeId = officeId;
@@ -649,28 +799,92 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
         emp.healthInsuranceStatus = emp.healthInsuranceStatus || {};
         emp.healthInsuranceStatus.isApplicable = emp.isHealthInsuranceApplicable === 'true' || emp.isHealthInsuranceApplicable === true;
       }
+      // healthInsuranceSymbol, healthInsuranceNumberもネストに格納
+      if ('healthInsuranceSymbol' in emp) {
+        emp.healthInsuranceStatus = emp.healthInsuranceStatus || {};
+        emp.healthInsuranceStatus.healthInsuranceSymbol = emp.healthInsuranceSymbol;
+      }
+      if ('healthInsuranceNumber' in emp) {
+        emp.healthInsuranceStatus = emp.healthInsuranceStatus || {};
+        emp.healthInsuranceStatus.healthInsuranceNumber = emp.healthInsuranceNumber;
+      }
       if ('isPensionApplicable' in emp) {
         emp.pensionStatus = emp.pensionStatus || {};
         emp.pensionStatus.isApplicable = emp.isPensionApplicable === 'true' || emp.isPensionApplicable === true;
       }
-      if ('isEmploymentInsuranceApplicable' in emp) {
-        emp.employmentInsuranceStatus = emp.employmentInsuranceStatus || {};
-        emp.employmentInsuranceStatus.isApplicable = emp.isEmploymentInsuranceApplicable === 'true' || emp.isEmploymentInsuranceApplicable === true;
-      }
       if ('isCareInsuranceApplicable' in emp) {
         emp.isCareInsuranceApplicable = emp.isCareInsuranceApplicable === 'true' || emp.isCareInsuranceApplicable === true;
       }
+      // 重複判定
+      const dup = existingEmployees.find(e => ((e as any).companyKey ?? '') === (emp.companyKey ?? '') && ((e as any).employeeId ?? '') === (emp.employeeId ?? ''));
+      if (dup) {
+        // 既存のduplicateEmployeesに同じemployeeIdがあればそのoverwriteを引き継ぐ
+        const existingDup = this.duplicateEmployees.find(d => d.employeeId === emp.employeeId);
+        this.duplicateEmployees.push({ ...emp, _docId: dup._docId, overwrite: existingDup ? existingDup.overwrite : false, existing: dup });
+      } else {
+        toAdd.push(emp);
+      }
+    }
+    console.log('duplicateEmployees after check:', this.duplicateEmployees);
+    // 重複があればUIで上書き可否を選択させる
+    if (this.duplicateEmployees.length > 0) {
+      console.log('重複従業員のoverwrite状態:', this.duplicateEmployees.map(e => e.overwrite));
+      if (this.duplicateEmployees.some(e => !e.overwrite)) {
+        alert('重複している従業員があります。上書きする場合はチェックを入れてください。');
+        console.log('overwriteがfalseの従業員がいるためreturn');
+        return;
+      }
+    }
+    // 4. 上書き・新規追加処理
+    for (const emp of this.duplicateEmployees) {
+      if (emp.overwrite) {
+        // マージ処理: 空でない項目のみ上書き
+        const updateData: any = {};
+        Object.keys(emp).forEach(key => {
+          if (key === '_docId' || key === 'overwrite' || key === 'existing') return;
+          if (emp[key] !== '' && emp[key] !== null && emp[key] !== undefined) {
+            updateData[key] = emp[key];
+          }
+        });
+        updateData.companyId = this.companyId;
+        // ネストもマージ
+        ['address','healthInsuranceStatus','pensionStatus','foreignWorker'].forEach(groupKey => {
+          if (emp[groupKey] && typeof emp[groupKey] === 'object') {
+            updateData[groupKey] = { ...emp.existing[groupKey], ...Object.fromEntries(Object.entries(emp[groupKey]).filter(([k,v]) => v !== '' && v !== null && v !== undefined)) };
+          }
+        });
+        const docRef = doc(this.firestore, 'employees', emp._docId);
+        console.log('updateDoc:', docRef, updateData);
+        await updateDoc(docRef, updateData);
+      }
+    }
+    for (const emp of toAdd) {
+      console.log('addDoc:', emp);
       await addDoc(collection(this.firestore, 'employees'), emp);
     }
     alert('インポートが完了しました');
     this.pendingImportData = [];
     this.fileName = '';
+    this.duplicateEmployees = [];
+    this.importErrors = [];
+    console.log('--- confirmImport end ---');
   }
 
   cancelImport() {
     this.pendingImportData = [];
     this.importErrors = [];
     this.fileName = '';
+  }
+
+  onDuplicateOverwriteChange() {
+    // すべての重複従業員にoverwriteが付いていればエラーを消す
+    const allChecked = this.duplicateEmployees.every(e => e.overwrite);
+    const idx = this.importErrors.findIndex(e => e.includes('重複している従業員があります'));
+    if (allChecked && idx !== -1) {
+      this.importErrors.splice(idx, 1);
+    } else if (!allChecked && idx === -1) {
+      this.importErrors.push('重複している従業員があります。上書きする場合はチェックを入れてください。');
+    }
   }
 }
 
@@ -680,10 +894,8 @@ function fullTimeInsuranceValidator(control: AbstractControl): ValidationErrors 
   if (!isFullTime) return null;
   const health = control.get('healthInsuranceStatus.isApplicable')?.value;
   const pension = control.get('pensionStatus.isApplicable')?.value;
-  const employment = control.get('employmentInsuranceStatus.isApplicable')?.value;
   const errors: any = {};
   if (!health) errors.healthInsuranceRequired = true;
   if (!pension) errors.pensionRequired = true;
-  if (!employment) errors.employmentInsuranceRequired = true;
   return Object.keys(errors).length ? errors : null;
 }

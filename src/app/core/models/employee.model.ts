@@ -5,10 +5,12 @@ import { Address } from './address.model';
 
 export type InsuranceStatus = {
   isApplicable: boolean;              // 適用対象か
-  insuranceNumber?: string;           // 保険者番号（適用時のみ有効）
+  baseNumber?: string;               // 基礎年金番号
+  healthInsuranceSymbol?: string;    // 健康保険記号
+  healthInsuranceNumber?: string;    // 健康保険者番号（適用時のみ有効）
   acquisitionDate?: Date;            // 資格取得日
-  acquisitionReported?: boolean;     // 取得手続き済みか
   lossDate?: Date;                   // 喪失日
+  acquisitionReported?: boolean;     // 取得手続き済みか
   lossReported?: boolean;            // 喪失届提出済みか
   certificateIssued?: boolean;       // 保険証発行済み（健康保険用）
   certificateCollected?: boolean;     // 保険証回収済み（健康保険用）
@@ -19,6 +21,7 @@ export type Employee = {
     companyKey: string;
     displayCompanyKey: string;
     employeeId: string;
+    insuranceNumber?: string;
     displayEmployeeId?: string;
     officeId: string;
     officeName?: string;
@@ -51,9 +54,9 @@ export type Employee = {
     hasDependents?: boolean;
     dependentsCount?: number; // 扶養人数
 
-    healthInsuranceStatus: InsuranceStatus;
-    pensionStatus: InsuranceStatus;
-    employmentInsuranceStatus: InsuranceStatus;
+    healthInsuranceStatus: InsuranceStatus; // 健康保険
+    pensionStatus: InsuranceStatus; // 厚生年金
+    
     isCareInsuranceApplicable?: boolean;     //介護保険の適用対象か
     remarks?: string;                       // 備考欄
 
@@ -88,7 +91,6 @@ export type Dependent = {
   isLivingTogether?: boolean; // 同居かどうか
   income?: number; // 年収等
   certificationDate?: Date; // 被扶養者認定日
-  certificationType?: string; // 認定区分
   lossDate?: Date; // 資格喪失日
   remarks?: string; // 備考
 
@@ -125,6 +127,7 @@ export const EMPLOYEE_CSV_FIELD_LABELS: { [key: string]: string } = {
   companyKey: '企業キー',
   displayCompanyKey: '表示用企業キー',
   employeeId: '従業員ID',
+  insuranceNumber: '被保険者整理番号',
   displayEmployeeId: '表示用従業員ID',
   officeId: '事業所ID',
   officeName: '事業所名',
@@ -158,8 +161,16 @@ export const EMPLOYEE_CSV_FIELD_LABELS: { [key: string]: string } = {
   hasDependents: '扶養家族あり',
   dependentsCount: '扶養人数',
   isHealthInsuranceApplicable: '健康保険適用',
+  healthInsuranceSymbol: '健康保険記号',
+  healthInsuranceNumber: '健康保険者番号',
+  acquisitionDate: '資格取得日',
+  lossDate: '資格喪失日',
+  certificateIssued: '保険証発行済み',
+  certificateCollected: '保険証回収済み',
   isPensionApplicable: '厚生年金適用',
-  isEmploymentInsuranceApplicable: '雇用保険適用',
+  baseNumber: '基礎年金番号',
+  pensionAcquisitionDate: '資格取得日',
+  pensionLossDate: '資格喪失日',  
   isCareInsuranceApplicable: '介護保険適用',
   remarks: '備考',
   isActive: '有効',

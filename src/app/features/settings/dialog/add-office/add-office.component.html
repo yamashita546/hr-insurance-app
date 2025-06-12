@@ -75,9 +75,11 @@
       </label>
       <label>給与締め日
         <input type="text" class="input" formControlName="salaryClosingDate" placeholder="例：20" />
-      </label>
-      <label>有効
-        <input type="checkbox" formControlName="isActive" /> 有効
+        <div class="error" *ngIf="form.get('salaryClosingDate')?.invalid && (form.get('salaryClosingDate')?.dirty || form.get('salaryClosingDate')?.touched)">
+          <ng-container *ngIf="form.get('salaryClosingDate')?.errors?.['required']">給与締め日は必須です</ng-container>
+          <ng-container *ngIf="form.get('salaryClosingDate')?.errors?.['pattern']">1～31の半角数字で入力してください</ng-container>
+          <ng-container *ngIf="form.get('salaryClosingDate')?.errors?.['range']">1～31の範囲で入力してください</ng-container>
+        </div>
       </label>
     </div>
     <div class="dialog-actions">

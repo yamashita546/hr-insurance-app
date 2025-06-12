@@ -1,5 +1,5 @@
 import { Component, Output, EventEmitter, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { Office } from '../../../../core/models/company.model';
@@ -8,8 +8,6 @@ import { InsuranceType, INSURANCE_TYPES } from '../../../../core/models/insuranc
 import { Company } from '../../../../core/models/company.model';
 import { INDUSTRY_CLASSIFICATIONS } from '../../../../core/models/industry-classification.model';
 import { MatDialogRef } from '@angular/material/dialog';
-
-
 
 @Component({
   selector: 'app-add-office',
@@ -57,8 +55,7 @@ export class AddOfficeComponent implements OnInit {
       officeCode: [''],
       validFrom: [''],
       validTo: [''],
-      isActive: [true],
-      salaryClosingDate: ['']
+      salaryClosingDate: ['', [Validators.required, AddOfficeComponent.salaryClosingDateValidator]]
     });
 
     // 会社情報が変わったときは値だけpatch
@@ -106,21 +103,20 @@ export class AddOfficeComponent implements OnInit {
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
     const raw = this.form.getRawValue();
-    // 郵便番号を結合
-    const postalCode = `${raw.address.postalCodeFirst}-${raw.address.postalCodeLast}`;
+    const { postalCodeFirst, postalCodeLast, ...addressRest } = raw.address;
+    const postalCode = `${postalCodeFirst}-${postalCodeLast}`;
     const office: Office = {
       ...raw,
       address: {
-        ...raw.address,
-        postalCode,
-        postalCodeFirst: undefined,
-        postalCodeLast: undefined
+        ...addressRest,
+        postalCode
       },
       companyKey: this.companyKey,
       createdAt: new Date(),
       updatedAt: new Date(),
       id: '', // Firestoreで自動生成 or 保存時に付与
-      salaryClosingDate: this.form.value.salaryClosingDate
+      salaryClosingDate: this.form.value.salaryClosingDate,
+      isActive: true
     };
     this.saved.emit(office);
   }
@@ -134,5 +130,14 @@ export class AddOfficeComponent implements OnInit {
   }
   get postalCodeLastCtrl() {
     return this.form.get('address.postalCodeLast');
+  }
+
+  // カスタムバリデータ: 1～31の半角数字のみ
+  static salaryClosingDateValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+    if (!/^[0-9]{1,2}$/.test(value)) return { pattern: true };
+    const num = Number(value);
+    if (num < 1 || num > 31) return { range: true };
+    return null;
   }
 }

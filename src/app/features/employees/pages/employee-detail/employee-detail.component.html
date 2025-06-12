@@ -42,80 +42,133 @@
   <section class="detail-section">
     <h3>基本情報</h3>
     <table class="detail-table">
-      <tr>
+      <tr *ngIf="!isEditMode">
         <th>従業員ID</th>
-        <td *ngIf="!isEditMode">{{ employee.employeeId || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.employeeId"></td>
+        <td>{{ employee.employeeId || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>従業員ID</th>
+        <td><input [(ngModel)]="editEmployee.employeeId"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
+        <th>被保険者整理番号</th>
+        <td>{{ employee.insuranceNumber || '未入力' }}</td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>被保険者整理番号</th>
+        <td><input [(ngModel)]="editEmployee.insuranceNumber"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>姓</th>
-        <td *ngIf="!isEditMode">{{ employee.lastName || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.lastName"></td>
+        <td>{{ employee.lastName || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>姓</th>
+        <td><input [(ngModel)]="editEmployee.lastName"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>名</th>
-        <td *ngIf="!isEditMode">{{ employee.firstName || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.firstName"></td>
+        <td>{{ employee.firstName || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>名</th>
+        <td><input [(ngModel)]="editEmployee.firstName"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>姓（カナ）</th>
-        <td *ngIf="!isEditMode">{{ employee.lastNameKana || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.lastNameKana"></td>
+        <td>{{ employee.lastNameKana || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>姓（カナ）</th>
+        <td><input [(ngModel)]="editEmployee.lastNameKana"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>名（カナ）</th>
-        <td *ngIf="!isEditMode">{{ employee.firstNameKana || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.firstNameKana"></td>
+        <td>{{ employee.firstNameKana || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>名（カナ）</th>
+        <td><input [(ngModel)]="editEmployee.firstNameKana"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>生年月日</th>
-        <td *ngIf="!isEditMode">{{ employee.birthday || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.birthday"></td>
+        <td>{{ employee.birthday || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>生年月日</th>
+        <td><input type="date" [(ngModel)]="editEmployee.birthday"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>性別</th>
-        <td *ngIf="!isEditMode">{{ getGenderName(employee.gender) }}</td>
-        <td *ngIf="isEditMode">
+        <td>{{ getGenderName(employee.gender) }}</td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>性別</th>
+        <td>
           <select [(ngModel)]="editEmployee.gender">
-            <option value="">選択してください</option>
+            <option value="">選択</option>
             <option *ngFor="let g of genderTypes" [value]="g.code">{{ g.name }}</option>
           </select>
         </td>
       </tr>
-      <tr>
+      <tr *ngIf="!isEditMode">
         <th>マイナンバー</th>
-        <td *ngIf="!isEditMode">{{ employee.myNumber || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.myNumber" maxlength="12"></td>
+        <td>{{ employee.myNumber || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>マイナンバー</th>
+        <td><input [(ngModel)]="editEmployee.myNumber"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>Email</th>
-        <td *ngIf="!isEditMode">{{ employee.email || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.email"></td>
+        <td>{{ employee.email || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>Email</th>
+        <td><input [(ngModel)]="editEmployee.email"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>電話番号</th>
-        <td *ngIf="!isEditMode">{{ employee.phoneNumber || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.phoneNumber"></td>
+        <td>{{ employee.phoneNumber || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>電話番号</th>
+        <td><input [(ngModel)]="editEmployee.phoneNumber"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>住所</th>
-        <td *ngIf="!isEditMode">
+        <td>
           <div *ngIf="employee.address">
             〒{{ employee.address.postalCode || '' }}<br>
-            {{ getPrefectureName(employee.address.prefecture) }}{{ employee.address.city || '' }}{{ employee.address.town || '' }}{{ employee.address.streetAddress || '' }}{{ employee.address.buildingName || '' }}
+            {{ getPrefectureName(employee.address.prefecture) }}{{ employee.address.city || '' }}{{ employee.address.town || '' }}{{ employee.address.streetAddress || '' }}
           </div>
           <div *ngIf="!employee.address">未入力</div>
         </td>
-        <td *ngIf="isEditMode">
-          <input placeholder="郵便番号" [(ngModel)]="editEmployee.address.postalCode" style="width: 80px;"> <br>
-          <select [(ngModel)]="editEmployee.address.prefecture" style="width: 120px;">
-            <option value="">都道府県を選択</option>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>郵便番号</th>
+        <td><input [(ngModel)]="editEmployee.address.postalCode"></td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>都道府県</th>
+        <td>
+          <select [(ngModel)]="editEmployee.address.prefecture">
+            <option value="">選択</option>
             <option *ngFor="let p of prefectures" [value]="p.code">{{ p.name }}</option>
           </select>
-          <input placeholder="市区町村" [(ngModel)]="editEmployee.address.city" style="width: 100px;">
-          <input placeholder="町域・番地" [(ngModel)]="editEmployee.address.town" style="width: 100px;">
-          <input placeholder="建物名" [(ngModel)]="editEmployee.address.streetAddress" style="width: 120px;">
         </td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>市区町村</th>
+        <td><input [(ngModel)]="editEmployee.address.city"></td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>町域</th>
+        <td><input [(ngModel)]="editEmployee.address.town"></td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>番地・建物名</th>
+        <td><input [(ngModel)]="editEmployee.address.streetAddress"></td>
       </tr>
     </table>
   </section>
@@ -124,65 +177,92 @@
   <section class="detail-section">
     <h3>雇用情報</h3>
     <table class="detail-table">
-      <tr>
+      <tr *ngIf="!isEditMode">
         <th>事業所名</th>
-        <td *ngIf="!isEditMode">{{ employee.officeName || '未入力' }}</td>
-        <td *ngIf="isEditMode">
-          <select [(ngModel)]="editEmployee.officeName">
-            <option value="">選択してください</option>
-            <option *ngFor="let office of offices" [value]="office.name">{{ office.name }}</option>
+        <td>{{ employee.officeName || '未入力' }}</td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>事業所名</th>
+        <td>
+          <select [(ngModel)]="editEmployee.officeId">
+            <option value="">選択</option>
+            <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
           </select>
         </td>
       </tr>
-      <tr>
+      <tr *ngIf="!isEditMode">
         <th>部署</th>
-        <td *ngIf="!isEditMode">{{ employee.department || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.department"></td>
+        <td>{{ employee.department || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>部署</th>
+        <td><input [(ngModel)]="editEmployee.department"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>役職</th>
-        <td *ngIf="!isEditMode">{{ employee.position || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.position"></td>
+        <td>{{ employee.position || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>役職</th>
+        <td><input [(ngModel)]="editEmployee.position"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>雇用形態</th>
-        <td *ngIf="!isEditMode">{{ getEmployeeTypeName(employee.employeeType) }}</td>
-        <td *ngIf="isEditMode">
+        <td>{{ getEmployeeTypeName(employee.employeeType) }}</td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>雇用形態</th>
+        <td>
           <select [(ngModel)]="editEmployee.employeeType">
-            <option value="">選択してください</option>
+            <option value="">選択</option>
             <option *ngFor="let t of employeeTypes" [value]="t.code">{{ t.name }}</option>
           </select>
         </td>
       </tr>
-      <tr>
+      <tr *ngIf="!isEditMode">
         <th>勤務形態</th>
-        <td *ngIf="!isEditMode">{{ getWorkStyleName(employee.workStyle) }}</td>
-        <td *ngIf="isEditMode">
+        <td>{{ getWorkStyleName(employee.workStyle) }}</td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>勤務形態</th>
+        <td>
           <select [(ngModel)]="editEmployee.workStyle">
-            <option value="">選択してください</option>
+            <option value="">選択</option>
             <option *ngFor="let t of workStyleTypes" [value]="t.code">{{ t.name }}</option>
           </select>
         </td>
       </tr>
-      <tr>
+      <tr *ngIf="!isEditMode">
         <th>学生</th>
-        <td *ngIf="!isEditMode">{{ employee.isStudent ? '○' : '×' }}</td>
-        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.isStudent"></td>
+        <td>{{ employee.isStudent ? '○' : '×' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>学生</th>
+        <td><input type="checkbox" [(ngModel)]="editEmployee.isStudent"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>契約開始日</th>
-        <td *ngIf="!isEditMode">{{ employee.contractStartDate || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.contractStartDate"></td>
+        <td>{{ employee.contractStartDate || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>契約開始日</th>
+        <td><input type="date" [(ngModel)]="editEmployee.contractStartDate"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>契約終了日</th>
-        <td *ngIf="!isEditMode">{{ employee.contractEndDate || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.contractEndDate"></td>
+        <td>{{ employee.contractEndDate || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>契約終了日</th>
+        <td><input type="date" [(ngModel)]="editEmployee.contractEndDate"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>退職理由</th>
-        <td *ngIf="!isEditMode">{{ employee.resignationReason || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.resignationReason"></td>
+        <td>{{ employee.resignationReason || '未入力' }}</td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>退職理由</th>
+        <td><input [(ngModel)]="editEmployee.resignationReason"></td>
       </tr>
     </table>
   </section>
@@ -191,131 +271,166 @@
   <section class="detail-section">
     <h3>社会保険情報</h3>
     <table class="detail-table">
-      <tr>
+      <tr *ngIf="!isEditMode">
         <th>健康保険適用</th>
-        <td *ngIf="!isEditMode">{{ employee.healthInsuranceStatus?.isApplicable ? '○' : '×' }}</td>
-        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.healthInsuranceStatus.isApplicable" (change)="onHealthInsuranceChange()"></td>
+        <td>{{ employee.healthInsuranceStatus?.isApplicable ? '○' : '×' }}</td>
       </tr>
-      <ng-container *ngIf="isEditMode ? editEmployee.healthInsuranceStatus?.isApplicable : employee.healthInsuranceStatus?.isApplicable">
+      <tr *ngIf="isEditMode">
+        <th>健康保険適用</th>
+        <td><input type="checkbox" [(ngModel)]="editEmployee.healthInsuranceStatus.isApplicable"></td>
+      </tr>
+      <ng-container *ngIf="!isEditMode && employee.healthInsuranceStatus?.isApplicable">
+        <tr>
+          <th>健康保険記号</th>
+          <td>{{ employee.healthInsuranceStatus?.healthInsuranceSymbol || '未入力' }}</td>
+        </tr>
         <tr>
           <th>健康保険被保険者番号</th>
-          <td *ngIf="!isEditMode">{{ employee.healthInsuranceStatus?.insuranceNumber || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.healthInsuranceStatus.insuranceNumber"></td>
+          <td>{{ employee.healthInsuranceStatus?.healthInsuranceNumber || '未入力' }}</td>
         </tr>
         <tr>
           <th>健康保険資格取得日</th>
-          <td *ngIf="!isEditMode">{{ employee.healthInsuranceStatus?.acquisitionDate || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.healthInsuranceStatus.acquisitionDate"></td>
+          <td>{{ employee.healthInsuranceStatus?.acquisitionDate || '未入力' }}</td>
         </tr>
         <tr>
           <th>健康保険取得手続き済み</th>
-          <td *ngIf="!isEditMode">{{ employee.healthInsuranceStatus?.acquisitionReported ? '○' : '×' }}</td>
-          <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.healthInsuranceStatus.acquisitionReported"></td>
+          <td>{{ employee.healthInsuranceStatus?.acquisitionReported ? '○' : '×' }}</td>
         </tr>
         <tr>
           <th>健康保険資格喪失日</th>
-          <td *ngIf="!isEditMode">{{ employee.healthInsuranceStatus?.lossDate || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.healthInsuranceStatus.lossDate"></td>
+          <td>{{ employee.healthInsuranceStatus?.lossDate || '未入力' }}</td>
         </tr>
         <tr>
           <th>健康保険喪失届提出済み</th>
-          <td *ngIf="!isEditMode">{{ employee.healthInsuranceStatus?.lossReported ? '○' : '×' }}</td>
-          <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.healthInsuranceStatus.lossReported"></td>
+          <td>{{ employee.healthInsuranceStatus?.lossReported ? '○' : '×' }}</td>
         </tr>
         <tr>
           <th>健康保険証発行済み</th>
-          <td *ngIf="!isEditMode">{{ employee.healthInsuranceStatus?.certificateIssued ? '○' : '×' }}</td>
-          <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.healthInsuranceStatus.certificateIssued"></td>
+          <td>{{ employee.healthInsuranceStatus?.certificateIssued ? '○' : '×' }}</td>
         </tr>
         <tr>
           <th>健康保険証回収済み</th>
-          <td *ngIf="!isEditMode">{{ employee.healthInsuranceStatus?.certificateCollected ? '○' : '×' }}</td>
-          <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.healthInsuranceStatus.certificateCollected"></td>
+          <td>{{ employee.healthInsuranceStatus?.certificateCollected ? '○' : '×' }}</td>
         </tr>
         <tr>
           <th>健康保険備考</th>
-          <td *ngIf="!isEditMode">{{ employee.healthInsuranceStatus?.remarks || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.healthInsuranceStatus.remarks"></td>
+          <td>{{ employee.healthInsuranceStatus?.remarks || '未入力' }}</td>
         </tr>
       </ng-container>
-      <tr>
+      <ng-container *ngIf="isEditMode && editEmployee.healthInsuranceStatus?.isApplicable">
+        <tr>
+          <th>健康保険記号</th>
+          <td><input [(ngModel)]="editEmployee.healthInsuranceStatus.healthInsuranceSymbol"></td>
+        </tr>
+        <tr>
+          <th>健康保険被保険者番号</th>
+          <td><input [(ngModel)]="editEmployee.healthInsuranceStatus.healthInsuranceNumber"></td>
+        </tr>
+        <tr>
+          <th>健康保険資格取得日</th>
+          <td><input type="date" [(ngModel)]="editEmployee.healthInsuranceStatus.acquisitionDate"></td>
+        </tr>
+        <tr>
+          <th>健康保険取得手続き済み</th>
+          <td><input type="checkbox" [(ngModel)]="editEmployee.healthInsuranceStatus.acquisitionReported"></td>
+        </tr>
+        <tr>
+          <th>健康保険資格喪失日</th>
+          <td><input type="date" [(ngModel)]="editEmployee.healthInsuranceStatus.lossDate"></td>
+        </tr>
+        <tr>
+          <th>健康保険喪失届提出済み</th>
+          <td><input type="checkbox" [(ngModel)]="editEmployee.healthInsuranceStatus.lossReported"></td>
+        </tr>
+        <tr>
+          <th>健康保険証発行済み</th>
+          <td><input type="checkbox" [(ngModel)]="editEmployee.healthInsuranceStatus.certificateIssued"></td>
+        </tr>
+        <tr>
+          <th>健康保険証回収済み</th>
+          <td><input type="checkbox" [(ngModel)]="editEmployee.healthInsuranceStatus.certificateCollected"></td>
+        </tr>
+        <tr>
+          <th>健康保険備考</th>
+          <td><input [(ngModel)]="editEmployee.healthInsuranceStatus.remarks"></td>
+        </tr>
+      </ng-container>
+      <tr *ngIf="!isEditMode">
         <th>厚生年金適用</th>
-        <td *ngIf="!isEditMode">{{ employee.pensionStatus?.isApplicable ? '○' : '×' }}</td>
-        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.pensionStatus.isApplicable"></td>
+        <td>{{ employee.pensionStatus?.isApplicable ? '○' : '×' }}</td>
       </tr>
-      <ng-container *ngIf="isEditMode ? editEmployee.pensionStatus?.isApplicable : employee.pensionStatus?.isApplicable">
+      <tr *ngIf="isEditMode">
+        <th>厚生年金適用</th>
+        <td><input type="checkbox" [(ngModel)]="editEmployee.pensionStatus.isApplicable"></td>
+      </tr>
+      <ng-container *ngIf="!isEditMode && employee.pensionStatus?.isApplicable">
+        <tr>
+          <th>基礎年金番号</th>
+          <td>{{ employee.pensionStatus?.baseNumber || '未入力' }}</td>
+        </tr>
         <tr>
           <th>厚生年金被保険者番号</th>
-          <td *ngIf="!isEditMode">{{ employee.pensionStatus?.insuranceNumber || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.pensionStatus.insuranceNumber"></td>
+          <td>{{ employee.pensionStatus?.insuranceNumber || '未入力' }}</td>
         </tr>
         <tr>
           <th>厚生年金資格取得日</th>
-          <td *ngIf="!isEditMode">{{ employee.pensionStatus?.acquisitionDate || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.pensionStatus.acquisitionDate"></td>
+          <td>{{ employee.pensionStatus?.acquisitionDate || '未入力' }}</td>
         </tr>
         <tr>
           <th>厚生年金取得手続き済み</th>
-          <td *ngIf="!isEditMode">{{ employee.pensionStatus?.acquisitionReported ? '○' : '×' }}</td>
-          <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.pensionStatus.acquisitionReported"></td>
+          <td>{{ employee.pensionStatus?.acquisitionReported ? '○' : '×' }}</td>
         </tr>
         <tr>
           <th>厚生年金資格喪失日</th>
-          <td *ngIf="!isEditMode">{{ employee.pensionStatus?.lossDate || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.pensionStatus.lossDate"></td>
+          <td>{{ employee.pensionStatus?.lossDate || '未入力' }}</td>
         </tr>
         <tr>
           <th>厚生年金喪失届提出済み</th>
-          <td *ngIf="!isEditMode">{{ employee.pensionStatus?.lossReported ? '○' : '×' }}</td>
-          <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.pensionStatus.lossReported"></td>
+          <td>{{ employee.pensionStatus?.lossReported ? '○' : '×' }}</td>
         </tr>
         <tr>
           <th>厚生年金備考</th>
-          <td *ngIf="!isEditMode">{{ employee.pensionStatus?.remarks || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.pensionStatus.remarks"></td>
+          <td>{{ employee.pensionStatus?.remarks || '未入力' }}</td>
         </tr>
       </ng-container>
-      <tr>
-        <th>雇用保険適用</th>
-        <td *ngIf="!isEditMode">{{ employee.employmentInsuranceStatus?.isApplicable ? '○' : '×' }}</td>
-        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.employmentInsuranceStatus.isApplicable"></td>
-      </tr>
-      <ng-container *ngIf="isEditMode ? editEmployee.employmentInsuranceStatus?.isApplicable : employee.employmentInsuranceStatus?.isApplicable">
+      <ng-container *ngIf="isEditMode && editEmployee.pensionStatus?.isApplicable">
         <tr>
-          <th>雇用保険被保険者番号</th>
-          <td *ngIf="!isEditMode">{{ employee.employmentInsuranceStatus?.insuranceNumber || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.employmentInsuranceStatus.insuranceNumber"></td>
+          <th>基礎年金番号</th>
+          <td><input [(ngModel)]="editEmployee.pensionStatus.baseNumber"></td>
         </tr>
         <tr>
-          <th>雇用保険資格取得日</th>
-          <td *ngIf="!isEditMode">{{ employee.employmentInsuranceStatus?.acquisitionDate || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.employmentInsuranceStatus.acquisitionDate"></td>
+          <th>厚生年金被保険者番号</th>
+          <td><input [(ngModel)]="editEmployee.pensionStatus.insuranceNumber"></td>
         </tr>
         <tr>
-          <th>雇用保険取得手続き済み</th>
-          <td *ngIf="!isEditMode">{{ employee.employmentInsuranceStatus?.acquisitionReported ? '○' : '×' }}</td>
-          <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.employmentInsuranceStatus.acquisitionReported"></td>
+          <th>厚生年金資格取得日</th>
+          <td><input type="date" [(ngModel)]="editEmployee.pensionStatus.acquisitionDate"></td>
         </tr>
         <tr>
-          <th>雇用保険資格喪失日</th>
-          <td *ngIf="!isEditMode">{{ employee.employmentInsuranceStatus?.lossDate || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.employmentInsuranceStatus.lossDate"></td>
+          <th>厚生年金取得手続き済み</th>
+          <td><input type="checkbox" [(ngModel)]="editEmployee.pensionStatus.acquisitionReported"></td>
         </tr>
         <tr>
-          <th>雇用保険喪失届提出済み</th>
-          <td *ngIf="!isEditMode">{{ employee.employmentInsuranceStatus?.lossReported ? '○' : '×' }}</td>
-          <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.employmentInsuranceStatus.lossReported"></td>
+          <th>厚生年金資格喪失日</th>
+          <td><input type="date" [(ngModel)]="editEmployee.pensionStatus.lossDate"></td>
         </tr>
         <tr>
-          <th>雇用保険備考</th>
-          <td *ngIf="!isEditMode">{{ employee.employmentInsuranceStatus?.remarks || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.employmentInsuranceStatus.remarks"></td>
+          <th>厚生年金喪失届提出済み</th>
+          <td><input type="checkbox" [(ngModel)]="editEmployee.pensionStatus.lossReported"></td>
+        </tr>
+        <tr>
+          <th>厚生年金備考</th>
+          <td><input [(ngModel)]="editEmployee.pensionStatus.remarks"></td>
         </tr>
       </ng-container>
-      <tr>
+      
+      <tr *ngIf="!isEditMode">
         <th>介護保険適用</th>
-        <td *ngIf="!isEditMode">{{ employee.isCareInsuranceApplicable ? '○' : '×' }}</td>
-        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.isCareInsuranceApplicable" readonly></td>
+        <td>{{ employee.isCareInsuranceApplicable ? '○' : '×' }}</td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>介護保険適用</th>
+        <td><input type="checkbox" [(ngModel)]="editEmployee.isCareInsuranceApplicable"></td>
       </tr>
     </table>
   </section>
@@ -324,205 +439,191 @@
   <section class="detail-section">
     <h3>緊急連絡先</h3>
     <table class="detail-table">
-      <tr>
+      <tr *ngIf="!isEditMode">
         <th>氏名</th>
-        <td *ngIf="!isEditMode">{{ employee.emergencyContactName || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.emergencyContactName"></td>
+        <td>{{ employee.emergencyContactName || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>氏名</th>
+        <td><input [(ngModel)]="editEmployee.emergencyContactName"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>続柄</th>
-        <td *ngIf="!isEditMode">{{ employee.emergencyContactRelationship || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.emergencyContactRelationship"></td>
+        <td>{{ employee.emergencyContactRelationship || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>続柄</th>
+        <td><input [(ngModel)]="editEmployee.emergencyContactRelationship"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>電話番号</th>
-        <td *ngIf="!isEditMode">{{ employee.emergencyContactPhone || '未入力' }}</td>
-        <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.emergencyContactPhone"></td>
+        <td>{{ employee.emergencyContactPhone || '未入力' }}</td>
       </tr>
-      <tr>
+      <tr *ngIf="isEditMode">
+        <th>電話番号</th>
+        <td><input [(ngModel)]="editEmployee.emergencyContactPhone"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
         <th>現役</th>
-        <td *ngIf="!isEditMode">{{ employee.emergencyContactIsActive ? '○' : '×' }}</td>
-        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.emergencyContactIsActive"></td>
+        <td>{{ employee.emergencyContactIsActive ? '○' : '×' }}</td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>現役</th>
+        <td><input type="checkbox" [(ngModel)]="editEmployee.emergencyContactIsActive"></td>
       </tr>
     </table>
-  </section>
-
-  <!-- 扶養家族 -->
-  <section class="detail-section">
-    <h3>扶養家族</h3>
-    <div *ngIf="!isEditMode">
-      <div *ngIf="employee.dependents?.length; else noDep">
-        <div *ngFor="let dep of employee.dependents; let i = index" class="sub-table">
-          <h4>扶養家族 {{ i + 1 }}</h4>
-          <table>
-            <tr><th>姓</th><td>{{ dep.lastName || '未入力' }}</td></tr>
-            <tr><th>名</th><td>{{ dep.firstName || '未入力' }}</td></tr>
-            <tr><th>姓カナ</th><td>{{ dep.lastNameKana || '未入力' }}</td></tr>
-            <tr><th>名カナ</th><td>{{ dep.firstNameKana || '未入力' }}</td></tr>
-            <tr><th>続柄</th><td>{{ dep.relationship || '未入力' }}</td></tr>
-            <tr><th>続柄コード</th><td>{{ getRelationshipName(dep.relationshipCode) }}</td></tr>
-            <tr><th>認定区分</th><td>{{ getCertificationTypeName(dep.certificationType) }}</td></tr>
-            <tr><th>生年月日</th><td>{{ dep.birthday || '未入力' }}</td></tr>
-            <tr><th>性別</th><td>{{ getGenderName(dep.gender) }}</td></tr>
-            <tr><th>マイナンバー</th><td>{{ dep.myNumber || '未入力' }}</td></tr>
-            <tr><th>障害者</th><td>{{ dep.isDisabled ? '○' : '×' }}</td></tr>
-            <tr><th>学生</th><td>{{ dep.isStudent ? '○' : '×' }}</td></tr>
-            <tr><th>同居</th><td>{{ dep.isLivingTogether ? '○' : '×' }}</td></tr>
-            <tr><th>年収</th><td>{{ dep.income || '未入力' }}</td></tr>
-            <tr><th>被扶養者認定日</th><td>{{ dep.certificationDate || '未入力' }}</td></tr>
-            <tr><th>資格喪失日</th><td>{{ dep.lossDate || '未入力' }}</td></tr>
-            <tr><th>備考</th><td>{{ dep.remarks || '未入力' }}</td></tr>
-          </table>
-        </div>
-      </div>
-      <ng-template #noDep>
-        <div>未入力</div>
-      </ng-template>
-    </div>
-    <div *ngIf="isEditMode">
-      <div *ngFor="let dep of editEmployee.dependents; let i = index" class="sub-table">
-        <h4>扶養家族 {{ i + 1 }}</h4>
-        <table>
-          <tr><th>姓</th><td><input [(ngModel)]="dep.lastName"></td></tr>
-          <tr><th>名</th><td><input [(ngModel)]="dep.firstName"></td></tr>
-          <tr><th>姓カナ</th><td><input [(ngModel)]="dep.lastNameKana"></td></tr>
-          <tr><th>名カナ</th><td><input [(ngModel)]="dep.firstNameKana"></td></tr>
-          <tr><th>続柄</th>
-            <td>
-              <select [(ngModel)]="dep.relationshipCode">
-                <option value="">選択</option>
-                <option *ngFor="let r of relationshipTypes" [value]="r.code">{{ r.name }}</option>
-              </select>
-            </td>
-          </tr>
-          <tr><th>認定区分</th>
-            <td>
-              <select [(ngModel)]="dep.certificationType">
-                <option value="">選択</option>
-                <option *ngFor="let c of certificationTypes" [value]="c.code">{{ c.name }}</option>
-              </select>
-            </td>
-          </tr>
-          <tr><th>生年月日</th><td><input type="date" [(ngModel)]="dep.birthday"></td></tr>
-          <tr><th>性別</th>
-            <td>
-              <select [(ngModel)]="dep.gender">
-                <option value="">選択</option>
-                <option *ngFor="let g of genderTypes" [value]="g.code">{{ g.name }}</option>
-              </select>
-            </td>
-          </tr>
-          <tr><th>マイナンバー</th><td><input [(ngModel)]="dep.myNumber"></td></tr>
-          <tr><th>障害者</th><td><input type="checkbox" [(ngModel)]="dep.isDisabled"></td></tr>
-          <tr><th>学生</th><td><input type="checkbox" [(ngModel)]="dep.isStudent"></td></tr>
-          <tr><th>同居</th><td><input type="checkbox" [(ngModel)]="dep.isLivingTogether"></td></tr>
-          <tr><th>年収</th><td><input type="number" [(ngModel)]="dep.income"></td></tr>
-          <tr><th>被扶養者認定日</th><td><input type="date" [(ngModel)]="dep.certificationDate"></td></tr>
-          <tr><th>資格喪失日</th><td><input type="date" [(ngModel)]="dep.lossDate"></td></tr>
-          <tr><th>備考</th><td><input [(ngModel)]="dep.remarks"></td></tr>
-        </table>
-        <button (click)="editEmployee.dependents.splice(i, 1)">削除</button>
-      </div>
-      <button (click)="editEmployee.dependents.push({})">＋扶養家族を追加</button>
-    </div>
   </section>
 
   <!-- その他（外国人労働者情報） -->
   <section class="detail-section">
     <h3>外国人労働者情報</h3>
     <table class="detail-table">
-      <tr>
+      <tr *ngIf="!isEditMode">
         <th>外国人労働者</th>
-        <td *ngIf="!isEditMode">{{ employee.isForeignWorker ? '○' : '×' }}</td>
-        <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.isForeignWorker"></td>
+        <td>{{ employee.isForeignWorker ? '○' : '×' }}</td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>外国人労働者</th>
+        <td><input type="checkbox" [(ngModel)]="editEmployee.isForeignWorker"></td>
       </tr>
     </table>
     <ng-container *ngIf="(isEditMode ? editEmployee.isForeignWorker : employee.isForeignWorker)">
       <table class="detail-table">
-        <tr>
+        <tr *ngIf="!isEditMode">
           <th>氏名（ローマ字）</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.romanName || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.foreignWorker.romanName"></td>
+          <td>{{ employee.foreignWorker?.romanName || '未入力' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>氏名（ローマ字）</th>
+          <td><input [(ngModel)]="editEmployee.foreignWorker.romanName"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>国籍</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.nationality || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.foreignWorker.nationality"></td>
+          <td>{{ employee.foreignWorker?.nationality || '未入力' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>国籍</th>
+          <td><input [(ngModel)]="editEmployee.foreignWorker.nationality"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>在留資格</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.residenceStatus || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.foreignWorker.residenceStatus"></td>
+          <td>{{ employee.foreignWorker?.residenceStatus || '未入力' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>在留資格</th>
+          <td><input [(ngModel)]="editEmployee.foreignWorker.residenceStatus"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>在留資格の種類</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.residenceStatusType || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.foreignWorker.residenceStatusType"></td>
+          <td>{{ employee.foreignWorker?.residenceStatusType || '未入力' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>在留資格の種類</th>
+          <td><input [(ngModel)]="editEmployee.foreignWorker.residenceStatusType"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>在留カード番号</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.residenceCardNumber || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.foreignWorker.residenceCardNumber"></td>
+          <td>{{ employee.foreignWorker?.residenceCardNumber || '未入力' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>在留カード番号</th>
+          <td><input [(ngModel)]="editEmployee.foreignWorker.residenceCardNumber"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>在留資格の有効期限</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.residenceCardExpiry || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.foreignWorker.residenceCardExpiry"></td>
+          <td>{{ employee.foreignWorker?.residenceCardExpiry || '未入力' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>在留資格の有効期限</th>
+          <td><input type="date" [(ngModel)]="editEmployee.foreignWorker.residenceCardExpiry"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>在留資格の更新履歴</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.residenceStatusHistory || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.foreignWorker.residenceStatusHistory"></td>
+          <td>{{ employee.foreignWorker?.residenceStatusHistory || '未入力' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>在留資格の更新履歴</th>
+          <td><input [(ngModel)]="editEmployee.foreignWorker.residenceStatusHistory"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>パスポート番号</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.passportNumber || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.foreignWorker.passportNumber"></td>
+          <td>{{ employee.foreignWorker?.passportNumber || '未入力' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>パスポート番号</th>
+          <td><input [(ngModel)]="editEmployee.foreignWorker.passportNumber"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>パスポート有効期限</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.passportExpiry || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.foreignWorker.passportExpiry"></td>
+          <td>{{ employee.foreignWorker?.passportExpiry || '未入力' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>パスポート有効期限</th>
+          <td><input type="date" [(ngModel)]="editEmployee.foreignWorker.passportExpiry"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>在留カード写しの有無</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.hasResidenceCardCopy ? '○' : '×' }}</td>
-          <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.foreignWorker.hasResidenceCardCopy"></td>
+          <td>{{ employee.foreignWorker?.hasResidenceCardCopy ? '○' : '×' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>在留カード写しの有無</th>
+          <td><input type="checkbox" [(ngModel)]="editEmployee.foreignWorker.hasResidenceCardCopy"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>社会保険の免除特例の有無</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.hasSpecialExemption ? '○' : '×' }}</td>
-          <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.foreignWorker.hasSpecialExemption"></td>
+          <td>{{ employee.foreignWorker?.hasSpecialExemption ? '○' : '×' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>社会保険の免除特例の有無</th>
+          <td><input type="checkbox" [(ngModel)]="editEmployee.foreignWorker.hasSpecialExemption"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>免除特例の理由</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.exemptionReason || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.foreignWorker.exemptionReason"></td>
+          <td>{{ employee.foreignWorker?.exemptionReason || '未入力' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>免除特例の理由</th>
+          <td><input [(ngModel)]="editEmployee.foreignWorker.exemptionReason"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>雇用開始日</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.employmentStartDate || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.foreignWorker.employmentStartDate"></td>
+          <td>{{ employee.foreignWorker?.employmentStartDate || '未入力' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>雇用開始日</th>
+          <td><input type="date" [(ngModel)]="editEmployee.foreignWorker.employmentStartDate"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>雇用契約終了日</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.employmentEndDate || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.foreignWorker.employmentEndDate"></td>
+          <td>{{ employee.foreignWorker?.employmentEndDate || '未入力' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>雇用契約終了日</th>
+          <td><input type="date" [(ngModel)]="editEmployee.foreignWorker.employmentEndDate"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>特定活動の有無</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.hasSpecificActivity ? '○' : '×' }}</td>
-          <td *ngIf="isEditMode"><input type="checkbox" [(ngModel)]="editEmployee.foreignWorker.hasSpecificActivity"></td>
+          <td>{{ employee.foreignWorker?.hasSpecificActivity ? '○' : '×' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>特定活動の有無</th>
+          <td><input type="checkbox" [(ngModel)]="editEmployee.foreignWorker.hasSpecificActivity"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>帰国予定日</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.returnPlannedDate || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input type="date" [(ngModel)]="editEmployee.foreignWorker.returnPlannedDate"></td>
+          <td>{{ employee.foreignWorker?.returnPlannedDate || '未入力' }}</td>
         </tr>
-        <tr>
+        <tr *ngIf="isEditMode">
+          <th>帰国予定日</th>
+          <td><input type="date" [(ngModel)]="editEmployee.foreignWorker.returnPlannedDate"></td>
+        </tr>
+        <tr *ngIf="!isEditMode">
           <th>備考</th>
-          <td *ngIf="!isEditMode">{{ employee.foreignWorker?.remarks || '未入力' }}</td>
-          <td *ngIf="isEditMode"><input [(ngModel)]="editEmployee.foreignWorker.remarks"></td>
+          <td>{{ employee.foreignWorker?.remarks || '未入力' }}</td>
+        </tr>
+        <tr *ngIf="isEditMode">
+          <th>備考</th>
+          <td><input [(ngModel)]="editEmployee.foreignWorker.remarks"></td>
         </tr>
       </table>
     </ng-container>
@@ -543,10 +644,7 @@
             <tr><th>休職理由</th><td>{{ leave.leaveReason || '未入力' }}</td></tr>
             <tr><th>健康保険料免除</th><td>{{ leave.isHealthInsuranceExempted ? '○' : '×' }}</td></tr>
             <tr><th>厚生年金免除</th><td>{{ leave.isPensionExempted ? '○' : '×' }}</td></tr>
-            <tr><th>雇用保険免除</th><td>{{ leave.isEmploymentInsuranceExempted ? '○' : '×' }}</td></tr>
             <tr><th>介護保険免除</th><td>{{ leave.isCareInsuranceExempted ? '○' : '×' }}</td></tr>
-            <tr><th>育児休業</th><td>{{ leave.isChildcareLeave ? '○' : '×' }}</td></tr>
-            <tr><th>介護休業</th><td>{{ leave.isNursingCareLeave ? '○' : '×' }}</td></tr>
           </table>
         </div>
       </div>
@@ -573,10 +671,7 @@
           <tr><th>休職理由</th><td><input [(ngModel)]="leave.leaveReason"></td></tr>
           <tr><th>健康保険料免除</th><td><input type="checkbox" [(ngModel)]="leave.isHealthInsuranceExempted"></td></tr>
           <tr><th>厚生年金免除</th><td><input type="checkbox" [(ngModel)]="leave.isPensionExempted"></td></tr>
-          <tr><th>雇用保険免除</th><td><input type="checkbox" [(ngModel)]="leave.isEmploymentInsuranceExempted"></td></tr>
           <tr><th>介護保険免除</th><td><input type="checkbox" [(ngModel)]="leave.isCareInsuranceExempted"></td></tr>
-          <tr><th>育児休業</th><td><input type="checkbox" [(ngModel)]="leave.isChildcareLeave"></td></tr>
-          <tr><th>介護休業</th><td><input type="checkbox" [(ngModel)]="leave.isNursingCareLeave"></td></tr>
         </table>
         <button (click)="editEmployee.extraordinaryLeaves.splice(i, 1)">削除</button>
       </div>
@@ -588,7 +683,7 @@
   <section class="detail-section">
     <h3>備考</h3>
     <div *ngIf="!isEditMode">{{ employee.remarks || '未入力' }}</div>
-    <div *ngIf="isEditMode"><textarea [(ngModel)]="editEmployee.remarks"></textarea></div>
+    <div *ngIf="isEditMode"><input [(ngModel)]="editEmployee.remarks"></div>
   </section>
 
   <!-- 異動履歴 -->

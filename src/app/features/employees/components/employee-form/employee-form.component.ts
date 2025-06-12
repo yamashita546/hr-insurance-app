@@ -75,6 +75,8 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
 
   duplicateEmployees: any[] = []; // 重複従業員リスト
 
+  expandedIndex: number = -1;
+
   get dependents(): FormArray {
     return this.form.get('dependents') as FormArray;
   }

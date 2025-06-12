@@ -6,6 +6,16 @@
   <div>企業名：{{ companyName }}</div>
 </div>
 <h2 style="margin-top: 0; margin-bottom: 24px; text-align: center;">従業員追加</h2>
+
+<!-- CSV追加UIここから -->
+<div class="csv-toolbar" style="margin-bottom: 24px; display: flex; gap: 16px; align-items: center;">
+  <button class="csv-btn" type="button" (click)="onExportCsv()">CSVひな型出力</button>
+  <label class="file-label" style="margin-bottom: 0;">
+    ファイルを選択
+    <input type="file" (change)="onImportCsv($event)" accept=".csv" style="display: none;" #fileInput />
+  </label>
+  <span class="file-name">{{ fileName || '選択されていません' }}</span>
+</div>
 <div *ngIf="validationErrors.length > 0" class="validation-errors" style="color: red; margin-bottom: 16px;">
   <ul>
     <li *ngFor="let err of validationErrors">{{ err }}</li>
@@ -26,35 +36,24 @@
     </tr>
   </table>
 </div>
-<!-- CSV追加UIここから -->
-<div class="csv-toolbar" style="margin-bottom: 24px; display: flex; gap: 16px; align-items: center;">
-  <button class="csv-btn" type="button" (click)="onExportCsv()">CSVひな型出力</button>
-  <label class="file-label" style="margin-bottom: 0;">
-    ファイルを選択
-    <input type="file" (change)="onImportCsv($event)" accept=".csv" style="display: none;" #fileInput />
-  </label>
-  <span class="file-name">{{ fileName || '選択されていません' }}</span>
-</div>
+
 <div *ngIf="pendingImportData.length > 0">
   <h3>インポート予定データ</h3>
-  <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px;">
-    <button (click)="confirmImport()" [disabled]="importErrors.length > 0">保存</button>
-    <button (click)="cancelImport()" class="cancel-btn">キャンセル</button>
-  </div>
-  <div style="max-width:100%;overflow-x:auto;">
-    <table>
-      <thead>
-        <tr>
-          <th *ngFor="let key of previewKeys">{{ EMPLOYEE_CSV_FIELD_LABELS[key] || key }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let row of pendingImportData">
-          <td *ngFor="let key of previewKeys">{{ row[key] }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <ul>
+    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px;">
+      <button (click)="confirmImport()" [disabled]="importErrors.length > 0">保存</button>
+      <button (click)="cancelImport()" class="cancel-btn">キャンセル</button>
+    </div>
+    <li *ngFor="let emp of pendingImportData; let i = index">
+      <span (click)="expandedIndex = expandedIndex === i ? -1 : i" style="cursor:pointer;">
+        {{ emp.employeeId }}
+        <button type="button">{{ expandedIndex === i ? '▲' : '▼' }}</button>
+      </span>
+      <div *ngIf="expandedIndex === i" style="margin-left:2em;">
+        <pre>{{ emp | json }}</pre>
+      </div>
+    </li>
+  </ul>
 </div>
 <div *ngIf="importErrors.length > 0" style="color:red;">
   <h3>エラー一覧</h3>

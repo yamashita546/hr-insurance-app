@@ -582,7 +582,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       'lastName', 'firstName', 'lastNameKana', 'firstNameKana',
       'relationship', 'relationshipCode', 'birthday', 'myNumber',
       'isSpouse', 'isChild', 'isDisabled', 'isStudent', 'isLivingTogether',
-      'income', 'certificationDate', 'lossDate', 'remarks', 'isActive'
+      'income', 'certificationDate', 'lossDate', 'remarks'
     ];
     const headers = [
       'companyKey',
@@ -617,7 +617,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       'isCareInsuranceApplicable',
       'emergencyContactName', 'emergencyContactRelationship', 'emergencyContactPhone', 'emergencyContactIsActive',
       'hasDependents', 'remarks',
-      ...[0,1,2,3].flatMap(i => dependentFields.map(f => `dependents[${i}].${f}`)),
+      ...dependentFields.map(f => `dependents[0].${f}`),
       'foreignWorker.romanName', 'foreignWorker.nationality', 'foreignWorker.residenceStatus', 'foreignWorker.residenceStatusType',
       'foreignWorker.residenceCardNumber', 'foreignWorker.residenceCardExpiry', 'foreignWorker.residenceStatusHistory',
       'foreignWorker.passportNumber', 'foreignWorker.passportExpiry', 'foreignWorker.hasResidenceCardCopy', 'foreignWorker.hasSpecialExemption',
@@ -694,6 +694,60 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     reader.readAsText(file, 'utf-8');
   }
 
+  // 共通の正規化関数
+  static normalizeEmployeeRow(row: any): any {
+    // 都道府県コード・名称変換
+    if (row['address'] && row['address'].prefecture) {
+      const pref = PREFECTURES.find(
+        p => p.code === row['address'].prefecture || p.name === row['address'].prefecture
+      );
+      if (pref) {
+        row['address'].prefecture = pref.code;
+      }
+    } else if (row['address.prefecture']) {
+      const pref = PREFECTURES.find(
+        p => p.code === row['address.prefecture'] || p.name === row['address.prefecture']
+      );
+      if (pref) {
+        row['address.prefecture'] = pref.code;
+      }
+    }
+    // 保険適用フラット→ネスト変換
+    if ('isHealthInsuranceApplicable' in row) {
+      row.healthInsuranceStatus = row.healthInsuranceStatus || {};
+      row.healthInsuranceStatus.isApplicable = row.isHealthInsuranceApplicable === 'true' || row.isHealthInsuranceApplicable === true;
+    }
+    if ('healthInsuranceSymbol' in row) {
+      row.healthInsuranceStatus = row.healthInsuranceStatus || {};
+      row.healthInsuranceStatus.healthInsuranceSymbol = row.healthInsuranceSymbol;
+    }
+    if ('healthInsuranceNumber' in row) {
+      row.healthInsuranceStatus = row.healthInsuranceStatus || {};
+      row.healthInsuranceStatus.healthInsuranceNumber = row.healthInsuranceNumber;
+    }
+    if ('isPensionApplicable' in row) {
+      row.pensionStatus = row.pensionStatus || {};
+      row.pensionStatus.isApplicable = row.isPensionApplicable === 'true' || row.isPensionApplicable === true;
+    }
+    if ('isCareInsuranceApplicable' in row) {
+      row.isCareInsuranceApplicable = row.isCareInsuranceApplicable === 'true' || row.isCareInsuranceApplicable === true;
+    }
+    // 性別コード・名称変換
+    if (row['gender']) {
+      const gender = GENDER_TYPES.find(
+        g => g.code === row['gender'] || g.name === row['gender']
+      );
+      if (gender) {
+        row['gender'] = gender.code;
+      }
+    }
+    // 扶養家族有がfalseまたは未設定ならdependents配列を保存しない
+    if (!row.hasDependents || row.hasDependents === 'false' || row.hasDependents === false) {
+      delete row.dependents;
+    }
+    return row;
+  }
+
   parseCsv(text: string): { data: any[], errors: string[] } {
     const lines = text.split(/\r?\n/).filter(l => l.trim());
     if (lines.length < 2) return { data: [], errors: ['CSVにデータがありません'] };
@@ -731,46 +785,14 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
           row[key] = value;
         }
       }
-      // 都道府県コード・名称変換
-      if (row['address.prefecture']) {
-        const pref = PREFECTURES.find(
-          p => p.code === row['address.prefecture'] || p.name === row['address.prefecture']
-        );
-        if (pref) {
-          row['address.prefecture'] = pref.code;
-        } else {
-          errors.push(`${i+1}行目: address.prefecture（${row['address.prefecture']}）が不正です`);
-        }
-      }
-      // 保険適用フラット→ネスト変換
-      if ('isHealthInsuranceApplicable' in row) {
-        row.healthInsuranceStatus = row.healthInsuranceStatus || {};
-        row.healthInsuranceStatus.isApplicable = row.isHealthInsuranceApplicable === 'true' || row.isHealthInsuranceApplicable === true;
-      }
-      if ('isPensionApplicable' in row) {
-        row.pensionStatus = row.pensionStatus || {};
-        row.pensionStatus.isApplicable = row.isPensionApplicable === 'true' || row.isPensionApplicable === true;
-      }
-      if ('isCareInsuranceApplicable' in row) {
-        row.isCareInsuranceApplicable = row.isCareInsuranceApplicable === 'true' || row.isCareInsuranceApplicable === true;
-      }
+      // 共通正規化処理
+      EmployeeFormComponent.normalizeEmployeeRow(row);
       if (!row['employeeId']) {
         errors.push(`${i+1}行目: employeeIdが未入力です`);
         continue;
       }
       if (row['birthday'] && !/^\d{4}-\d{2}-\d{2}$/.test(row['birthday'])) {
         errors.push(`${i+1}行目: birthdayの日付形式が不正です`);
-      }
-      // 性別コード・名称変換
-      if (row['gender']) {
-        const gender = GENDER_TYPES.find(
-          g => g.code === row['gender'] || g.name === row['gender']
-        );
-        if (gender) {
-          row['gender'] = gender.code;
-        } else {
-          errors.push(`${i+1}行目: gender（${row['gender']}）が不正です`);
-        }
       }
       data.push(row);
     }
@@ -812,30 +834,17 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
         emp.officeId = '';
         console.warn(`displayOfficeId「${emp.displayOfficeId}」に一致する事業所がありません`);
       }
-      // 扶養家族有がfalseまたは未設定ならdependents配列を保存しない
-      if (!emp.hasDependents || emp.hasDependents === 'false' || emp.hasDependents === false) {
-        delete emp.dependents;
-      }
-      // 保険適用フラット→ネスト変換
-      if ('isHealthInsuranceApplicable' in emp) {
-        emp.healthInsuranceStatus = emp.healthInsuranceStatus || {};
-        emp.healthInsuranceStatus.isApplicable = emp.isHealthInsuranceApplicable === 'true' || emp.isHealthInsuranceApplicable === true;
-      }
-      // healthInsuranceSymbol, healthInsuranceNumberもネストに格納
-      if ('healthInsuranceSymbol' in emp) {
-        emp.healthInsuranceStatus = emp.healthInsuranceStatus || {};
-        emp.healthInsuranceStatus.healthInsuranceSymbol = emp.healthInsuranceSymbol;
-      }
-      if ('healthInsuranceNumber' in emp) {
-        emp.healthInsuranceStatus = emp.healthInsuranceStatus || {};
-        emp.healthInsuranceStatus.healthInsuranceNumber = emp.healthInsuranceNumber;
-      }
-      if ('isPensionApplicable' in emp) {
-        emp.pensionStatus = emp.pensionStatus || {};
-        emp.pensionStatus.isApplicable = emp.isPensionApplicable === 'true' || emp.isPensionApplicable === true;
-      }
-      if ('isCareInsuranceApplicable' in emp) {
-        emp.isCareInsuranceApplicable = emp.isCareInsuranceApplicable === 'true' || emp.isCareInsuranceApplicable === true;
+      // 共通正規化処理
+      EmployeeFormComponent.normalizeEmployeeRow(emp);
+      // 扶養家族情報の主要項目が1つでも入力されている場合のみisActive: trueを付与し、全て空欄の要素は除外
+      if (emp.hasDependents && Array.isArray(emp.dependents)) {
+        const mainKeys = ['lastName', 'firstName', 'relationship', 'relationshipCode', 'birthday'];
+        emp.dependents = emp.dependents
+          .filter((dep: any) => mainKeys.some(k => (dep[k] && String(dep[k]).trim() !== '')))
+          .map((dep: any) => ({ ...dep, isActive: true }));
+        if (emp.dependents.length === 0) {
+          delete emp.dependents;
+        }
       }
       // 重複判定
       const dup = existingEmployees.find(e => ((e as any).companyKey ?? '') === (emp.companyKey ?? '') && ((e as any).employeeId ?? '') === (emp.employeeId ?? ''));

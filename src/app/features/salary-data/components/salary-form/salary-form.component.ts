@@ -421,22 +421,40 @@ export class SalaryFormComponent implements OnInit {
     }
     if (this.csvTemplateType === 'salary') {
       for (const row of this.csvImportData) {
-        const totalAllowance = (Number(row.commuteAllowance) || 0) + (Number(row.positionAllowance) || 0) + (Number(row.otherAllowance) || 0);
-        const totalSalary = (Number(row.basicSalary) || 0) + (Number(row.overtimeSalary) || 0) + totalAllowance;
+        // 各配列の合計値を計算
+        const totalOtherAllowance = (row.otherAllowances || []).reduce((sum: number, item: { amount: number }) => sum + (Number(item.amount) || 0), 0);
+        const totalInKind = (row.inKindAllowances || []).reduce((sum: number, item: { amount: number }) => sum + (Number(item.amount) || 0), 0);
+        const totalRetro = (row.retroAllowances || []).reduce((sum: number, item: { amount: number }) => sum + (Number(item.amount) || 0), 0);
+        const totalActualExpense = (row.actualExpenses || []).reduce((sum: number, item: { amount: number }) => sum + (Number(item.amount) || 0), 0);
+        
+        // 時間外手当、通勤手当、役職手当
+        const overtime = Number(row.overtimeSalary) || 0;
+        const commute = Number(row.commuteAllowance) || 0;
+        const position = Number(row.positionAllowance) || 0;
+
+        // 手当合計（基本給を除く全ての手当の合計）
+        const totalAllowance = totalOtherAllowance + totalInKind + totalRetro + totalActualExpense + overtime + commute + position;
+        
+        // 総支給額（基本給 + 全ての手当）
+        const totalSalary = (Number(row.basicSalary) || 0) + totalAllowance;
+
         const salary = {
           companyKey: row.companyKey || this.companyKey,
           employeeId: row.employeeId,
           targetYearMonth: `${row.targetYear}-${String(row.targetMonth).padStart(2, '0')}`,
           paymentDate: row.paymentDate || '',
           basicSalary: Number(row.basicSalary) || 0,
-          overtimeSalary: Number(row.overtimeSalary) || 0,
-          commuteAllowance: Number(row.commuteAllowance) || 0,
-          positionAllowance: Number(row.positionAllowance) || 0,
-          otherAllowance: Number(row.otherAllowance) || 0,
+          overtimeSalary: overtime,
+          commuteAllowance: commute,
+          positionAllowance: position,
           otherAllowances: row.otherAllowances || [],
+          totalOtherAllowance,
           inKindAllowances: row.inKindAllowances || [],
+          totalInKind,
           retroAllowances: row.retroAllowances || [],
+          totalRetro,
           actualExpenses: row.actualExpenses || [],
+          totalActualExpense,
           totalAllowance,
           totalSalary,
           remarks: row.remarks || '',
@@ -549,11 +567,11 @@ export class SalaryFormComponent implements OnInit {
         const ym = `${this.csvYear}-${String(this.csvMonth).padStart(2, '0')}`;
         // Firestoreから取得した給与データから該当データを検索
         const salary = this.allSalaries?.find(s => s.employeeId === emp.employeeId && s.targetYearMonth === ym) || {};
-        // totalAllowance再計算（未定義の場合）
-        let totalOtherAllowance = (salary.otherAllowances || []).reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0);
-        let totalInKind = (salary.inKindAllowances || []).reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0);
-        let totalRetro = (salary.retroAllowances || []).reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0);
-        let totalActualExpense = (salary.actualExpenses || []).reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0);
+        // 各配列の合計値を計算
+        const totalOtherAllowance = (salary.otherAllowances || []).reduce((sum: number, item: { amount: number }) => sum + (Number(item.amount) || 0), 0);
+        const totalInKind = (salary.inKindAllowances || []).reduce((sum: number, item: { amount: number }) => sum + (Number(item.amount) || 0), 0);
+        const totalRetro = (salary.retroAllowances || []).reduce((sum: number, item: { amount: number }) => sum + (Number(item.amount) || 0), 0);
+        const totalActualExpense = (salary.actualExpenses || []).reduce((sum: number, item: { amount: number }) => sum + (Number(item.amount) || 0), 0);
         let overtime = Number(salary.overtimeSalary) || 0;
         let commute = Number(salary.commuteAllowance) || 0;
         let position = Number(salary.positionAllowance) || 0;

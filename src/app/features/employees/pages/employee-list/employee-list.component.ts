@@ -101,7 +101,7 @@ export class EmployeeListComponent {
   changeSort(key: string) {
     if (this.sortKey === key) {
       this.sortAsc = !this.sortAsc;
-    } else {
+      } else {
       this.sortKey = key;
       this.sortAsc = true;
     }

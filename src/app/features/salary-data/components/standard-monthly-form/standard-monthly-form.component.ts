@@ -320,11 +320,15 @@ export class StandardMonthlyFormComponent implements OnInit {
       `【${year}年${month}月の勤怠情報】`,
       `支払い基礎日数: ${baseDays !== undefined ? baseDays : '-'} 日`,
       `所定労働日数: ${att.scheduledWorkDays ?? '-'} 日`,
+      `所定労働時間: ${att.scheduledWorkHours ?? '-'} 時間`,
+      `実際の労働時間: ${att.actualWorkHours ?? '-'} 時間`,
       `出勤日数: ${att.actualWorkDays ?? '-'} 日`,
-      `有給日数: ${att.paidLeaveDays ?? '-'} 日`,
       `欠勤日数: ${att.absenceDays ?? '-'} 日`,
-      `遅刻回数: ${att.lateCount ?? '-'} 回`,
-      `早退回数: ${att.earlyLeaveCount ?? '-'} 回`,
+      `無給休暇日数: ${att.leaveWithoutPayDays ?? '-'} 日`,
+      `有給日数: ${att.paidLeaveDays ?? '-'} 日`,
+      `休暇特例日数: ${att.holidaySpecialDays ?? '-'} 日`,
+      `育児休業開始日: ${att.childCareLeaveStartDate ?? '-'}`,
+      `育児休業終了日: ${att.childCareLeaveEndDate ?? '-'}`,
       `備考: ${att.remarks ?? '-'} `
     ].join('\n');
     alert(info);
@@ -341,17 +345,22 @@ export class StandardMonthlyFormComponent implements OnInit {
       alert(`${year}年${month}月の給与情報はありません。`);
       return;
     }
-    // 表示内容を整形
+    // 0円表示用ヘルパー
+    const yen = (v: any) => (v != null && v !== '') ? `${Number(v).toLocaleString()} 円` : '0 円';
+    const num = (v: any) => (v != null && v !== '') ? v : '0';
     const info = [
       `【${year}年${month}月の給与情報】`,
-      `基本給: ${salary.basicSalary ?? '-'} 円`,
-      `残業代: ${salary.overtimeSalary ?? '-'} 円`,
-      `通勤手当: ${salary.commuteAllowance ?? '-'} 円`,
-      `通勤手当月数: ${salary.commuteAllowanceMonths ?? '-'} ヶ月`,
-      `その他手当: ${salary.otherAllowance ?? '-'} 円`,
-      `現物支給: ${salary.totalInKind ?? '-'} 円`,
-      `遡及分: ${salary.totalRetro ?? '-'} 円`,
-      `総支給額: ${salary.totalSalary ?? '-'} 円`
+      `支給日: ${salary.paymentDate ?? '-'}`,
+      `基本給: ${yen(salary.basicSalary)}`,
+      `時間外手当: ${yen(salary.overtimeSalary)}`,
+      `通勤手当: ${yen(salary.commuteAllowance)}`,
+      `通勤手当月数: ${num(salary.commuteAllowanceMonths)} ヶ月`,
+      `役職手当: ${yen(salary.positionAllowance)}`,
+      `その他手当合計: ${yen(salary.totalOtherAllowance)}`,
+      `現物支給合計: ${yen(salary.totalInKind)}`,
+      `遡及手当合計: ${yen(salary.totalRetro)}`,
+      `実費精算合計: ${yen(salary.totalActualExpense)}`,
+      `総支給額: ${yen(salary.totalSalary)}`
     ].join('\n');
     alert(info);
   }
@@ -442,7 +451,24 @@ export class StandardMonthlyFormComponent implements OnInit {
   private getTotalSalaryForEmployeeAndPeriod(employeeId: string, year: number, month: number): number {
     const ym = `${year}-${String(month).padStart(2, '0')}`;
     const salary = this.salaries.find(s => s.employeeId === employeeId && s.targetYearMonth === ym);
-    return salary ? (salary.totalSalary || 0) : 0;
+    if (!salary) return 0;
+
+    // 基本給
+    const basic = Number(salary.basicSalary) || 0;
+    // 時間外手当
+    const overtime = Number(salary.overtimeSalary) || 0;
+    // 通勤手当
+    const commute = Number(salary.commuteAllowance) || 0;
+    // 役職手当
+    const position = Number(salary.positionAllowance) || 0;
+    // その他手当
+    const otherAllowance = Number(salary.totalOtherAllowance) || 0;
+    // 実費精算
+    const actualExpense = Number(salary.totalActualExpense) || 0;
+
+    // 現金支給額 = 基本給 + 時間外手当 + 通勤手当 + 役職手当 + その他手当 + 実費精算
+    // （現物給与と遡及は除く）
+    return basic + overtime + commute + position + otherAllowance + actualExpense;
   }
 
   // 現物：選択従業員・年月の給与情報からtotalInKindを取得

@@ -45,6 +45,7 @@
       <button class="edit-btn" (click)="onEdit('salary')" *ngIf="!editMode">修正</button>
       <form *ngIf="editMode === 'salary'" (ngSubmit)="onSaveSalaryEdit()" class="edit-form">
         <table class="detail-table">
+          <tr><th>支給日</th><td><input type="date" [(ngModel)]="editSalaryForm.paymentDate" name="paymentDate"></td></tr>
           <tr><th>基本給</th><td><input type="number" [(ngModel)]="editSalaryForm.basicSalary" name="basicSalary" required></td></tr>
           <tr><th>時間外手当</th><td><input type="number" [(ngModel)]="editSalaryForm.overtimeSalary" name="overtimeSalary"></td></tr>
           <tr><th>通勤手当</th><td><input type="number" [(ngModel)]="editSalaryForm.commuteAllowance" name="commuteAllowance"></td></tr>
@@ -100,6 +101,7 @@
         <button type="button" (click)="onCancelEdit()">キャンセル</button>
       </form>
       <table class="detail-table" *ngIf="!editMode">
+        <tr><th>支給日</th><td>{{ salary?.paymentDate }}</td></tr>
         <tr><th>基本給</th><td>{{ salary?.basicSalary | number }} 円</td></tr>
         <tr><th>時間外手当</th><td>{{ salary?.overtimeSalary | number }} 円</td></tr>
         <tr><th>通勤手当</th><td>{{ salary?.commuteAllowance | number }} 円</td></tr>
@@ -136,6 +138,7 @@
         </td></tr>
         <tr><th>総支給額</th><td>{{ salary?.totalSalary | number }} 円</td></tr>
         <tr><th>備考</th><td>{{ salary?.remarks }}</td></tr>
+       
       </table>
       <div *ngIf="!salary && !editMode" style="color: #d9534f; margin-top: 1em;">該当月の給与データがありません。</div>
     </div>
@@ -148,6 +151,7 @@
             <tr>
               <th>賞与種類</th>
               <th>賞与名</th>
+              <th>支給日</th>
               <th>金額</th>
               <th>備考</th>
               <th></th>
@@ -168,6 +172,7 @@
               <td>
                 <input type="text" [(ngModel)]="bonus.bonusName" name="bonusName{{i}}" *ngIf="bonus.bonusType === 'その他賞与'">
               </td>
+              <td><input type="date" [(ngModel)]="bonus.paymentDate" name="bonusPaymentDate{{i}}"></td>
               <td><input type="number" [(ngModel)]="bonus.bonus" name="bonus{{i}}"></td>
               <td><input type="text" [(ngModel)]="bonus.remarks" name="remarks{{i}}"></td>
               <td><button type="button" (click)="removeBonusRow(i)" *ngIf="editBonusForms.length > 1">削除</button></td>
@@ -183,6 +188,7 @@
           <tr>
             <th>賞与種類</th>
             <th>賞与名</th>
+            <th>支給日</th>
             <th>金額</th>
             <th>備考</th>
           </tr>
@@ -191,6 +197,7 @@
           <tr *ngFor="let bonus of bonuses">
             <td>{{ bonus.bonusType }}</td>
             <td>{{ bonus.bonusName }}</td>
+            <td>{{ bonus.paymentDate }}</td>
             <td>{{ bonus.bonus | number }} 円</td>
             <td>{{ bonus.remarks }}</td>
           </tr>

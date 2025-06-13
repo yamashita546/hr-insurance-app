@@ -12,6 +12,7 @@ export interface Salary {
     commuteAllowancePeriodFrom?: string; // 対象期間開始（YYYY-MM）
     commuteAllowancePeriodTo?: string;   // 対象期間終了（YYYY-MM）
     splitCurrency?: number; // 通勤費按分
+    positionAllowance?: number; // 役職手当
     otherAllowanceName?: string; // その他手当名
     otherAllowance?: number; // その他手当
     totalOtherAllowance?: number; // その他手当合計

@@ -199,6 +199,7 @@ export class DetailSalaryComponent implements OnInit {
     this.editMode = type;
     if (type === 'salary' && this.salary) {
       this.editSalaryForm = {
+        paymentDate: this.salary.paymentDate || '',
         basicSalary: this.salary.basicSalary,
         overtimeSalary: this.salary.overtimeSalary,
         commuteAllowance: this.salary.commuteAllowance ?? 0,
@@ -220,6 +221,7 @@ export class DetailSalaryComponent implements OnInit {
       this.editBonusForms = this.bonuses.length > 0 ? this.bonuses.map(b => ({
         bonusType: b.bonusType,
         bonusName: b.bonusName,
+        paymentDate: b.paymentDate || '',
         bonus: b.bonus,
         remarks: b.remarks || ''
       })) : [{}];
@@ -250,7 +252,15 @@ export class DetailSalaryComponent implements OnInit {
     this.editSalaryForm.totalInKind = this.editSalaryForm.inKindAllowances.reduce((sum: number, a: any) => sum + (Number(a.amount) || 0), 0);
     this.editSalaryForm.totalRetro = this.editSalaryForm.retroAllowances.reduce((sum: number, a: any) => sum + (Number(a.amount) || 0), 0);
     this.editSalaryForm.totalActualExpense = this.editSalaryForm.actualExpenses.reduce((sum: number, a: any) => sum + (Number(a.amount) || 0), 0);
-    return basic + overtime + commute + position + this.editSalaryForm.totalOtherAllowance + this.editSalaryForm.totalInKind + this.editSalaryForm.totalRetro + this.editSalaryForm.totalActualExpense;
+    // totalAllowance: 基本給を除いた手当の合計
+    this.editSalaryForm.totalAllowance = this.editSalaryForm.totalOtherAllowance
+      + this.editSalaryForm.totalInKind
+      + this.editSalaryForm.totalRetro
+      + this.editSalaryForm.totalActualExpense
+      + overtime
+      + commute
+      + position;
+    return basic + this.editSalaryForm.totalAllowance;
   }
 
   addBonusRow() {
@@ -294,18 +304,20 @@ export class DetailSalaryComponent implements OnInit {
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
     // totalOtherAllowance: otherAllowances配列内のamountの合計
     const totalOtherAllowance = (this.editSalaryForm.otherAllowances || []).reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0);
-    // totalAllowance: overtimeSalary + commuteAllowance + totalOtherAllowance
-    const totalAllowance = (Number(this.editSalaryForm.overtimeSalary) || 0)
-      + (Number(this.editSalaryForm.commuteAllowance) || 0)
-      + totalOtherAllowance;
-    // totalSalary: basicSalary + totalAllowance + totalInKind + totalRetro + totalActualExpense
+    const totalInKind = (this.editSalaryForm.inKindAllowances || []).reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0);
+    const totalRetro = (this.editSalaryForm.retroAllowances || []).reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0);
+    const totalActualExpense = (this.editSalaryForm.actualExpenses || []).reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0);
+    const overtime = Number(this.editSalaryForm.overtimeSalary) || 0;
+    const commute = Number(this.editSalaryForm.commuteAllowance) || 0;
+    const position = Number(this.editSalaryForm.positionAllowance) || 0;
+    // totalAllowance: 基本給を除いた手当の合計
+    const totalAllowance = totalOtherAllowance + totalInKind + totalRetro + totalActualExpense + overtime + commute + position;
+    // totalSalary: basicSalary + totalAllowance
     const totalSalary = (Number(this.editSalaryForm.basicSalary) || 0)
-      + totalAllowance
-      + this.editSalaryForm.totalInKind
-      + this.editSalaryForm.totalRetro
-      + this.editSalaryForm.totalActualExpense;
+      + totalAllowance;
     const newSalary = {
       ...this.salary,
+      paymentDate: this.editSalaryForm.paymentDate || '',
       basicSalary: Number(this.editSalaryForm.basicSalary) || 0,
       overtimeSalary: Number(this.editSalaryForm.overtimeSalary) || 0,
       commuteAllowance: Number(this.editSalaryForm.commuteAllowance) || 0,
@@ -313,11 +325,11 @@ export class DetailSalaryComponent implements OnInit {
       otherAllowances: this.editSalaryForm.otherAllowances,
       totalOtherAllowance: totalOtherAllowance,
       inKindAllowances: this.editSalaryForm.inKindAllowances,
-      totalInKind: this.editSalaryForm.totalInKind,
+      totalInKind: totalInKind,
       retroAllowances: this.editSalaryForm.retroAllowances,
-      totalRetro: this.editSalaryForm.totalRetro,
+      totalRetro: totalRetro,
       actualExpenses: this.editSalaryForm.actualExpenses,
-      totalActualExpense: this.editSalaryForm.totalActualExpense,
+      totalActualExpense: totalActualExpense,
       totalAllowance,
       totalSalary,
       remarks: this.editSalaryForm.remarks || '',
@@ -342,6 +354,7 @@ export class DetailSalaryComponent implements OnInit {
         employeeId: this.employee.employeeId,
         companyKey: this.companyKey,
         targetYearMonth: ym,
+        paymentDate: bonus.paymentDate || '',
         bonus: Number(bonus.bonus) || 0,
       };
       await this.firestoreService.updateBonus(this.companyKey, this.employee.employeeId, ym, newBonus);

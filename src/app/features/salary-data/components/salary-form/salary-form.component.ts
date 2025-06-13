@@ -549,6 +549,15 @@ export class SalaryFormComponent implements OnInit {
         const ym = `${this.csvYear}-${String(this.csvMonth).padStart(2, '0')}`;
         // Firestoreから取得した給与データから該当データを検索
         const salary = this.allSalaries?.find(s => s.employeeId === emp.employeeId && s.targetYearMonth === ym) || {};
+        // totalAllowance再計算（未定義の場合）
+        let totalOtherAllowance = (salary.otherAllowances || []).reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0);
+        let totalInKind = (salary.inKindAllowances || []).reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0);
+        let totalRetro = (salary.retroAllowances || []).reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0);
+        let totalActualExpense = (salary.actualExpenses || []).reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0);
+        let overtime = Number(salary.overtimeSalary) || 0;
+        let commute = Number(salary.commuteAllowance) || 0;
+        let position = Number(salary.positionAllowance) || 0;
+        let totalAllowance = (typeof salary.totalAllowance === 'number') ? salary.totalAllowance : (totalOtherAllowance + totalInKind + totalRetro + totalActualExpense + overtime + commute + position);
         return [
           emp.companyKey || this.companyKey,
           emp.employeeId || '',
@@ -573,7 +582,7 @@ export class SalaryFormComponent implements OnInit {
           (salary.retroAllowances && salary.retroAllowances[0]?.amount) || '',
           (salary.actualExpenses && salary.actualExpenses[0]?.name) || '',
           (salary.actualExpenses && salary.actualExpenses[0]?.amount) || '',
-          salary.totalAllowance || '',
+          totalAllowance,
           salary.totalSalary || '',
           salary.remarks || ''
         ];

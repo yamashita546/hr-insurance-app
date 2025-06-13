@@ -8,6 +8,7 @@ import { Office } from '../../../../core/models/company.model';
 import { Employee } from '../../../../core/models/employee.model';
 import { filter, take } from 'rxjs/operators';
 import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
+import { SalaryFieldNameMap, BonusFieldNameMap } from '../../../../core/models/salary.model';
 
 @Component({
   selector: 'app-salary-form',
@@ -54,6 +55,7 @@ export class SalaryFormComponent implements OnInit {
   totalRetro: number = 0;
   actualExpenses: any[] = [];
   totalActualExpense: number = 0;
+  allSalaries: any[] = [];
 
   get bonusTotal() {
     return this.bonusForms.reduce((sum, b) => sum + (Number(b.bonus) || 0), 0);
@@ -331,6 +333,7 @@ export class SalaryFormComponent implements OnInit {
     const data: any[] = [];
     const errors: string[] = [];
     for (let i = 1; i < lines.length; i++) {
+      if (i === 1) continue; // 2行目（ダミーデータ）はスキップ
       const cols = lines[i].split(',');
       if (cols.length !== headers.length) {
         errors.push(`${i+1}行目: 列数が一致しません`);
@@ -430,7 +433,10 @@ export class SalaryFormComponent implements OnInit {
           commuteAllowance: Number(row.commuteAllowance) || 0,
           positionAllowance: Number(row.positionAllowance) || 0,
           otherAllowance: Number(row.otherAllowance) || 0,
-          otherAllowances: [],
+          otherAllowances: row.otherAllowances || [],
+          inKindAllowances: row.inKindAllowances || [],
+          retroAllowances: row.retroAllowances || [],
+          actualExpenses: row.actualExpenses || [],
           totalAllowance,
           totalSalary,
           remarks: row.remarks || '',
@@ -509,36 +515,70 @@ export class SalaryFormComponent implements OnInit {
     }
     if (this.csvTemplateType === 'salary') {
       // 給与CSVひな型
-      const header = [
+      const codeHeader = [
         'companyKey', 'employeeId', 'lastName', 'firstName', 'officeId',
         'targetYear', 'targetMonth',
         'paymentDate',
         'basicSalary', 'overtimeSalary', 'commuteAllowance',
         'commuteAllowancePeriodFrom', 'commuteAllowancePeriodTo', 'commuteAllowanceMonths',
         'positionAllowance',
-        // 配列項目（1セット分）
         'otherAllowances[0].name', 'otherAllowances[0].amount',
         'inKindAllowances[0].name', 'inKindAllowances[0].amount',
         'retroAllowances[0].name', 'retroAllowances[0].amount',
         'actualExpenses[0].name', 'actualExpenses[0].amount',
         'totalAllowance', 'totalSalary', 'remarks'
       ];
-      const rows = targetEmployees.map(emp => [
-        emp.companyKey || this.companyKey,
-        emp.employeeId || '',
-        emp.lastName || '',
-        emp.firstName || '',
-        emp.officeId || '',
-        this.csvYear,
-        this.csvMonth,
-        '', '', '', '', '', '', '', // 既存項目
-        '', '', // otherAllowances[0]
-        '', '', // inKindAllowances[0]
-        '', '', // retroAllowances[0]
-        '', '', // actualExpenses[0]
-        '', '', '' // 合計・備考
-      ]);
-      const csv = [header.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+      // 日本語ヘッダーもインデックス付きで出力
+      const header = codeHeader;
+      // ダミーデータ（入力例）
+      const dummyRow = [
+        'C0001', 'E0001', '山田', '太郎', 'O001',
+        '2024', '6',
+        '2024-06-01',
+        '300000', '20000', '10000',
+        '2024-06', '2024-08', '3',
+        '5000',
+        '家族手当', '10000',
+        '社宅', '20000',
+        '調整', '5000',
+        '交通費', '8000',
+        '35000', '355000', '例：6月分給与'
+      ];
+      const rows = targetEmployees.map(emp => {
+        // 対象年月
+        const ym = `${this.csvYear}-${String(this.csvMonth).padStart(2, '0')}`;
+        // Firestoreから取得した給与データから該当データを検索
+        const salary = this.allSalaries?.find(s => s.employeeId === emp.employeeId && s.targetYearMonth === ym) || {};
+        return [
+          emp.companyKey || this.companyKey,
+          emp.employeeId || '',
+          emp.lastName || '',
+          emp.firstName || '',
+          emp.officeId || '',
+          this.csvYear,
+          this.csvMonth,
+          salary.paymentDate || '',
+          salary.basicSalary || '',
+          salary.overtimeSalary || '',
+          salary.commuteAllowance || '',
+          salary.commuteAllowancePeriodFrom || '',
+          salary.commuteAllowancePeriodTo || '',
+          salary.commuteAllowanceMonths || '',
+          salary.positionAllowance || '',
+          (salary.otherAllowances && salary.otherAllowances[0]?.name) || '',
+          (salary.otherAllowances && salary.otherAllowances[0]?.amount) || '',
+          (salary.inKindAllowances && salary.inKindAllowances[0]?.name) || '',
+          (salary.inKindAllowances && salary.inKindAllowances[0]?.amount) || '',
+          (salary.retroAllowances && salary.retroAllowances[0]?.name) || '',
+          (salary.retroAllowances && salary.retroAllowances[0]?.amount) || '',
+          (salary.actualExpenses && salary.actualExpenses[0]?.name) || '',
+          (salary.actualExpenses && salary.actualExpenses[0]?.amount) || '',
+          salary.totalAllowance || '',
+          salary.totalSalary || '',
+          salary.remarks || ''
+        ];
+      });
+      const csv = [header.join(','), dummyRow.join(','), ...rows.map(r => r.join(','))].join('\r\n');
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');

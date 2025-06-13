@@ -26,8 +26,9 @@
 
   <div class="edit-btn-container">
     <button *ngIf="!isEditMode" class="edit-btn" (click)="startEdit()">編集</button>
-    <button *ngIf="isEditMode" class="edit-btn" (click)="saveEdit()">保存</button>
-    <button *ngIf="isEditMode" class="edit-btn" (click)="cancelEdit()">キャンセル</button>
+    <button *ngIf="isEditMode" class="edit-btn" (click)="saveEdit()" [disabled]="isUploading">保存</button>
+    <span *ngIf="isEditMode && isUploading" style="margin-left:1em;color:#1976d2;">アップロード中...</span>
+    <button *ngIf="isEditMode" class="edit-btn" (click)="cancelEdit()" [disabled]="isUploading">キャンセル</button>
     <button class="edit-btn" (click)="openTransferPlanDialog()">異動予定登録</button>
     <button *ngIf="employee?.transferPlan" class="edit-btn" (click)="cancelTransferPlan()">異動予定キャンセル</button>
     <button *ngIf="!isEditMode" class="edit-btn" (click)="deleteEmployee()" style="background:#e53935;color:#fff;">削除</button>

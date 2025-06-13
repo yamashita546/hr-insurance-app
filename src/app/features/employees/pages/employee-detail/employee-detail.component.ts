@@ -47,6 +47,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   transferPlanDialogOpen = false;
   transferPlan: any = { transferDate: '', targetOfficeId: '', targetOfficeName: '' };
   transferHistory: EmployeeTransferHistory[] = [];
+  isUploading = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -124,121 +125,126 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   }
 
   async saveEdit() {
-    // console.log('[saveEdit] called');
     this.validationErrors = [];
     this.saveMessage = '';
-    // console.log('[saveEdit] docId:', this.docId);
     if (!this.docId) return;
-    const health = this.editEmployee.healthInsuranceStatus?.isApplicable;
-    const birthday = this.editEmployee.birthday;
-    let age = 0;
-    if (birthday) {
-      const birthDate = new Date(birthday);
-      const today = new Date();
-      age = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
+    this.isUploading = true;
+    try {
+      const health = this.editEmployee.healthInsuranceStatus?.isApplicable;
+      const birthday = this.editEmployee.birthday;
+      let age = 0;
+      if (birthday) {
+        const birthDate = new Date(birthday);
+        const today = new Date();
+        age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
       }
-    }
 
-    // 1. 健康保険がfalseなのに介護保険がtrue → エラー
-    if (!health && this.editEmployee.isCareInsuranceApplicable) {
-      alert('健康保険が適用されていない場合、介護保険も適用できません。');
-      return;
-    }
-
-    // 2. 健康保険がtrue かつ 40歳以上65歳未満なのに介護保険がfalse → アラートで自動修正
-    if (health && age >= 40 && age < 65 && !this.editEmployee.isCareInsuranceApplicable) {
-      const ok = confirm('この従業員は年齢が40歳以上65歳未満かつ健康保険適用のため、介護保険適用が必要です。\n介護保険を適用して保存してよろしいですか？');
-      if (!ok) {
+      // 1. 健康保険がfalseなのに介護保険がtrue → エラー
+      if (!health && this.editEmployee.isCareInsuranceApplicable) {
+        alert('健康保険が適用されていない場合、介護保険も適用できません。');
         return;
       }
-      this.editEmployee.isCareInsuranceApplicable = true;
-    }
 
-    // 3. 健康保険がfalseなら介護保険もfalse（自動修正、アラート不要）
-    if (!health) {
-      this.editEmployee.isCareInsuranceApplicable = false;
-    }
-
-    // 4. それ以外（条件に合致している場合）はアラートなしで保存
-
-    // コード値で保存するための変換処理
-    // 雇用形態
-    if (this.editEmployee.employeeType) {
-      const found = this.employeeTypes.find(t => t.code === this.editEmployee.employeeType || t.name === this.editEmployee.employeeType);
-      this.editEmployee.employeeType = found ? found.code : this.editEmployee.employeeType;
-    }
-    // 勤務形態
-    if (this.editEmployee.workStyle) {
-      const found = this.workStyleTypes.find(t => t.code === this.editEmployee.workStyle || t.name === this.editEmployee.workStyle);
-      this.editEmployee.workStyle = found ? found.code : this.editEmployee.workStyle;
-    }
-    // 性別
-    if (this.editEmployee.gender) {
-      const found = this.genderTypes.find(g => g.code === this.editEmployee.gender || g.name === this.editEmployee.gender);
-      this.editEmployee.gender = found ? found.code : this.editEmployee.gender;
-    }
-    // 都道府県
-    if (this.editEmployee.address && this.editEmployee.address.prefecture) {
-      const found = this.prefectures.find(p => p.code === this.editEmployee.address.prefecture || p.name === this.editEmployee.address.prefecture);
-      this.editEmployee.address.prefecture = found ? found.code : this.editEmployee.address.prefecture;
-    }
-    // 扶養家族の続柄コード
-    if (Array.isArray(this.editEmployee.dependents)) {
-      const mainKeys = ['lastName', 'firstName', 'birthday', 'income', 'certificationDate'];
-      const emptyRows = this.editEmployee.dependents.filter((dep: any) =>
-        !mainKeys.some(k => dep[k] && String(dep[k]).trim() !== '')
-      );
-      if (emptyRows.length > 0) {
-        const ok = window.confirm('被扶養者情報の入力が不足しています。\n入力欄を削除して保存しますか？');
+      // 2. 健康保険がtrue かつ 40歳以上65歳未満なのに介護保険がfalse → アラートで自動修正
+      if (health && age >= 40 && age < 65 && !this.editEmployee.isCareInsuranceApplicable) {
+        const ok = confirm('この従業員は年齢が40歳以上65歳未満かつ健康保険適用のため、介護保険適用が必要です。\n介護保険を適用して保存してよろしいですか？');
         if (!ok) {
           return;
         }
-        this.editEmployee.dependents = this.editEmployee.dependents.filter((dep: any) =>
-          mainKeys.some(k => dep[k] && String(dep[k]).trim() !== '')
-        );
+        this.editEmployee.isCareInsuranceApplicable = true;
       }
-    }
 
-    // バリデーション: 正社員なら社会保険3種のisApplicableがすべてtrueでなければならない
-    // console.log('[saveEdit] employeeType:', this.editEmployee.employeeType);
-    if (this.editEmployee.employeeType === 'regular') {
-      if (!this.editEmployee.healthInsuranceStatus?.isApplicable) {
-        this.validationErrors.push('正社員の場合、健康保険適用は必須です');
+      // 3. 健康保険がfalseなら介護保険もfalse（自動修正、アラート不要）
+      if (!health) {
+        this.editEmployee.isCareInsuranceApplicable = false;
       }
-      if (!this.editEmployee.pensionStatus?.isApplicable) {
-        this.validationErrors.push('正社員の場合、厚生年金適用は必須です');
+
+      // 4. それ以外（条件に合致している場合）はアラートなしで保存
+
+      // コード値で保存するための変換処理
+      // 雇用形態
+      if (this.editEmployee.employeeType) {
+        const found = this.employeeTypes.find(t => t.code === this.editEmployee.employeeType || t.name === this.editEmployee.employeeType);
+        this.editEmployee.employeeType = found ? found.code : this.editEmployee.employeeType;
       }
-    }
-    // console.log('[saveEdit] validationErrors:', this.validationErrors);
-    if (this.validationErrors.length > 0) {
-      // エラーがあれば編集モードを終了しない
-      return;
-    }
-    // console.log('[saveEdit] updateEmployee実行:', this.docId, this.editEmployee);
-    // companyIdがなければ補完
-    if (!this.editEmployee.companyId && this.companyKey) {
-      this.userCompanyService.company$.subscribe(company => {
-        if (company && company.companyId) {
-          this.editEmployee.companyId = company.companyId;
+      // 勤務形態
+      if (this.editEmployee.workStyle) {
+        const found = this.workStyleTypes.find(t => t.code === this.editEmployee.workStyle || t.name === this.editEmployee.workStyle);
+        this.editEmployee.workStyle = found ? found.code : this.editEmployee.workStyle;
+      }
+      // 性別
+      if (this.editEmployee.gender) {
+        const found = this.genderTypes.find(g => g.code === this.editEmployee.gender || g.name === this.editEmployee.gender);
+        this.editEmployee.gender = found ? found.code : this.editEmployee.gender;
+      }
+      // 都道府県
+      if (this.editEmployee.address && this.editEmployee.address.prefecture) {
+        const found = this.prefectures.find(p => p.code === this.editEmployee.address.prefecture || p.name === this.editEmployee.address.prefecture);
+        this.editEmployee.address.prefecture = found ? found.code : this.editEmployee.address.prefecture;
+      }
+      // 扶養家族の続柄コード
+      if (Array.isArray(this.editEmployee.dependents)) {
+        const mainKeys = ['lastName', 'firstName', 'birthday', 'income', 'certificationDate'];
+        const emptyRows = this.editEmployee.dependents.filter((dep: any) =>
+          !mainKeys.some(k => dep[k] && String(dep[k]).trim() !== '')
+        );
+        if (emptyRows.length > 0) {
+          const ok = window.confirm('被扶養者情報の入力が不足しています。\n入力欄を削除して保存しますか？');
+          if (!ok) {
+            return;
+          }
+          this.editEmployee.dependents = this.editEmployee.dependents.filter((dep: any) =>
+            mainKeys.some(k => dep[k] && String(dep[k]).trim() !== '')
+          );
         }
-      });
-    }
-    // 事業所名とofficeIdの整合性を必ず保つ
-    if (this.editEmployee.officeId && this.offices.length > 0) {
-      const office = this.offices.find(o => o.id === this.editEmployee.officeId);
-      if (office) {
-        this.editEmployee.officeName = office.name;
       }
+
+      // バリデーション: 正社員なら社会保険3種のisApplicableがすべてtrueでなければならない
+      // console.log('[saveEdit] employeeType:', this.editEmployee.employeeType);
+      if (this.editEmployee.employeeType === 'regular') {
+        if (!this.editEmployee.healthInsuranceStatus?.isApplicable) {
+          this.validationErrors.push('正社員の場合、健康保険適用は必須です');
+        }
+        if (!this.editEmployee.pensionStatus?.isApplicable) {
+          this.validationErrors.push('正社員の場合、厚生年金適用は必須です');
+        }
+      }
+      // console.log('[saveEdit] validationErrors:', this.validationErrors);
+      if (this.validationErrors.length > 0) {
+        // エラーがあれば編集モードを終了しない
+        return;
+      }
+      // console.log('[saveEdit] updateEmployee実行:', this.docId, this.editEmployee);
+      // companyIdがなければ補完
+      if (!this.editEmployee.companyId && this.companyKey) {
+        this.userCompanyService.company$.subscribe(company => {
+          if (company && company.companyId) {
+            this.editEmployee.companyId = company.companyId;
+          }
+        });
+      }
+      // 事業所名とofficeIdの整合性を必ず保つ
+      if (this.editEmployee.officeId && this.offices.length > 0) {
+        const office = this.offices.find(o => o.id === this.editEmployee.officeId);
+        if (office) {
+          this.editEmployee.officeName = office.name;
+        }
+      }
+      await this.firestoreService.updateEmployee(this.docId, this.editEmployee);
+      this.employee = JSON.parse(JSON.stringify(this.editEmployee));
+      this.isEditMode = false;
+      this.editEmployee = null;
+      this.saveMessage = '保存が完了しました';
+      alert('保存が完了しました');
+    } catch (e) {
+      alert('保存に失敗しました: ' + e);
+    } finally {
+      this.isUploading = false;
     }
-    await this.firestoreService.updateEmployee(this.docId, this.editEmployee);
-    this.employee = JSON.parse(JSON.stringify(this.editEmployee));
-    this.isEditMode = false;
-    this.editEmployee = null;
-    this.saveMessage = '保存が完了しました';
-    // console.log('[saveEdit] 完了');
   }
 
   canDeactivate(): boolean {

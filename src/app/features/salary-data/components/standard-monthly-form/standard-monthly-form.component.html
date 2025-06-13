@@ -132,11 +132,12 @@
   </div>
 
   <!-- 取り扱い注意 -->
-  <div class="attention-block">
+  <div class="attention-block" *ngIf="decisionType !== 'entry' && isConfirmed">
     <h4>取り扱い注意</h4>
-    <p>
-      
-    </p>
+    <ul *ngIf="attentionMessages.length > 0">
+      <li *ngFor="let msg of attentionMessages">{{ msg }}</li>
+    </ul>
+    <p *ngIf="attentionMessages.length === 0">特に注意事項はありません。</p>
   </div>
 
   <!-- 算出根拠入力テーブル -->

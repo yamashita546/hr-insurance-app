@@ -12,6 +12,7 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { EMPLOYEE_TYPES, EmployeeType } from '../../../../core/models/employee.type';
 import { AppUser } from '../../../../core/models/user.model';
 import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
+import { StandardMonthlyCheckService } from '../../../../core/services/standard.monthly.check.service';
 
 @Component({
   selector: 'app-standard-monthly-form',
@@ -65,7 +66,7 @@ export class StandardMonthlyFormComponent implements OnInit {
   // 算出根拠入力用
   calculationRows: any[] = [];
 
-  
+  attentionMessages: string[] = [];
 
   get totalSum() {
     return this.calculationRows.filter(row => !row.excluded).reduce((acc, row) => acc + (row.sum || 0), 0);
@@ -138,7 +139,8 @@ export class StandardMonthlyFormComponent implements OnInit {
     private userCompanyService: UserCompanyService,
     private firestoreService: FirestoreService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private standardMonthlyCheckService: StandardMonthlyCheckService
   ) {}
 
   async ngOnInit() {
@@ -428,6 +430,16 @@ export class StandardMonthlyFormComponent implements OnInit {
         row.modifiedAverage = this.modifiedAverage;
       });
     }
+    // 追加: 注意喚起メッセージ生成
+    this.attentionMessages = this.standardMonthlyCheckService.generateAttentionMessages(
+      this.salaries,
+      [], // bonusesは現状未取得のため空配列、必要に応じて取得
+      this.calculationRows,
+      emp,
+      this.decisionType,
+      `${this.salaryFromYear}-${String(this.salaryFromMonth).padStart(2, '0')}`,
+      `${this.salaryToYear}-${String(this.salaryToMonth).padStart(2, '0')}`
+    );
     this.isConfirmed = true;
   }
 

@@ -16,11 +16,7 @@ export interface Attendance {
   // 休暇情報
   childCareLeaveStartDate?: Date | null; // 育児休業開始日
   childCareLeaveEndDate?: Date | null; // 育児休業終了日
-  familyCareLeaveStartDate?: Date | null; // 介護休業開始日
-  familyCareLeaveEndDate?: Date | null; // 介護休業終了日
-  injuryOrSicknessLeaveStartDate?: Date | null; // 傷病による休業開始日
-  injuryOrSicknessLeaveEndDate?: Date | null; // 傷病による休業終了日
-  isOnFullLeaveThisMonth?: boolean; // 月全体で無給休業中か（報酬ゼロの判定用）
+  holidaySpecialDays?: number; // 休暇特例日数
 
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
@@ -40,13 +36,9 @@ export const ATTENDANCE_COLUMN_LABELS: { [key: string]: string } = {
   absentDays: '欠勤日数',
   leaveWithoutPayDays: '無給休暇日数',
   paidLeaveDays: '有給取得日数',
+  holidaySpecialDays: '休暇特例日数',
   childCareLeaveStartDate: '育児休業開始日',
   childCareLeaveEndDate: '育児休業終了日',
-  familyCareLeaveStartDate: '介護休業開始日',
-  familyCareLeaveEndDate: '介護休業終了日',
-  injuryOrSicknessLeaveStartDate: '傷病休業開始日',
-  injuryOrSicknessLeaveEndDate: '傷病休業終了日',
-  isOnFullLeaveThisMonth: '全休',
   companyKey: '会社ID'
 };
 
@@ -56,7 +48,6 @@ export const ATTENDANCE_COLUMN_ORDER = [
   'scheduledWorkDays', 'actualWorkDays', 'scheduledWorkHours', 'actualWorkHours',
   'absentDays', 'leaveWithoutPayDays', 'paidLeaveDays',
   'childCareLeaveStartDate', 'childCareLeaveEndDate',
-  'familyCareLeaveStartDate', 'familyCareLeaveEndDate',
-  'injuryOrSicknessLeaveStartDate', 'injuryOrSicknessLeaveEndDate',
-  'isOnFullLeaveThisMonth', 'companyKey'
+  'holidaySpecialDays',
+  'companyKey'
 ];

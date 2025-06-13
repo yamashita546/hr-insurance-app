@@ -30,6 +30,7 @@
     <button *ngIf="isEditMode" class="edit-btn" (click)="cancelEdit()">キャンセル</button>
     <button class="edit-btn" (click)="openTransferPlanDialog()">異動予定登録</button>
     <button *ngIf="employee?.transferPlan" class="edit-btn" (click)="cancelTransferPlan()">異動予定キャンセル</button>
+    <button *ngIf="!isEditMode" class="edit-btn" (click)="deleteEmployee()" style="background:#e53935;color:#fff;">削除</button>
   </div>
 
   <div *ngIf="isEditMode && validationErrors.length > 0" style="color: red; margin-bottom: 16px;">
@@ -184,7 +185,7 @@
       <tr *ngIf="isEditMode">
         <th>事業所名</th>
         <td>
-          <select [(ngModel)]="editEmployee.officeId">
+          <select [(ngModel)]="editEmployee.officeId" (change)="onEditOfficeIdChange()">
             <option value="">選択</option>
             <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
           </select>
@@ -264,6 +265,13 @@
         <th>退職理由</th>
         <td><input [(ngModel)]="editEmployee.resignationReason"></td>
       </tr>
+      <tr *ngIf="!isEditMode">
+        <th>退社済み</th>
+        <td>{{ employee.isResigned ? '○' : '×' }}</td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>退社済み</th>
+      
     </table>
   </section>
 
@@ -476,46 +484,111 @@
 
   <!-- 扶養家族あり -->
   <section class="detail-section">
-    <h3>扶養家族あり</h3>
-    <table class="detail-table">
-      <thead>
-        <tr>
-          <th>氏名</th>
-          <th>カナ</th>
-          <th>続柄</th>
-          <th>生年月日</th>
-          <th>性別</th>
-          <th>年収</th>
-          <th>同居</th>
-          <th>学生</th>
-          <th>障害者</th>
-          <th>認定日</th>
-          <th>資格喪失日</th>
-          <th>備考</th>
-          <th>現役</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let dep of employee.dependents">
-          <td>{{ dep.lastName }} {{ dep.firstName }}</td>
-          <td>{{ dep.lastNameKana }} {{ dep.firstNameKana }}</td>
-          <td>{{ dep.relationship | relationshipName }}</td>
-          <td>{{ dep.birthday | date:'yyyy-MM-dd' }}</td>
-          <td>{{ dep.gender === 'M' ? '男' : dep.gender === 'F' ? '女' : dep.gender }}</td>
-          <td>{{ dep.income }}</td>
-          <td><span *ngIf="dep.isLivingTogether">✔</span></td>
-          <td><span *ngIf="dep.isStudent">✔</span></td>
-          <td><span *ngIf="dep.isDisabled">✔</span></td>
-          <td>{{ dep.certificationDate | date:'yyyy-MM-dd' }}</td>
-          <td>{{ dep.lossDate | date:'yyyy-MM-dd' }}</td>
-          <td>{{ dep.remarks }}</td>
-          <td>
-            <span *ngIf="!dep.lossDate">現役</span>
-            <span *ngIf="dep.lossDate">-</span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <h3>扶養家族</h3>
+    <ng-container *ngIf="isEditMode; else viewDependents">
+      <table class="detail-table">
+        <thead>
+          <tr>
+            <th>氏名</th>
+            <th>カナ</th>
+            <th>続柄</th>
+            <th>生年月日</th>
+            <th>性別</th>
+            <th>年収</th>
+            <th>同居</th>
+            <th>学生</th>
+            <th>障害者</th>
+            <th>認定日</th>
+            <th>資格喪失日</th>
+            <th>備考</th>
+            <th>現役</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let dep of editEmployee.dependents; let i = index">
+            <td>
+              <input [(ngModel)]="dep.lastName" placeholder="姓" style="width: 3.5em;" />
+              <input [(ngModel)]="dep.firstName" placeholder="名" style="width: 3.5em;" />
+            </td>
+            <td>
+              <input [(ngModel)]="dep.lastNameKana" placeholder="姓カナ" style="width: 3.5em;" />
+              <input [(ngModel)]="dep.firstNameKana" placeholder="名カナ" style="width: 3.5em;" />
+            </td>
+            <td>
+              <select [(ngModel)]="dep.relationshipCode">
+                <option value="">選択</option>
+                <option *ngFor="let r of relationshipTypes" [value]="r.code">{{ r.name }}</option>
+              </select>
+            </td>
+            <td><input type="date" [(ngModel)]="dep.birthday" style="width: 8em;" /></td>
+            <td>
+              <select [(ngModel)]="dep.gender">
+                <option value="">選択</option>
+                <option value="M">男</option>
+                <option value="F">女</option>
+              </select>
+            </td>
+            <td><input type="number" [(ngModel)]="dep.income" style="width: 6em;" /></td>
+            <td><input type="checkbox" [(ngModel)]="dep.isLivingTogether" /></td>
+            <td><input type="checkbox" [(ngModel)]="dep.isStudent" /></td>
+            <td><input type="checkbox" [(ngModel)]="dep.isDisabled" /></td>
+            <td><input type="date" [(ngModel)]="dep.certificationDate" style="width: 8em;" /></td>
+            <td><input type="date" [(ngModel)]="dep.lossDate" style="width: 8em;" /></td>
+            <td><input [(ngModel)]="dep.remarks" style="width: 8em;" /></td>
+            <td>
+              <span *ngIf="!dep.lossDate">現役</span>
+              <span *ngIf="dep.lossDate">-</span>
+            </td>
+            <td>
+              <button type="button" (click)="editEmployee.dependents.splice(i, 1)">削除</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button type="button" (click)="editEmployee.dependents.push({lastName:'',firstName:'',lastNameKana:'',firstNameKana:'',relationship:'',relationshipCode:'',birthday:'',myNumber:'',isSpouse:false,isChild:false,isDisabled:false,isStudent:false,isLivingTogether:false,income:'',certificationDate:'',lossDate:'',remarks:'',gender:''})">扶養家族を追加</button>
+    </ng-container>
+    <ng-template #viewDependents>
+      <table class="detail-table">
+        <thead>
+          <tr>
+            <th>氏名</th>
+            <th>カナ</th>
+            <th>続柄</th>
+            <th>生年月日</th>
+            <th>性別</th>
+            <th>年収</th>
+            <th>同居</th>
+            <th>学生</th>
+            <th>障害者</th>
+            <th>認定日</th>
+            <th>資格喪失日</th>
+            <th>備考</th>
+            <th>現役</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let dep of employee.dependents">
+            <td>{{ dep.lastName }} {{ dep.firstName }}</td>
+            <td>{{ dep.lastNameKana }} {{ dep.firstNameKana }}</td>
+            <td>{{ dep.relationship | relationshipName }}</td>
+            <td>{{ dep.birthday | date:'yyyy-MM-dd' }}</td>
+            <td>{{ dep.gender === 'M' ? '男' : dep.gender === 'F' ? '女' : dep.gender }}</td>
+            <td>{{ dep.income }}</td>
+            <td><span *ngIf="dep.isLivingTogether">✔</span></td>
+            <td><span *ngIf="dep.isStudent">✔</span></td>
+            <td><span *ngIf="dep.isDisabled">✔</span></td>
+            <td>{{ dep.certificationDate | date:'yyyy-MM-dd' }}</td>
+            <td>{{ dep.lossDate | date:'yyyy-MM-dd' }}</td>
+            <td>{{ dep.remarks }}</td>
+            <td>
+              <span *ngIf="!dep.lossDate">現役</span>
+              <span *ngIf="dep.lossDate">-</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-template>
   </section>
 
   <!-- その他（外国人労働者情報） -->

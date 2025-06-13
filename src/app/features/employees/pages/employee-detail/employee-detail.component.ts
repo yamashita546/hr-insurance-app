@@ -16,6 +16,7 @@ import { RELATIONSHIP_TYPES } from '../../../../core/models/dependents.relations
 import { EmployeeTransferHistory } from '../../../../core/models/empoloyee.history';
 import { RelationshipNamePipe } from '../../../../core/pipe/relationship.pipe';
 
+
 @Component({
   selector: 'app-employee-detail',
   standalone: true,
@@ -186,13 +187,19 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     }
     // 扶養家族の続柄コード
     if (Array.isArray(this.editEmployee.dependents)) {
-      this.editEmployee.dependents = this.editEmployee.dependents.map((dep: any) => {
-        if (dep.relationshipCode) {
-          const found = RELATIONSHIP_TYPES.find(r => r.code === dep.relationshipCode || r.name === dep.relationshipCode);
-          dep.relationshipCode = found ? found.code : dep.relationshipCode;
+      const mainKeys = ['lastName', 'firstName', 'birthday', 'income', 'certificationDate'];
+      const emptyRows = this.editEmployee.dependents.filter((dep: any) =>
+        !mainKeys.some(k => dep[k] && String(dep[k]).trim() !== '')
+      );
+      if (emptyRows.length > 0) {
+        const ok = window.confirm('被扶養者情報の入力が不足しています。\n入力欄を削除して保存しますか？');
+        if (!ok) {
+          return;
         }
-        return dep;
-      });
+        this.editEmployee.dependents = this.editEmployee.dependents.filter((dep: any) =>
+          mainKeys.some(k => dep[k] && String(dep[k]).trim() !== '')
+        );
+      }
     }
 
     // バリデーション: 正社員なら社会保険3種のisApplicableがすべてtrueでなければならない
@@ -218,6 +225,13 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
           this.editEmployee.companyId = company.companyId;
         }
       });
+    }
+    // 事業所名とofficeIdの整合性を必ず保つ
+    if (this.editEmployee.officeId && this.offices.length > 0) {
+      const office = this.offices.find(o => o.id === this.editEmployee.officeId);
+      if (office) {
+        this.editEmployee.officeName = office.name;
+      }
     }
     await this.firestoreService.updateEmployee(this.docId, this.editEmployee);
     this.employee = JSON.parse(JSON.stringify(this.editEmployee));
@@ -280,14 +294,13 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
 
   updateFilteredEmployees() {
     if (this.selectedOfficeId === 'ALL') {
-      this.filteredEmployees = [...this.allEmployees];
+      this.filteredEmployees = this.allEmployees.filter(e => e.isActive !== false);
     } else {
-      this.filteredEmployees = this.allEmployees.filter(e => String(e.officeId) === String(this.selectedOfficeId));
+      this.filteredEmployees = this.allEmployees.filter(e => String(e.officeId) === String(this.selectedOfficeId) && e.isActive !== false);
     }
     // employeeIdを明示的にString型に変換
     this.filteredEmployees = this.filteredEmployees.map(e => ({ ...e, employeeId: String(e.employeeId) }));
     this.selectedEmployeeId = String(this.selectedEmployeeId);
-    // console.log('[updateFilteredEmployees] selectedOfficeId:', this.selectedOfficeId, 'allEmployees:', this.allEmployees, 'filteredEmployees:', this.filteredEmployees);
     this.filteredEmployees.sort((a, b) => (a.employeeId > b.employeeId ? 1 : -1));
   }
 
@@ -340,6 +353,19 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
             this.employee.companyId = company.companyId;
           }
         });
+      }
+      // 契約終了日を参照して退社済みフラグを設定
+      if (this.employee.contractEndDate) {
+        const today = new Date();
+        const endDate = new Date(this.employee.contractEndDate);
+        // 日付部分だけ比較
+        if (!isNaN(endDate.getTime()) && endDate < new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)) {
+          this.employee.isResigned = true;
+        } else {
+          this.employee.isResigned = false;
+        }
+      } else {
+        this.employee.isResigned = false;
       }
     }
     this.isEditMode = false;
@@ -500,6 +526,28 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
       });
       // ここではリロードしない
       await this.onEmployeeChange();
+    }
+  }
+
+  async deleteEmployee() {
+    if (!this.employee || !this.employee.id) return;
+    const ok = window.confirm('本当にこの従業員を削除しますか？\n（この操作は元に戻せません）');
+    if (!ok) return;
+    try {
+      // 論理削除: isActive: false
+      await this.firestoreService.updateEmployee(this.employee.id, { isActive: false });
+      alert('削除しました');
+      this.router.navigate(['/employees/list']);
+    } catch (e) {
+      alert('削除に失敗しました: ' + e);
+    }
+  }
+
+  onEditOfficeIdChange() {
+    if (!this.editEmployee || !this.editEmployee.officeId) return;
+    const office = this.offices.find(o => o.id === this.editEmployee.officeId);
+    if (office) {
+      this.editEmployee.officeName = office.name;
     }
   }
 }

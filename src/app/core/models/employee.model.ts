@@ -39,6 +39,7 @@ export type Employee = {
     contractStartDate?: Date; // 雇用契約開始日
     contractEndDate?: Date;   // 雇用契約終了日
     resignationReason?: string; // 退職理由
+    isResigned?: boolean; // 退職者かどうか
     workStyle?: string; // 勤務形態（フルタイム、パート等）
     myNumber?: string;
     myNumberCollected?: boolean; // マイナンバー収集済みか

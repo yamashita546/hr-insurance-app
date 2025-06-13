@@ -29,7 +29,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [
     MatExpansionModule, ReactiveFormsModule, CommonModule,
-    MatInputModule, MatSelectModule, MatDatepickerModule, 
+            MatInputModule, MatSelectModule, MatDatepickerModule, 
     MatNativeDateModule, MatButtonModule, MatTabsModule, RouterModule,
     FormsModule
   ],
@@ -148,7 +148,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       healthInsuranceStatus: this.fb.group({
         isApplicable: [false],
         healthInsuranceSymbol: [''],
-        healthInsuranceNumber: [''],
+      healthInsuranceNumber: [''],
         insuranceNumber: [''],
         acquisitionDate: [''],
         acquisitionReported: [false],
@@ -623,7 +623,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       'foreignWorker.passportNumber', 'foreignWorker.passportExpiry', 'foreignWorker.hasResidenceCardCopy', 'foreignWorker.hasSpecialExemption',
       'foreignWorker.exemptionReason', 'foreignWorker.employmentStartDate', 'foreignWorker.employmentEndDate', 'foreignWorker.hasSpecificActivity',
       'foreignWorker.returnPlannedDate', 'foreignWorker.remarks',
-      ...[0,1,2,3].flatMap(i => dependentFields.map(f => `extraordinaryLeaves[${i}].${f}`)),
+      ...extraordinaryLeaveFields.map(f => `extraordinaryLeaves[0].${f}`),
     ];
     // 日本語タイトルで出力
     const headerRow = headers.map(key => EMPLOYEE_CSV_FIELD_LABELS[key] || key).join(',');
@@ -827,12 +827,19 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     const toUpdate: any[] = [];
     for (const emp of this.pendingImportData) {
       emp.companyId = this.companyId;
+      // officeNameからofficeIdを自動取得
+      if (emp.officeName && this.offices && this.offices.length > 0) {
+        const office = this.offices.find(o => o.name === emp.officeName);
+        if (office) {
+          emp.officeId = office.id;
+        }
+      }
       const officeId = displayOfficeIdToId[emp.displayOfficeId];
       if (officeId) {
         emp.officeId = officeId;
-      } else {
+      } else if (!emp.officeId) {
         emp.officeId = '';
-        console.warn(`displayOfficeId「${emp.displayOfficeId}」に一致する事業所がありません`);
+        console.warn(`displayOfficeId「${emp.displayOfficeId}」やofficeName「${emp.officeName}」に一致する事業所がありません`);
       }
       // 共通正規化処理
       EmployeeFormComponent.normalizeEmployeeRow(emp);
@@ -930,3 +937,9 @@ function fullTimeInsuranceValidator(control: AbstractControl): ValidationErrors 
   if (!pension) errors.pensionRequired = true;
   return Object.keys(errors).length ? errors : null;
 }
+
+// extraordinaryLeaveFieldsの定義を追加
+const extraordinaryLeaveFields = [
+  'leaveTypeCode', 'leaveStartDate', 'leaveEndDate', 'returnPlanDate', 'leaveReason',
+  'isHealthInsuranceExempted', 'isPensionExempted', 'isCareInsuranceExempted'
+];

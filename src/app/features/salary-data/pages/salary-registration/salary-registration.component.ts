@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { filter, take } from 'rxjs/operators';
+import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
 
 @Component({
   selector: 'app-salary-registration',
@@ -29,6 +30,7 @@ export class SalaryRegistrationComponent {
   companyName: string = '';
 
   employees: any[] = [];
+  allEmployees: any[] = [];
   allSalaries: any[] = [];
   allBonuses: any[] = [];
 
@@ -42,7 +44,9 @@ export class SalaryRegistrationComponent {
   private editEmployee: any = null;
 
   get filteredEmployees() {
-    let result = this.employees;
+    let result = this.employees.filter(emp =>
+      isEmployeeSelectable(emp, this.selectedYear?.toString(), this.selectedMonth?.toString())
+    );
     if (this.selectedBranch) {
       result = result.filter(e => e.branch === this.selectedBranch);
     }
@@ -78,31 +82,34 @@ export class SalaryRegistrationComponent {
 
   async loadData() {
     // Firestoreから従業員・給与・賞与データを取得
-    this.employees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
+    this.allEmployees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
     this.allSalaries = await this.firestoreService.getSalariesByCompanyKey(this.companyKey);
     this.allBonuses = await this.firestoreService.getBonusesByCompanyKey(this.companyKey);
-    console.log('従業員:', this.employees);
+    console.log('従業員:', this.allEmployees);
     console.log('給与:', this.allSalaries);
     console.log('賞与:', this.allBonuses);
     // 年月でフィルタ
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
-    // 従業員ごとに給与・賞与を集計
-    this.employees = this.employees.map(emp => {
-      const salary = this.allSalaries.find(s => s.employeeId === emp.employeeId && s.targetYearMonth === ym);
-      const bonuses = this.allBonuses.filter(b => b.employeeId === emp.employeeId && b.targetYearMonth === ym);
-      const bonusSum = bonuses.reduce((sum, b) => sum + (b.bonus || 0), 0);
-      return {
-        name: emp.lastName + ' ' + emp.firstName,
-        branch: emp.officeName || '',
-        baseSalary: salary?.basicSalary || 0,
-        overtime: salary?.overtimeSalary || 0,
-        allowance: salary?.totalAllowance || 0,
-        totalSalary: (salary?.totalSalary || 0) + bonusSum,
-        bonus: bonusSum,
-        status: salary || bonuses.length ? '登録済' : '未登録',
-        employeeId: emp.employeeId
-      };
-    });
+    // isEmployeeSelectableでフィルタし、表示用データを作成
+    this.employees = this.allEmployees
+      .filter(emp => isEmployeeSelectable(emp, this.selectedYear?.toString(), this.selectedMonth?.toString()))
+      .map(emp => {
+        const salary = this.allSalaries.find(s => s.employeeId === emp.employeeId && s.targetYearMonth === ym);
+        const bonuses = this.allBonuses.filter(b => b.employeeId === emp.employeeId && b.targetYearMonth === ym);
+        const bonusSum = bonuses.reduce((sum, b) => sum + (b.bonus || 0), 0);
+        return {
+          ...emp, // 元データも保持
+          name: emp.lastName + ' ' + emp.firstName,
+          branch: emp.officeName || '',
+          baseSalary: salary?.basicSalary || 0,
+          overtime: salary?.overtimeSalary || 0,
+          allowance: salary?.totalAllowance || 0,
+          totalSalary: (salary?.totalSalary || 0) + bonusSum,
+          bonus: bonusSum,
+          status: salary || bonuses.length ? '登録済' : '未登録',
+          employeeId: emp.employeeId
+        };
+      });
   }
 
   onSearch() {
@@ -149,7 +156,8 @@ export class SalaryRegistrationComponent {
         commuteAllowance: salary.commuteAllowance ?? (salary.otherAllowances?.find((a: any) => a.otherAllowanceName === '通勤手当')?.otherAllowance || 0),
         positionAllowance: salary.positionAllowance ?? (salary.otherAllowances?.find((a: any) => a.otherAllowanceName === '役職手当')?.otherAllowance || 0),
         otherAllowance: salary.otherAllowance ?? (salary.otherAllowances?.find((a: any) => a.otherAllowanceName === 'その他手当')?.otherAllowance || 0),
-        remarks: salary.remarks || ''
+        remarks: salary.remarks || '',
+        paymentDate: salary.paymentDate || ''
       };
     }
   }
@@ -166,6 +174,7 @@ export class SalaryRegistrationComponent {
         bonusType: b.bonusType,
         bonusName: b.bonusType === 'その他賞与' ? b.bonusName : '',
         bonus: b.bonus,
+        paymentDate: b.paymentDate || '',
       }));
       this.editBonusRemark = bonusList[0].remarks || '';
     }
@@ -199,6 +208,7 @@ export class SalaryRegistrationComponent {
         companyKey: this.companyKey,
         employeeId: this.editTarget.employeeId,
         targetYearMonth: ym,
+        paymentDate: this.editSalaryForm.paymentDate || '',
         basicSalary: Number(this.editSalaryForm.basicSalary) || 0,
         overtimeSalary: Number(this.editSalaryForm.overtimeSalary) || 0,
         otherAllowances: otherAllowances,
@@ -218,6 +228,7 @@ export class SalaryRegistrationComponent {
           companyKey: this.companyKey,
           employeeId: this.editTarget.employeeId,
           targetYearMonth: ym,
+          paymentDate: bonus.paymentDate || '',
           bonusType: bonus.bonusType,
           bonusName: bonus.bonusType === 'その他賞与' ? bonus.bonusName : '',
           bonus: Number(bonus.bonus) || 0,

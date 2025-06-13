@@ -9,6 +9,7 @@ import { Router, RouterModule  } from '@angular/router';
 import { PREFECTURES } from '../../../../core/models/prefecture.model';
 import { isMaternityLeaveExempted, isChildcareLeaveExempted } from '../../../../core/services/childcare.leave.decision';
 import { getAllAgeArrivalDates } from '../../../../core/services/age.determination';
+import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
 
 @Component({
   selector: 'app-insurance-form',
@@ -96,7 +97,9 @@ export class InsuranceFormComponent implements OnInit {
   }
 
   get filteredEmployees() {
-    let list = this.employees;
+    let list = this.employees.filter(emp =>
+      isEmployeeSelectable(emp, this.selectedYear?.toString(), this.selectedMonth?.toString())
+    );
     if (this.selectedOfficeId) {
       list = list.filter(emp => emp.officeId === this.selectedOfficeId);
     }

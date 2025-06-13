@@ -37,7 +37,7 @@
     <div style="margin-top: 12px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
       <input type="text" [(ngModel)]="searchText" placeholder="ID・氏名・事業所で検索" style="width: 220px; padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;" />
       <select [(ngModel)]="selectedYear" style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;">
-        <option value="">すべての年度</option>
+        <option value="">すべての年</option>
         <option *ngFor="let y of yearList" [value]="y">{{ y }}</option>
       </select>
       <select [(ngModel)]="selectedMonth" style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc;">
@@ -71,13 +71,10 @@
           <th>欠勤日数</th>
           <th>無給休暇日数</th>
           <th>有給取得日数</th>
+          <th>休暇特例日数</th>
           <th>育児休業<br>開始日</th>
           <th>育児休業<br>終了日</th>
-          <th>介護休業<br>開始日</th>
-          <th>介護休業<br>終了日</th>
-          <th>傷病休業<br>開始日</th>
-          <th>傷病休業<br>終了日</th>
-          <th>全休月</th>
+          <th>編集・削除</th>
         </tr>
       </thead>
       <tbody>
@@ -95,17 +92,20 @@
           <td>{{ attendance.absentDays }}</td>
           <td>{{ attendance.leaveWithoutPayDays }}</td>
           <td>{{ attendance.paidLeaveDays }}</td>
+          <td>{{ attendance.holidaySpecialDays }}</td>
           <td>{{ attendance.childCareLeaveStartDate | date:'yyyy-MM-dd' }}</td>
           <td>{{ attendance.childCareLeaveEndDate | date:'yyyy-MM-dd' }}</td>
-          <td>{{ attendance.familyCareLeaveStartDate | date:'yyyy-MM-dd' }}</td>
-          <td>{{ attendance.familyCareLeaveEndDate | date:'yyyy-MM-dd' }}</td>
-          <td>{{ attendance.injuryOrSicknessLeaveStartDate | date:'yyyy-MM-dd' }}</td>
-          <td>{{ attendance.injuryOrSicknessLeaveEndDate | date:'yyyy-MM-dd' }}</td>
-          <td>{{ attendance.isOnFullLeaveThisMonth ? '○' : '' }}</td>
+          <td>
+            <button class="edit-btn" (click)="editAttendance(attendance)">編集</button>
+            <button class="delete-btn" (click)="deleteAttendance(attendance)">削除</button>
+          </td>
         </tr>
       </tbody>
     </table>
   </div>
+
+  <!-- 編集ダイアログ -->
+  <app-attendance-detail *ngIf="showEditDialog" [attendance]="selectedAttendance" (close)="closeEditDialog()" (save)="onSaveAttendance($event)"></app-attendance-detail>
 </div>
 
 

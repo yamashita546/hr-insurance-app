@@ -66,7 +66,7 @@ export class EmployeeListComponent {
   }
 
   get filteredEmployees() {
-    let list = this.employees;
+    let list = this.employees.filter(emp => emp.isActive !== false);
     if (this.selectedOffice) {
       list = list.filter(emp => emp.officeName === this.selectedOffice);
     }
@@ -94,7 +94,8 @@ export class EmployeeListComponent {
       if (aVal > bVal) return this.sortAsc ? 1 : -1;
       return 0;
     });
-    return list;
+    // 雇用形態をnameに変換
+    return list.map(emp => ({ ...emp, employeeType: this.getEmployeeTypeName(emp.employeeType) }));
   }
 
   changeSort(key: string) {

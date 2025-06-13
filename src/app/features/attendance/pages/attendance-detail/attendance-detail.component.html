@@ -1,1 +1,72 @@
-<p>attendance-detail works!</p>
+<div class="dialog-overlay" (click)="onClose()"></div>
+<div class="dialog-content">
+  <div class="attendance-detail-dialog">
+    <h2>勤怠情報編集</h2>
+    <form (ngSubmit)="onSave()">
+      <div>
+        <span>事業所:</span>
+        <span>{{ attendance.officeName }}</span>
+      </div>
+      <div>
+        <span>ID:</span>
+        <span>{{ attendance.employeeId }}</span>
+      </div>
+      <div>
+        <span>氏名:</span>
+        <span>{{ attendance.employeeName }}</span>
+      </div>
+      <div>
+        <span>年:</span>
+        <input type="number" [(ngModel)]="attendance.year" name="year" required />
+      </div>
+      <div>
+        <span>月:</span>
+        <input type="number" [(ngModel)]="attendance.month" name="month" min="1" max="12" required />
+      </div>
+      <div>
+        <span>所定労働日数:</span>
+        <input type="number" [(ngModel)]="attendance.scheduledWorkDays" name="scheduledWorkDays" />
+      </div>
+      <div>
+        <span>勤務日数:</span>
+        <input type="number" [(ngModel)]="attendance.actualWorkDays" name="actualWorkDays" />
+      </div>
+      <div>
+        <span>所定労働時間:</span>
+        <input type="number" [(ngModel)]="attendance.scheduledWorkHours" name="scheduledWorkHours" />
+      </div>
+      <div>
+        <span>実際の労働時間:</span>
+        <input type="number" [(ngModel)]="attendance.actualWorkHours" name="actualWorkHours" />
+      </div>
+      <div>
+        <span>欠勤日数:</span>
+        <input type="number" [(ngModel)]="attendance.absentDays" name="absentDays" />
+      </div>
+      <div>
+        <span>無給休暇日数:</span>
+        <input type="number" [(ngModel)]="attendance.leaveWithoutPayDays" name="leaveWithoutPayDays" />
+      </div>
+      <div>
+        <span>有給取得日数:</span>
+        <input type="number" [(ngModel)]="attendance.paidLeaveDays" name="paidLeaveDays" />
+      </div>
+      <div>
+        <span>育児休業開始日:</span>
+        <input type="date" [(ngModel)]="attendance.childCareLeaveStartDate" name="childCareLeaveStartDate" />
+      </div>
+      <div>
+        <span>育児休業終了日:</span>
+        <input type="date" [(ngModel)]="attendance.childCareLeaveEndDate" name="childCareLeaveEndDate" />
+      </div>
+      <div>
+        <span>休暇特例日数:</span>
+        <input type="number" [(ngModel)]="attendance.holidaySpecialDays" name="holidaySpecialDays" />
+      </div>
+      <div style="margin-top: 16px;">
+        <button type="submit">保存</button>
+        <button type="button" (click)="onClose()">閉じる</button>
+      </div>
+    </form>
+  </div>
+</div>

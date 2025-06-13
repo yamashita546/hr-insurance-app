@@ -3,7 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { Company } from '../../../../core/models/company.model';
-import { collection, query, where, getDocs, addDoc } from '@angular/fire/firestore';
+import { collection, query, where, getDocs, addDoc, doc, deleteDoc } from '@angular/fire/firestore';
 import { Firestore } from '@angular/fire/firestore';
 import { Attendance } from '../../../../core/models/attendance.model';
 import { FirestoreService } from '../../../../core/services/firestore.service';
@@ -11,11 +11,13 @@ import { ATTENDANCE_COLUMN_LABELS, ATTENDANCE_COLUMN_ORDER } from '../../../../c
 import { AttendanceFormComponent } from '../../components/attendance-form/attendance-form.component';
 import { RouterModule } from '@angular/router';
 import { Employee } from '../../../../core/models/employee.model';
+import { EMPLOYEE_TYPES } from '../../../../core/models/employee.type';
+import { AttendanceDetailComponent } from '../attendance-detail/attendance-detail.component';
 
 @Component({
   selector: 'app-attendance-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, AttendanceFormComponent, RouterModule],
+  imports: [CommonModule, FormsModule, AttendanceFormComponent, RouterModule, AttendanceDetailComponent],
   templateUrl: './attendance-list.component.html',
   styleUrl: './attendance-list.component.css',
   providers: [DatePipe]
@@ -38,7 +40,10 @@ export class AttendanceListComponent {
   alertTargets: any[] = [];
   showHistoryIndex: number | null = null;
   showHistoryBlock: boolean = false;
-  
+  editAttendanceModal: any;
+  deleteAttendanceModal: any;
+  showEditDialog: boolean = false;
+  selectedAttendance: any = null;
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -166,7 +171,11 @@ export class AttendanceListComponent {
       if (aVal > bVal) return this.sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
-    return list;
+    // 雇用形態をnameに変換
+    return list.map(a => {
+      const type = EMPLOYEE_TYPES.find(t => t.code === a.employeeType);
+      return { ...a, employeeType: type ? type.name : a.employeeType };
+    });
   }
 
   changeSort(key: string) {
@@ -233,5 +242,52 @@ export class AttendanceListComponent {
 
   toggleHistoryBlock() {
     this.showHistoryBlock = !this.showHistoryBlock;
+  }
+
+  editAttendance(attendance: any) {
+    this.selectedAttendance = attendance;
+    this.showEditDialog = true;
+  }
+
+  closeEditDialog() {
+    this.showEditDialog = false;
+    this.selectedAttendance = null;
+  }
+
+  async deleteAttendance(attendance: any) {
+    if (!attendance.id) {
+      alert('削除対象のIDが取得できません');
+      return;
+    }
+    const ok = window.confirm('本当にこの勤怠データを削除しますか？');
+    if (!ok) return;
+    try {
+      const docRef = doc(this.firestore, 'attendances', attendance.id);
+      await deleteDoc(docRef);
+      alert('削除しました');
+      // 削除後にリストを再読み込み
+      if (this.company?.companyKey) {
+        await this.loadAttendances(this.company.companyKey);
+      }
+    } catch (e) {
+      alert('削除に失敗しました: ' + e);
+    }
+  }
+
+  async onSaveAttendance(attendance: any) {
+    if (!attendance.id) {
+      alert('IDが取得できません。');
+      return;
+    }
+    try {
+      await this.firestoreService.updateAttendance(attendance.id, attendance);
+      alert('勤怠情報を保存しました');
+      this.closeEditDialog();
+      if (this.company?.companyKey) {
+        await this.loadAttendances(this.company.companyKey);
+      }
+    } catch (e) {
+      alert('保存に失敗しました: ' + e);
+    }
   }
 }

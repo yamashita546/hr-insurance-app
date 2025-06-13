@@ -9,6 +9,7 @@ import { Attendance, ATTENDANCE_COLUMN_ORDER, ATTENDANCE_COLUMN_LABELS } from '.
 import { Office } from '../../../../core/models/company.model';
 import { firstValueFrom, Subscription } from 'rxjs';
 import { RouterModule } from '@angular/router';
+import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
 
 @Component({
   selector: 'app-attendance-form',
@@ -52,11 +53,11 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
       if (company && company.companyKey) {
         this.companyKey = company.companyKey;
         this.offices = await this.firestoreService.getOffices(company.companyKey);
-        this.employees = await this.firestoreService.getEmployeesByCompanyKey(company.companyKey);
+        this.employees = (await this.firestoreService.getEmployeesByCompanyKey(company.companyKey)).filter(emp => emp.isActive !== false);
         this.filteredEmployees = {};
         this.offices.forEach(office => {
           this.filteredEmployees[office.id] = this.employees.filter(
-            emp => emp.officeId === office.id
+            emp => emp.officeId === office.id && emp.isActive !== false
           );
         });
         this.generateYearList();
@@ -97,13 +98,9 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
       absentDays: [''],
       leaveWithoutPayDays: [''],
       paidLeaveDays: [''],
+      holidaySpecialDays: [''],
       childCareLeaveStartDate: [''],
       childCareLeaveEndDate: [''],
-      familyCareLeaveStartDate: [''],
-      familyCareLeaveEndDate: [''],
-      injuryOrSicknessLeaveStartDate: [''],
-      injuryOrSicknessLeaveEndDate: [''],
-      isOnFullLeaveThisMonth: [false],
       companyKey: [this.companyKey]
     }));
   }
@@ -156,8 +153,9 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  getOfficeEmployees(officeId: string): Employee[] {
-    return this.filteredEmployees[officeId] || [];
+  getOfficeEmployees(officeId: string, year: string, month: string): Employee[] {
+    const list = this.filteredEmployees[officeId] || [];
+    return list.filter(emp => isEmployeeSelectable(emp, year, month));
   }
 
   async onSubmit() {
@@ -204,16 +202,16 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
     const header = [
       'year', 'month', 'officeName', 'employeeId', 'employeeName',
       'scheduledWorkDays', 'actualWorkDays', 'scheduledWorkHours', 'actualWorkHours',
-      'absentDays', 'leaveWithoutPayDays', 'paidLeaveDays',
+      'absentDays', 'leaveWithoutPayDays', 'paidLeaveDays','holidaySpecialDays',
       'childCareLeaveStartDate', 'childCareLeaveEndDate',
-      'familyCareLeaveStartDate', 'familyCareLeaveEndDate',
-      'injuryOrSicknessLeaveStartDate', 'injuryOrSicknessLeaveEndDate',
-      'isOnFullLeaveThisMonth', 'companyKey'
+      'companyKey'
     ];
+    // 日本語タイトルで出力
+    const headerRow = header.map(h => this.ATTENDANCE_COLUMN_LABELS[h] || h).join(',');
     // 各従業員ごとに1行生成
     const filteredEmployees = this.csvOfficeId
-      ? this.employees.filter(emp => emp.officeId === this.csvOfficeId)
-      : this.employees;
+      ? this.employees.filter(emp => emp.officeId === this.csvOfficeId && emp.isActive !== false)
+      : this.employees.filter(emp => emp.isActive !== false);
     const rows: Record<string, any>[] = filteredEmployees.map(emp => {
       const row: Record<string, any> = {};
       header.forEach(h => row[h] = '');
@@ -225,7 +223,7 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
       row['month'] = this.csvMonth;
       return row;
     });
-    const csv = [header.join(','), ...rows.map(r => header.map(h => r[h]).join(','))].join('\r\n');
+    const csv = [headerRow, ...rows.map(r => header.map(h => r[h]).join(','))].join('\r\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -254,17 +252,22 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
     const lines = text.split(/\r?\n/).filter(l => l.trim());
     if (lines.length < 2) return { data: [], errors: ['CSVにデータがありません'] };
     const headers = lines[0].split(',');
+    // 日本語→英語キー変換
+    const keyMap = Object.fromEntries(
+      Object.entries(this.ATTENDANCE_COLUMN_LABELS).map(([k, v]) => [v, k])
+    );
+    const keys = headers.map(label => keyMap[label] || label);
     const data: any[] = [];
     const errors: string[] = [];
     for (let i = 1; i < lines.length; i++) {
       const cols = lines[i].split(',');
-      if (cols.length !== headers.length) {
+      if (cols.length !== keys.length) {
         errors.push(`${i+1}行目: 列数が一致しません`);
         continue;
       }
       const row: any = {};
-      for (let j = 0; j < headers.length; j++) {
-        row[headers[j]] = cols[j];
+      for (let j = 0; j < keys.length; j++) {
+        row[keys[j]] = cols[j];
       }
       // 必須項目チェック
       if (!row['employeeId']) {

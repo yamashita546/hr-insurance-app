@@ -11,6 +11,7 @@ import { StandardMonthlyDecision, StandardMonthlyDecisionType, STANDARD_MONTHLY_
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { EMPLOYEE_TYPES, EmployeeType } from '../../../../core/models/employee.type';
 import { AppUser } from '../../../../core/models/user.model';
+import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
 
 @Component({
   selector: 'app-standard-monthly-form',
@@ -891,12 +892,17 @@ export class StandardMonthlyFormComponent implements OnInit {
     return office ? office.name : '';
   }
 
+  get filteredEmployeesByOffice() {
+    if (!this.selectedOfficeId) return this.employeesSortedByIdName.filter(emp => isEmployeeSelectable(emp, this.startYear?.toString(), this.startMonth?.toString()));
+    return this.employeesSortedByIdName.filter(emp => emp.officeId === this.selectedOfficeId && isEmployeeSelectable(emp, this.startYear?.toString(), this.startMonth?.toString()));
+  }
+
   get filteredEmployeesForSummary(): any[] {
     let filtered = this.employees;
     if (this.selectedOfficeId) {
       filtered = filtered.filter(emp => emp.officeId === this.selectedOfficeId);
     }
-    return filtered;
+    return filtered.filter(emp => isEmployeeSelectable(emp, this.startYear?.toString(), this.startMonth?.toString()));
   }
 
   // 社会保険加入者数
@@ -1039,11 +1045,7 @@ export class StandardMonthlyFormComponent implements OnInit {
     this.router.navigate(['/manage-standard-monthly']);
   }
 
-  get filteredEmployeesByOffice() {
-    if (!this.selectedOfficeId) return this.employeesSortedByIdName;
-    return this.employeesSortedByIdName.filter(emp => emp.officeId === this.selectedOfficeId);
-  }
-
+ 
   onOfficeChange() {
     // 事業所変更時に従業員選択をリセット
     this.selectedEmployeeId = '';

@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SalaryFieldNameMap, BonusFieldNameMap } from '../../../../core/models/salary.model';
 import { Location } from '@angular/common';
+import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
 
 @Component({
   selector: 'app-detail-salary',
@@ -111,9 +112,14 @@ export class DetailSalaryComponent implements OnInit {
 
   updateFilteredEmployees() {
     if (this.selectedOfficeId === 'ALL') {
-      this.filteredEmployees = [...this.allEmployees];
+      this.filteredEmployees = this.allEmployees.filter(e =>
+        isEmployeeSelectable(e, this.selectedYear?.toString(), this.selectedMonth?.toString())
+      );
     } else {
-      this.filteredEmployees = this.allEmployees.filter(e => e.officeId === this.selectedOfficeId);
+      this.filteredEmployees = this.allEmployees.filter(e =>
+        e.officeId === this.selectedOfficeId &&
+        isEmployeeSelectable(e, this.selectedYear?.toString(), this.selectedMonth?.toString())
+      );
     }
     // ソート（従業員番号順）
     this.filteredEmployees.sort((a, b) => (a.employeeId > b.employeeId ? 1 : -1));

@@ -1,0 +1,103 @@
+.dialog-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+.dialog-content {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  padding: 32px 24px;
+  z-index: 1001;
+  min-width: 340px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.attendance-detail-dialog {
+  width: 100%;
+}
+
+.attendance-detail-dialog form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.attendance-detail-dialog form > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.attendance-detail-dialog span {
+  min-width: 120px;
+  font-weight: 500;
+  color: #333;
+}
+
+.attendance-detail-dialog input[type="number"],
+.attendance-detail-dialog input[type="date"] {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1em;
+  background: #fafbfc;
+  transition: border 0.2s;
+}
+.attendance-detail-dialog input:focus {
+  border: 1.5px solid #1976d2;
+  outline: none;
+  background: #fff;
+}
+
+.attendance-detail-dialog button[type="submit"] {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 24px;
+  font-size: 1em;
+  margin-right: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.attendance-detail-dialog button[type="submit"]:hover {
+  background: #1565c0;
+}
+.attendance-detail-dialog button[type="button"] {
+  background: #eee;
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 18px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.attendance-detail-dialog button[type="button"]:hover {
+  background: #ddd;
+}
+
+@media (max-width: 600px) {
+  .dialog-content {
+    min-width: 90vw;
+    padding: 16px 4vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .attendance-detail-dialog span {
+    min-width: 80px;
+    font-size: 0.95em;
+  }
+  .attendance-detail-dialog form > div {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

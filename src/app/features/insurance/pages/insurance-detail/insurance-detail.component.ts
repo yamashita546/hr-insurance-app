@@ -5,6 +5,7 @@ import { FirestoreService } from '../../../../core/services/firestore.service';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { filter, take } from 'rxjs/operators';
 import { PREFECTURES } from '../../../../core/models/prefecture.model';
+import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
 
 @Component({
   selector: 'app-insurance-detail',
@@ -36,7 +37,10 @@ export class InsuranceDetailComponent implements OnInit {
       .subscribe(async company => {
         this.companyKey = company!.companyKey;
         this.offices = await this.firestoreService.getOffices(this.companyKey);
-        this.employees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
+        const allEmployees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
+        this.employees = allEmployees.filter(emp =>
+          isEmployeeSelectable(emp, new Date().getFullYear().toString(), (new Date().getMonth() + 1).toString())
+        );
         this.insuranceRates = (await this.firestoreService.getInsuranceRates().toPromise()) || [];
         console.log('取得したinsuranceRates:', this.insuranceRates);
         this.salaryCalculations = await this.firestoreService.getInsuranceSalaryCalculationsByCompanyKey(this.companyKey);

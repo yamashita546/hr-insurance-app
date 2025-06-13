@@ -6,6 +6,7 @@ import { FirestoreService } from '../../../../core/services/firestore.service';
 import { InsuranceSalaryCalculation, InsuranceBonusCalculation } from '../../../../core/models/insurance-calculation.model';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { filter, take } from 'rxjs/operators';
+import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
 
 @Component({
   selector: 'app-insurance-list',
@@ -30,8 +31,13 @@ export class InsuranceListComponent implements OnInit {
   selectedMonth: number = new Date().getMonth() + 1;
 
   get filteredEmployees() {
-    if (!this.selectedOfficeId) return this.employees;
-    return this.employees.filter(emp => emp.officeId === this.selectedOfficeId);
+    let result = this.employees.filter(emp =>
+      isEmployeeSelectable(emp, this.selectedYear?.toString(), this.selectedMonth?.toString())
+    );
+    if (this.selectedOfficeId) {
+      result = result.filter(emp => emp.officeId === this.selectedOfficeId);
+    }
+    return result;
   }
 
   constructor(

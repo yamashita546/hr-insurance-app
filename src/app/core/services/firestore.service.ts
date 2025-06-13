@@ -497,4 +497,13 @@ export class FirestoreService {
     const snap = await getDocs(q);
     return snap.docs.map(doc => ({ ...(doc.data() as InsuranceBonusCalculation) }));
   }
+
+  // 勤怠データ上書き保存
+  async updateAttendance(attendanceId: string, attendance: Partial<Attendance>) {
+    const now = Timestamp.now();
+    await setDoc(doc(this.firestore, 'attendances', attendanceId), {
+      ...attendance,
+      updatedAt: now
+    }, { merge: true });
+  }
 }

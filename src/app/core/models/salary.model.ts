@@ -4,6 +4,7 @@ export interface Salary {
     targetYearMonth: string;
 
     // 基本給関連
+    paymentDate: string; // 支給日
     basicSalary: number; // 基本給
     overtimeSalary: number; // 残業手当
     commuteAllowance?: number; // 通勤手当
@@ -53,6 +54,7 @@ export interface Allowance {
 }
 //賞与モデル
 export interface Bonus {
+    paymentDate: string; // 支給日
     employeeId: string;
     targetYearMonth: string;
     bonusName?: string; // 賞与名
@@ -75,6 +77,7 @@ export enum BonusType {
 
 // プロパティ名→日本語名変換用辞書
 export const SalaryFieldNameMap: Record<string, string> = {
+  paymentDate: '支給日',
   basicSalary: '基本給',
   overtimeSalary: '時間外手当',
   commuteAllowance: '通勤手当',
@@ -87,9 +90,20 @@ export const SalaryFieldNameMap: Record<string, string> = {
   commuteAllowancePeriodFrom: '通勤手当期間開始',
   commuteAllowancePeriodTo: '通勤手当期間終了',
   commuteAllowanceMonths: '通勤手当月数',
+  splitCurrency: '通貨合計',
+  inKindAllowanceName: '現物支給名称',
+  inKindAllowance: '現物支給',
+  totalInKind: '現物合計',
+  retroAllowanceName: '遡及手当名称',
+  retroAllowance: '遡及手当',
+  totalRetro: '遡及合計',
+  actualExpenseName: '実費精算名称',
+  actualExpense: '実費精算',
+  totalActualExpense: '実費精算合計',
 };
 
 export const BonusFieldNameMap: Record<string, string> = {
+  paymentDate: '支給日',
   bonusName: '賞与名',
   bonusType: '賞与種類',
   bonus: '金額',

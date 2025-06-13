@@ -7,6 +7,7 @@ import { AppUser } from '../../../../core/models/user.model';
 import { Office } from '../../../../core/models/company.model';
 import { Employee } from '../../../../core/models/employee.model';
 import { filter, take } from 'rxjs/operators';
+import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
 
 @Component({
   selector: 'app-salary-form',
@@ -106,9 +107,14 @@ export class SalaryFormComponent implements OnInit {
 
   filterEmployees() {
     if (this.selectedOfficeId) {
-      this.filteredEmployees = this.employees.filter(emp => emp.officeId === this.selectedOfficeId);
+      this.filteredEmployees = this.employees.filter(emp =>
+        emp.officeId === this.selectedOfficeId &&
+        isEmployeeSelectable(emp, this.selectedYear?.toString(), this.selectedMonth?.toString())
+      );
     } else {
-      this.filteredEmployees = this.employees;
+      this.filteredEmployees = this.employees.filter(emp =>
+        isEmployeeSelectable(emp, this.selectedYear?.toString(), this.selectedMonth?.toString())
+      );
     }
   }
 
@@ -205,6 +211,7 @@ export class SalaryFormComponent implements OnInit {
         companyKey: this.companyKey,
         employeeId: this.selectedEmployeeObj.employeeId,
         targetYearMonth: ym,
+        paymentDate: this.salaryForm.paymentDate || '',
         basicSalary: Number(this.salaryForm.basicSalary) || 0,
         overtimeSalary: Number(this.salaryForm.overtimeSalary) || 0,
         commuteAllowance: Number(this.salaryForm.commuteAllowance) || 0,
@@ -266,11 +273,16 @@ export class SalaryFormComponent implements OnInit {
           companyKey: this.companyKey,
           employeeId: this.selectedEmployeeObj.employeeId,
           targetYearMonth: ym,
+          paymentDate: bonus.paymentDate || '',
           bonusName: bonus.bonusType === 'その他賞与' ? bonus.bonusName : '',
           bonusType: bonus.bonusType,
           bonus: Number(bonus.bonus) || 0,
           bonusTotal: this.bonusTotal,
           remarks: this.bonusRemark || '',
+          commuteAllowance: Number(this.salaryForm.commuteAllowance) || 0,
+          commuteAllowancePeriodFrom: this.salaryForm.commuteAllowancePeriodFrom || '',
+          commuteAllowancePeriodTo: this.salaryForm.commuteAllowancePeriodTo || '',
+          commuteAllowanceMonths: this.salaryForm.commuteAllowanceMonths || 1,
         };
         try {
           await this.firestoreService.addBonus(bonusData);
@@ -412,6 +424,7 @@ export class SalaryFormComponent implements OnInit {
           companyKey: row.companyKey || this.companyKey,
           employeeId: row.employeeId,
           targetYearMonth: `${row.targetYear}-${String(row.targetMonth).padStart(2, '0')}`,
+          paymentDate: row.paymentDate || '',
           basicSalary: Number(row.basicSalary) || 0,
           overtimeSalary: Number(row.overtimeSalary) || 0,
           commuteAllowance: Number(row.commuteAllowance) || 0,
@@ -439,6 +452,7 @@ export class SalaryFormComponent implements OnInit {
           companyKey: row.companyKey || this.companyKey,
           employeeId: row.employeeId,
           targetYearMonth: `${row.targetYear}-${String(row.targetMonth).padStart(2, '0')}`,
+          paymentDate: row.paymentDate || '',
           bonusType: row.bonusType || '',
           bonusName: row.bonusType === 'その他賞与' ? (row.bonusName || '') : '',
           bonus: Number(row.bonus) || 0,
@@ -487,7 +501,9 @@ export class SalaryFormComponent implements OnInit {
 
   async onCsvDialogExport() {
     // 対象従業員を絞り込み
-    let targetEmployees = this.employees;
+    let targetEmployees = this.employees.filter(emp =>
+      isEmployeeSelectable(emp, this.csvYear?.toString(), this.csvMonth?.toString())
+    );
     if (this.csvOfficeId) {
       targetEmployees = targetEmployees.filter(emp => emp.officeId === this.csvOfficeId);
     }
@@ -496,6 +512,7 @@ export class SalaryFormComponent implements OnInit {
       const header = [
         'companyKey', 'employeeId', 'lastName', 'firstName', 'officeId',
         'targetYear', 'targetMonth',
+        'paymentDate',
         'basicSalary', 'overtimeSalary', 'commuteAllowance',
         'commuteAllowancePeriodFrom', 'commuteAllowancePeriodTo', 'commuteAllowanceMonths',
         'positionAllowance',
@@ -635,6 +652,7 @@ export class SalaryFormComponent implements OnInit {
         companyKey: this.companyKey,
         employeeId: this.selectedEmployeeObj.employeeId,
         targetYearMonth: ym,
+        paymentDate: this.salaryForm.paymentDate || '',
         basicSalary: Number(this.salaryForm.basicSalary) || 0,
         overtimeSalary: Number(this.salaryForm.overtimeSalary) || 0,
         commuteAllowance: Number(this.salaryForm.commuteAllowance) || 0,
@@ -659,6 +677,7 @@ export class SalaryFormComponent implements OnInit {
           companyKey: this.companyKey,
           employeeId: this.selectedEmployeeObj.employeeId,
           targetYearMonth: ym,
+          paymentDate: bonus.paymentDate || '',
           bonusType: bonus.bonusType,
           bonusName: bonus.bonusType === 'その他賞与' ? bonus.bonusName : '',
           bonus: Number(bonus.bonus) || 0,

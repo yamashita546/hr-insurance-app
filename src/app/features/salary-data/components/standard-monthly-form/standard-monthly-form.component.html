@@ -159,9 +159,36 @@
         <tr *ngFor="let row of calculationRows; let i = index">
           <td>{{ row.month }}月</td>
           <td><input type="number" [(ngModel)]="row.days" min="0" style="width:60px;" /></td>
-          <td><input type="number" [(ngModel)]="row.cash" (input)="updateRowSum(i)" /></td>
-          <td><input type="number" [(ngModel)]="row.inKind" name="inKind{{i}}" (input)="updateRowSum(i)" /></td>
-          <td><input type="number" [(ngModel)]="row.inKindRetro" name="inKindRetro{{i}}" (input)="updateRowSum(i)" /></td>
+          <td>
+            <div>
+              <input type="number" [(ngModel)]="row.cash" (input)="updateRowSum(i)" style="width:80px; margin-bottom:2px;" />
+            </div>
+            <div style="display:flex; align-items:center; gap:2px;">
+              <input type="number" [(ngModel)]="row.adjustCash" style="width:20px; font-size:9px; height:16px; text-align:left;" placeholder="調整" />
+              <button type="button" (click)="adjustValue(row, 'cash', +row.adjustCash, i)" style="padding:0 6px; font-size:12px; height:22px;">＋</button>
+              <button type="button" (click)="adjustValue(row, 'cash', -row.adjustCash, i)" style="padding:0 6px; font-size:12px; height:22px;">－</button>
+            </div>
+          </td>
+          <td>
+            <div>
+              <input type="number" [(ngModel)]="row.inKind" name="inKind{{i}}" (input)="updateRowSum(i)" style="width:80px; margin-bottom:2px;" />
+            </div>
+            <div style="display:flex; align-items:center; gap:2px;">
+              <input type="number" [(ngModel)]="row.adjustInKind" style="width:20px; font-size:9px; height:16px; text-align:left;" placeholder="調整" />
+              <button type="button" (click)="adjustValue(row, 'inKind', +row.adjustInKind, i)" style="padding:0 6px; font-size:12px; height:22px;">＋</button>
+              <button type="button" (click)="adjustValue(row, 'inKind', -row.adjustInKind, i)" style="padding:0 6px; font-size:12px; height:22px;">－</button>
+            </div>
+          </td>
+          <td>
+            <div>
+              <input type="number" [(ngModel)]="row.inKindRetro" name="inKindRetro{{i}}" (input)="updateRowSum(i)" style="width:80px; margin-bottom:2px;" />
+            </div>
+            <div style="display:flex; align-items:center; gap:2px;">
+              <input type="number" [(ngModel)]="row.adjustInKindRetro" style="width:20px; font-size:9px; height:16px; text-align:left;" placeholder="調整" />
+              <button type="button" (click)="adjustValue(row, 'inKindRetro', +row.adjustInKindRetro, i)" style="padding:0 6px; font-size:12px; height:22px;">＋</button>
+              <button type="button" (click)="adjustValue(row, 'inKindRetro', -row.adjustInKindRetro, i)" style="padding:0 6px; font-size:12px; height:22px;">－</button>
+            </div>
+          </td>
           <td>{{ row.sum | currency:'JPY':'symbol':'1.0-0' }}</td>
           <td><input type="checkbox" [(ngModel)]="row.excluded" /></td>
         </tr>

@@ -667,8 +667,67 @@ export class StandardMonthlyFormComponent implements OnInit {
     };
   }
 
-  // 保存ボタン押下時
-  async onSave() {
+  /**
+   * 保存ボタンクリック時の処理
+   */
+  onSave(): void {
+    if (this.decisionType === 'entry') {
+      this.saveEntryDecision();
+    } else {
+      this.saveStandardMonthlyDecision();
+    }
+  }
+
+  /**
+   * 入社時決定の保存
+   */
+  private async saveEntryDecision(): Promise<void> {
+    if (!this.resultList || this.resultList.length === 0) return;
+
+    const result = this.resultList[0];
+    const data = {
+      companyId: this.companyId,
+      companyKey: this.companyKey,
+      employeeId: this.selectedEmployeeId,
+      officeId: this.selectedOfficeId,
+      decisionType: this.decisionType,
+      type: this.decisionType,
+      applyYearMonth: `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`,
+      estimatedSalary: {
+        baseSalary: result.estimatedBaseSalary || 0,
+        overtime: result.estimatedOvertime || 0,
+        commute: result.estimatedCommute || 0,
+        positionAllowance: result.estimatedPositionAllowance || 0,
+        otherAllowance: result.estimatedOtherAllowance || 0,
+        inKind: result.estimatedInKind || 0,
+        total: result.estimatedTotal || 0
+      },
+      healthGrade: result.judgedGrade,
+      healthMonthly: result.judgedMonthly,
+      pensionGrade: result.pensionJudgedGrade,
+      pensionMonthly: result.pensionJudgedMonthly,
+      salaryAvg: result.estimatedTotal || 0,
+      salaryTotal: result.estimatedTotal || 0,
+      isActive: true,
+      createdAt: new Date()
+    };
+
+    try {
+      // 履歴保存
+      await this.firestoreService.addStandardMonthlyDecisionHistory(data);
+      // 本体保存
+      await this.firestoreService.addStandardMonthlyDecision(data);
+      alert('保存が完了しました。');
+    } catch (error) {
+      console.error('保存エラー:', error);
+      alert('保存に失敗しました。');
+    }
+  }
+
+  /**
+   * 定時決定などの保存（既存のメソッドをリネーム）
+   */
+  private async saveStandardMonthlyDecision(): Promise<void> {
     const applyYearMonth = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
     const isEntry = this.decisionType === 'entry';
     const userId = this.currentUser?.uid || '';
@@ -1149,6 +1208,17 @@ export class StandardMonthlyFormComponent implements OnInit {
       filtered = filtered.filter(r => r.officeId === this.selectedOfficeId);
     }
     return filtered.sort((a, b) => a.applyYearMonth.localeCompare(b.applyYearMonth))[0] || null;
+  }
+
+  // 金額調整用の＋－ボタン処理
+  adjustValue(row: any, key: 'cash' | 'inKind' | 'inKindRetro', value: number, i: number) {
+    if (!value || isNaN(value)) return;
+    row[key] = Number(row[key] || 0) + value;
+    this.updateRowSum(i);
+    // 調整用インプットをリセット
+    if (key === 'cash') row.adjustCash = '';
+    if (key === 'inKind') row.adjustInKind = '';
+    if (key === 'inKindRetro') row.adjustInKindRetro = '';
   }
 }
 

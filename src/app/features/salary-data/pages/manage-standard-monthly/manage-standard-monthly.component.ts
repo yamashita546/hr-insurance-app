@@ -33,10 +33,16 @@ export class ManageStandardMonthlyComponent implements OnInit {
         // Firestoreから標準報酬月額決定データを取得
         const snap = await this.firestoreService.getStandardMonthlyDecisionsByCompanyKey(this.companyKey);
         this.standardMonthlyList = snap;
+        console.log('Firestoreから取得したstandardMonthlyList:', this.standardMonthlyList);
         // Firestoreから従業員リストも取得
         this.employees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
+        console.log('Firestoreから取得したemployees:', this.employees);
         // Firestoreから支社リストも取得
         this.offices = await this.firestoreService.getOffices(this.companyKey);
+        console.log('Firestoreから取得したoffices:', this.offices);
+        // テーブル表示用リストの確認
+        const currentList = this.getCurrentStandardMonthlyList();
+        console.log('getCurrentStandardMonthlyList()の返り値:', currentList);
       });
   }
 
@@ -71,11 +77,13 @@ export class ManageStandardMonthlyComponent implements OnInit {
   }
 
   getNextDecision(row: StandardMonthlyDecision): StandardMonthlyDecision | null {
+    const today = new Date();
+    const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
     const next = this.standardMonthlyList
       .filter(r =>
         r.employeeId === row.employeeId &&
         r.officeId === row.officeId &&
-        r.applyYearMonth > row.applyYearMonth &&
+        r.applyYearMonth > currentYm &&
         r.isActive !== false
       )
       .sort((a, b) => a.applyYearMonth.localeCompare(b.applyYearMonth))[0];
@@ -111,6 +119,8 @@ export class ManageStandardMonthlyComponent implements OnInit {
           map.set(key, decision);
         }
       });
-    return Array.from(map.values());
+    const arr = Array.from(map.values());
+    console.log('getCurrentStandardMonthlyListで返す配列:', arr);
+    return arr;
   }
 }

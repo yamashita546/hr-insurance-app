@@ -1,4 +1,4 @@
-import { isMaternityLeaveExempted, isChildcareLeaveExempted } from './check.service';
+import { isMaternityLeaveExempted, isChildcareLeaveExempted, checkInsuranceExemption } from './check.service';
 import { ChildcareInsuranceRate } from '../../../core/models/insurance-rate.model';
 
 // 賞与計算プレビューリスト生成
@@ -48,6 +48,7 @@ export function generateBonusPreviewList({
           childcare: 'ー',
           companyShare: 'ー',
           appliedExemptions: [],
+          bonusDiff: 0,
         });
       }
       continue;
@@ -143,6 +144,19 @@ export function generateBonusPreviewList({
           annualBonusTotalDisplay = annualBonusTotal ? annualBonusTotal.toLocaleString() : 'ー';
         }
       }
+      // 573万円上限に関する差額（今回の賞与で保険料算出対象となった金額）
+      let bonusDiff = 0;
+      if (standardBonus !== null && rate) {
+        const limit = 5730000;
+        if (annualBonusTotal <= limit) {
+          bonusDiff = standardBonus;
+        } else if (annualBonusTotalBefore < limit) {
+          bonusDiff = limit - annualBonusTotalBefore;
+          if (bonusDiff < 0) bonusDiff = 0;
+        } else {
+          bonusDiff = 0;
+        }
+      }
       // 休業特例による免除（健康保険・厚生年金）
       let healthExempted = isMaternityExempted || isChildcareExempted;
       // 健康保険料計算
@@ -195,6 +209,22 @@ export function generateBonusPreviewList({
       }
       // ここで免除特例を取得
       const appliedExemptions = getAppliedExemptions(emp, selectedYear, selectedMonth);
+      // 退職日・入社日による社会保険免除判定
+      const exemptionResult = checkInsuranceExemption(emp, ymStr);
+      if (exemptionResult.exemption) {
+        // 免除の場合は各保険料を0円に
+        careInsurance = '×';
+        healthInsurance = '0';
+        healthInsuranceDeduction = '0';
+        pension = '0';
+        pensionDeduction = '0';
+        deductionTotal = '0';
+        childcare = '0';
+        companyShare = '0';
+        appliedExemptions.push(exemptionResult.exemptionType || '');
+      } else if (exemptionResult.exemptionType === '同月得喪') {
+        appliedExemptions.push('同月得喪');
+      }
       previewList.push({
         officeId: emp.officeId,
         employeeId: emp.employeeId,
@@ -225,6 +255,7 @@ export function generateBonusPreviewList({
         childcareRate: 0,
         insuranceTotal: 0,
         appliedExemptions,
+        bonusDiff,
       });
     }
   }

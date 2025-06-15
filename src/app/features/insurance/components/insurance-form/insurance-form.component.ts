@@ -7,7 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { ChildcareInsuranceRate } from '../../../../core/models/insurance-rate.model';
 import { Router, RouterModule  } from '@angular/router';
 import { PREFECTURES } from '../../../../core/models/prefecture.model';
-import { isMaternityLeaveExempted, isChildcareLeaveExempted } from '../../service/check.service';
+import { isMaternityLeaveExempted, isChildcareLeaveExempted, checkInsuranceExemption } from '../../service/check.service';
 import { getAllAgeArrivalDates } from '../../../../core/services/age.determination';
 import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
 import { generateBonusPreviewList } from '../../service/bonus.check';
@@ -422,6 +422,22 @@ export class InsuranceFormComponent implements OnInit {
           }
           // ここで免除特例を取得
           const appliedExemptions = this.getAppliedExemptions(emp, this.selectedYear, this.selectedMonth);
+          // 退職日・入社日による社会保険免除判定
+          const exemptionResult = checkInsuranceExemption(emp, ymStr);
+          if (exemptionResult.exemption) {
+            // 免除の場合は各保険料を0円に
+            careInsurance = '×';
+            healthInsurance = '0';
+            healthInsuranceDeduction = '0';
+            pension = '0';
+            pensionDeduction = '0';
+            deductionTotal = '0';
+            childcare = '0';
+            companyShare = '0';
+            appliedExemptions.push(exemptionResult.exemptionType || '');
+          } else if (exemptionResult.exemptionType === '同月得喪') {
+            appliedExemptions.push('同月得喪');
+          }
           return {
             officeId: emp.officeId,
             employeeId: emp.employeeId,
@@ -494,16 +510,21 @@ export class InsuranceFormComponent implements OnInit {
   // 給与・賞与の計算結果保存処理
   async onSave() {
     const applyYearMonth = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+    // 標準報酬月額未登録従業員がいる場合は保存不可
+    if (this.missingStandardMonthlyEmployees && this.missingStandardMonthlyEmployees.length > 0) {
+      alert('有効な標準月額が登録されていない従業員がいます。\n有効な標準月額を登録する、または行を削除してから再度保存してください。');
+      return;
+    }
     // 当月データ存在チェック
     if (this.selectedType === 'salary') {
-      // 既存給与データの重複チェック
-      const existingSalaries = await this.firestoreService.getSalariesByCompanyKey(this.companyKey!);
+      // 既存給与計算結果の重複チェック
+      const existingCalcs = this.insuranceSalaryCalculations.filter(s => s.applyYearMonth === applyYearMonth);
       const duplicateRows = this.previewList.filter(row =>
-        existingSalaries.some(s => s.employeeId === row.employeeId && s.targetYearMonth === applyYearMonth)
+        existingCalcs.some(s => s.employeeId === row.employeeId)
       );
       if (duplicateRows.length > 0) {
         const names = duplicateRows.map(row => `${row.officeName} ${row.employeeName}`).join('\n');
-        alert(`既に給与が登録されている従業員がいます:\n${names}`);
+        alert(`既に社会保険料計算結果が登録されている従業員がいます:\n${names}`);
         return;
       }
       const hasSalary = this.previewList.some(row => row.salaryTotal && row.salaryTotal !== 'ー');
@@ -535,8 +556,8 @@ export class InsuranceFormComponent implements OnInit {
         await this.firestoreService.addInsuranceSalaryCalculation(calculation);
       });
       await Promise.all(promises);
-      alert(`${this.previewList.length}件の給与計算結果を保存しました。`);
-      this.router.navigate(['/insurance-list']);
+      alert(`${this.previewList.length}件の給与社会保険料計算結果を保存しました。`);
+      this.router.navigate(['/insurance-calc']);
     } else if (this.selectedType === 'bonus') {
       // 対象月に賞与データが未登録の従業員を抽出
       const missingBonusEmployees = this.previewList.filter(row => !row.bonus || row.bonus === 'ー');
@@ -566,12 +587,14 @@ export class InsuranceFormComponent implements OnInit {
           childcare: Number(row.childcare.toString().replace(/,/g, '')),
           companyShare: Number(row.companyShare.toString().replace(/,/g, '')),
           standardBonus: row.standardBonus ?? 0,
-          annualBonusTotal: row.annualBonusTotal ?? 0
+          annualBonusTotal: row.annualBonusTotal ?? 0,
+          annualBonusTotalBefore: row.annualBonusTotalBefore ?? 0,
+          bonusDiff: row.bonusDiff ?? 0,
         };
         await this.firestoreService.addInsuranceBonusCalculation(calculation);
       });
       await Promise.all(promises);
-      alert(`${this.previewList.length}件の賞与計算結果を保存しました。`);
+      alert(`${this.previewList.length}件の賞与社会保険料計算結果を保存しました。`);
       this.router.navigate(['/insurance-calc']);
     }
   }
@@ -596,6 +619,8 @@ export class InsuranceFormComponent implements OnInit {
     const msg = `本当に「${row.officeName} ${row.employeeName}」を削除してよろしいですか？`;
     if (confirm(msg)) {
       this.previewList.splice(index, 1);
+      // missingStandardMonthlyEmployeesからも削除
+      this.missingStandardMonthlyEmployees = this.missingStandardMonthlyEmployees.filter(emp => emp.employeeId !== row.employeeId);
     }
   }
 
@@ -608,6 +633,8 @@ export class InsuranceFormComponent implements OnInit {
     const msg = `本当に「${row.officeName} ${row.employeeName}」を削除してよろしいですか？`;
     if (confirm(msg)) {
       this.previewList.splice(index, 1);
+      // missingStandardMonthlyEmployeesからも削除
+      this.missingStandardMonthlyEmployees = this.missingStandardMonthlyEmployees.filter(emp => emp.employeeId !== row.employeeId);
       if (this.selectedPopoverIndex === index) {
         this.selectedPopoverIndex = null;
       } else if (this.selectedPopoverIndex !== null && this.selectedPopoverIndex > index) {

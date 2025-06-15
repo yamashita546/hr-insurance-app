@@ -44,6 +44,8 @@ export interface InsuranceBonusCalculation {
   companyShare: number;
   standardBonus: number;
   annualBonusTotal: number;
+  annualBonusTotalBefore: number;
+  bonusDiff: number;
   createdAt: Date;
   updatedAt: Date;
 }

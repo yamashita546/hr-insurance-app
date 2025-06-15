@@ -1,0 +1,104 @@
+<h2>社会保険料 詳細</h2>
+
+<!-- 従業員切り替えセレクター -->
+<div class="form-row">
+  <label>従業員</label>
+  <select [(ngModel)]="selectedEmployeeId" (ngModelChange)="onEmployeeChange()">
+    <option *ngFor="let emp of employees" [value]="emp.employeeId">{{ emp.employeeId }} {{ emp.lastName }} {{ emp.firstName }}</option>
+  </select>
+</div>
+
+<!-- 従業員情報表示 -->
+<div class="employee-info" *ngIf="employeeInfo">
+  <div>従業員ID: {{ employeeInfo.employeeId }}</div>
+  <div>氏名: {{ employeeInfo.lastName }} {{ employeeInfo.firstName }}</div>
+  <div>事業所: {{ employeeInfo.officeName }}</div>
+  <div>入社日: {{ employeeInfo.contractStartDate | date:'yyyy-MM-dd' }}</div>
+  <div>生年月日: {{ employeeInfo.birthday | date:'yyyy-MM-dd' }}</div>
+  <div>雇用形態: {{ getEmployeeTypeName(employeeInfo.employeeType) }}</div>
+</div>
+
+<!-- 給与 社会保険料テーブル -->
+<div class="history-table">
+  <h3>給与計算結果</h3>
+  <table *ngIf="selectedEmployeeSalaryCalculations.length > 0">
+    <thead>
+      <tr>
+        <th>対象年月</th>
+        <th>標準月額</th>
+        <th>健康保険料<br>合計</th>
+        <th>健康保険料<br>個人負担</th>
+        <th>介護保険料<br>合計</th>
+        <th>介護保険料<br>個人負担</th>
+        <th>厚生年金保険料<br>合計</th>
+        <th>厚生年金保険料<br>個人負担</th>
+        <th>子ども子育て<br>拠出金</th>
+        <th>会社負担<br>合計</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of selectedEmployeeSalaryCalculations">
+        <td>{{ row.applyYearMonth }}</td>
+        <td>{{ isNumber(row.healthMonthly) ? (row.healthMonthly | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.healthInsurance) ? (row.healthInsurance | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.healthInsuranceDeduction) ? (row.healthInsuranceDeduction | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.careInsurance) ? (row.careInsurance | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.careInsuranceDeduction) ? (row.careInsuranceDeduction | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.pension) ? (row.pension | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.pensionDeduction) ? (row.pensionDeduction | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.childcare) ? (row.childcare | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.companyShare) ? (row.companyShare | number) : 'ー' }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <div *ngIf="selectedEmployeeSalaryCalculations.length === 0">該当データなし</div>
+</div>
+
+<!-- 賞与 社会保険料テーブル -->
+<div class="history-table">
+  <h3>賞与計算結果</h3>
+  <table *ngIf="selectedEmployeeBonusCalculations.length > 0">
+    <thead>
+      <tr>
+        <th>対象年月</th>
+        <th>標準賞与額</th>
+        <th>健康保険料合計</th>
+        <th>健康保険料個人負担</th>
+        <th>介護保険料合計</th>
+        <th>介護保険料個人負担</th>
+        <th>厚生年金保険料合計</th>
+        <th>厚生年金保険料個人負担</th>
+        <th>子ども子育て拠出金</th>
+        <th>会社負担合計</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of selectedEmployeeBonusCalculations">
+        <td>{{ row.applyYearMonth }}</td>
+        <td>{{ isNumber(row.standardBonus) ? (row.standardBonus | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.healthInsurance) ? (row.healthInsurance | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.healthInsuranceDeduction) ? (row.healthInsuranceDeduction | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.careInsurance) ? (row.careInsurance | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.careInsuranceDeduction) ? (row.careInsuranceDeduction | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.pension) ? (row.pension | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.pensionDeduction) ? (row.pensionDeduction | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.childcare) ? (row.childcare | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.companyShare) ? (row.companyShare | number) : 'ー' }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <div *ngIf="selectedEmployeeBonusCalculations.length === 0">該当データなし</div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -27,8 +27,11 @@ export class InsuranceListComponent implements OnInit {
 
   selectedOfficeId: string = '';
   selectedEmployeeId: string = '';
-  selectedYear: number = new Date().getFullYear();
-  selectedMonth: number = new Date().getMonth() + 1;
+  selectedYear: number | '' = new Date().getFullYear();
+  selectedMonth: number | '' = new Date().getMonth() + 1;
+
+  sortColumn: string = '';
+  sortDirection: 'asc' | 'desc' = 'asc';
 
   get filteredEmployees() {
     let result = this.employees.filter(emp =>
@@ -72,8 +75,15 @@ export class InsuranceListComponent implements OnInit {
     const filtered = sourceList.filter(row => {
       const officeMatch = !this.selectedOfficeId || row.officeId === this.selectedOfficeId;
       const empMatch = !this.selectedEmployeeId || row.employeeId === this.selectedEmployeeId;
-      const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
-      const ymMatch = !row.applyYearMonth || row.applyYearMonth === ym;
+      let ymMatch = true;
+      if (this.selectedYear && this.selectedMonth) {
+        const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+        ymMatch = !row.applyYearMonth || row.applyYearMonth === ym;
+      } else if (this.selectedYear && !this.selectedMonth) {
+        ymMatch = !!row.applyYearMonth && row.applyYearMonth.startsWith(`${this.selectedYear}-`);
+      } else if (!this.selectedYear && this.selectedMonth) {
+        ymMatch = !!row.applyYearMonth && row.applyYearMonth.endsWith(`-${String(this.selectedMonth).padStart(2, '0')}`);
+      }
       return officeMatch && empMatch && ymMatch;
     });
     // 同じ従業員・支社・年月の組み合わせで最新の1件だけ残す
@@ -87,7 +97,7 @@ export class InsuranceListComponent implements OnInit {
     }
     const uniqueList = Array.from(uniqueMap.values());
     // 支社名→従業員名の昇順でソート
-    const sorted = [...uniqueList].sort((a, b) => {
+    let sorted = [...uniqueList].sort((a, b) => {
       const officeA = this.offices.find(o => o.id === a.officeId)?.name || '';
       const officeB = this.offices.find(o => o.id === b.officeId)?.name || '';
       if (officeA !== officeB) return officeA.localeCompare(officeB, 'ja');
@@ -97,16 +107,34 @@ export class InsuranceListComponent implements OnInit {
       const nameB = empB ? `${empB.lastName} ${empB.firstName}` : '';
       return nameA.localeCompare(nameB, 'ja');
     });
+    // ソートカラム指定時はそのカラムでソート
+    if (this.sortColumn) {
+      sorted = sorted.sort((a, b) => {
+        let valA = a[this.sortColumn];
+        let valB = b[this.sortColumn];
+        // 数値文字列は数値比較
+        if (!isNaN(Number(valA)) && !isNaN(Number(valB))) {
+          valA = Number(valA);
+          valB = Number(valB);
+        }
+        if (valA === undefined || valA === null) valA = '';
+        if (valB === undefined || valB === null) valB = '';
+        if (valA < valB) return this.sortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return this.sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
     this.resultList = sorted.map(row => {
       const officeName = this.offices.find(o => o.id === row.officeId)?.name || '';
       const emp = this.employees.find(e => e.employeeId === row.employeeId);
-      const employeeName = emp ? `${emp.lastName} ${emp.firstName}` : '';
+      const employeeName = emp ? `${emp.employeeId} ${emp.lastName} ${emp.firstName}` : row.employeeId;
       const careInsurance = row.careInsurance === true ? '〇' : row.careInsurance === false ? '×' : 'ー';
       // 数値はカンマ区切り、未定義は「ー」
       const format = (v: any) => (v === undefined || v === null || v === '' || isNaN(v)) ? 'ー' : Number(v).toLocaleString();
       if (this.selectedType === 'salary') {
         return {
           officeName,
+          employeeId: row.employeeId,
           employeeName,
           careInsurance,
           salaryTotal: format((row as any).salaryTotal),
@@ -128,6 +156,7 @@ export class InsuranceListComponent implements OnInit {
         console.log('bonus row:', { employeeName, bonusTotal, standardBonus, annualBonusTotal, row });
         return {
           officeName,
+          employeeId: row.employeeId,
           employeeName,
           careInsurance,
           bonus: format(bonusTotal),
@@ -145,6 +174,16 @@ export class InsuranceListComponent implements OnInit {
         };
       }
     });
+  }
+
+  sortBy(column: string) {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.updateResultList();
   }
 
   // ngModelの双方向バインドでselectedTypeが変わったときに呼ばれる

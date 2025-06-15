@@ -15,13 +15,15 @@
       <label>従業員</label>
       <select [(ngModel)]="selectedEmployeeId" name="employee" (ngModelChange)="updateResultList()">
         <option value="">全従業員</option>
-        <option *ngFor="let emp of filteredEmployees" [value]="emp.employeeId">{{ emp.lastName }} {{ emp.firstName }}</option>
+        <option *ngFor="let emp of filteredEmployees" [value]="emp.employeeId">{{ emp.employeeId }} {{ emp.lastName }} {{ emp.firstName }}</option>
       </select>
       <label>対象年月</label>
       <select [(ngModel)]="selectedYear" name="year" (ngModelChange)="updateResultList()">
+        <option value="">全期間</option>
         <option *ngFor="let y of [2024,2025,2026]" [value]="y">{{ y }}年</option>
       </select>
       <select [(ngModel)]="selectedMonth" name="month" (ngModelChange)="updateResultList()">
+        <option value="">全期間</option>
         <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
       </select>
     </div>
@@ -35,40 +37,43 @@
     <table class="insurance-result-table">
       <thead>
         <tr *ngIf="selectedType === 'salary'">
-          <th>支社</th>
-          <th>従業員名</th>
-          <th>介護保険<br>適用</th>
-          <th>当月給与<br>総支給</th>
-          <th>等級</th>
-          <th>標準報酬<br>月額</th>
-          <th>健康保険料</th>
-          <th>健康保険料<br>控除額</th>
-          <th>厚生年金保険料</th>
-          <th>厚生年金保険料<br>控除額</th>
-          <th>控除額合計</th>
-          <th>子ども子育て<br>拠出金</th>
-          <th>会社負担</th>
+          <th (click)="sortBy('officeName')" style="cursor:pointer">支社<span *ngIf="sortColumn==='officeName'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('employeeId')" style="cursor:pointer">従業員ID<span *ngIf="sortColumn==='employeeId'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('employeeName')" style="cursor:pointer">従業員名<span *ngIf="sortColumn==='employeeName'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('careInsurance')" style="cursor:pointer">介護保険<br>適用<span *ngIf="sortColumn==='careInsurance'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('salaryTotal')" style="cursor:pointer">当月給与<br>総支給<span *ngIf="sortColumn==='salaryTotal'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('grade')" style="cursor:pointer">等級<span *ngIf="sortColumn==='grade'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('monthly')" style="cursor:pointer">標準報酬<br>月額<span *ngIf="sortColumn==='monthly'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('healthInsurance')" style="cursor:pointer">健康保険料<span *ngIf="sortColumn==='healthInsurance'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('healthInsuranceDeduction')" style="cursor:pointer">健康保険料<br>控除額<span *ngIf="sortColumn==='healthInsuranceDeduction'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('pension')" style="cursor:pointer">厚生年金保険料<span *ngIf="sortColumn==='pension'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('pensionDeduction')" style="cursor:pointer">厚生年金保険料<br>控除額<span *ngIf="sortColumn==='pensionDeduction'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('deductionTotal')" style="cursor:pointer">控除額合計<span *ngIf="sortColumn==='deductionTotal'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('childcare')" style="cursor:pointer">子ども子育て<br>拠出金<span *ngIf="sortColumn==='childcare'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('companyShare')" style="cursor:pointer">会社負担<span *ngIf="sortColumn==='companyShare'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
         </tr>
         <tr *ngIf="selectedType === 'bonus'">
-          <th>支社</th>
-          <th>従業員名</th>
-          <th>介護保険<br>適用</th>
-          <th>当月賞与</th>
-          <th>標準賞与額</th>
-          <th>年度賞与<br>合計</th>
-          <th>健康保険料</th>
-          <th>健康保険料<br>控除額</th>
-          <th>厚生年金保険料</th>
-          <th>厚生年金保険料<br>控除額</th>
-          <th>控除額合計</th>
-          <th>子ども子育て<br>拠出金</th>
-          <th>会社負担</th>
+          <th (click)="sortBy('officeName')" style="cursor:pointer">支社<span *ngIf="sortColumn==='officeName'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('employeeId')" style="cursor:pointer">従業員ID<span *ngIf="sortColumn==='employeeId'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('employeeName')" style="cursor:pointer">従業員名<span *ngIf="sortColumn==='employeeName'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('careInsurance')" style="cursor:pointer">介護保険<br>適用<span *ngIf="sortColumn==='careInsurance'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('bonus')" style="cursor:pointer">当月賞与<span *ngIf="sortColumn==='bonus'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('standardBonus')" style="cursor:pointer">標準賞与額<span *ngIf="sortColumn==='standardBonus'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('annualBonusTotal')" style="cursor:pointer">年度賞与<br>合計<span *ngIf="sortColumn==='annualBonusTotal'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('healthInsurance')" style="cursor:pointer">健康保険料<span *ngIf="sortColumn==='healthInsurance'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('healthInsuranceDeduction')" style="cursor:pointer">健康保険料<br>控除額<span *ngIf="sortColumn==='healthInsuranceDeduction'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('pension')" style="cursor:pointer">厚生年金保険料<span *ngIf="sortColumn==='pension'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('pensionDeduction')" style="cursor:pointer">厚生年金保険料<br>控除額<span *ngIf="sortColumn==='pensionDeduction'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('deductionTotal')" style="cursor:pointer">控除額合計<span *ngIf="sortColumn==='deductionTotal'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('childcare')" style="cursor:pointer">子ども子育て<br>拠出金<span *ngIf="sortColumn==='childcare'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('companyShare')" style="cursor:pointer">会社負担<span *ngIf="sortColumn==='companyShare'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
         </tr>
       </thead>
       <tbody>
         <ng-container *ngIf="selectedType === 'salary'">
           <tr *ngFor="let row of resultList">
             <td>{{ row.officeName }}</td>
+            <td>{{ row.employeeId }}</td>
             <td>{{ row.employeeName }}</td>
             <td>{{ row.careInsurance }}</td>
             <td>{{ row.salaryTotal }}</td>
@@ -86,6 +91,7 @@
         <ng-container *ngIf="selectedType === 'bonus'">
           <tr *ngFor="let row of resultList">
             <td>{{ row.officeName }}</td>
+            <td>{{ row.employeeId }}</td>
             <td>{{ row.employeeName }}</td>
             <td>{{ row.careInsurance }}</td>
             <td>{{ row.bonus }}</td>

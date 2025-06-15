@@ -506,4 +506,14 @@ export class FirestoreService {
       updatedAt: now
     }, { merge: true });
   }
+
+  // 賞与（bonus）削除（employeeId, targetYearMonth, paymentDateで特定して削除）
+  async deleteBonus(companyKey: string, employeeId: string, targetYearMonth: string, paymentDate: string) {
+    const bonusesCol = collection(this.firestore, 'bonuses');
+    const q = query(bonusesCol, where('companyKey', '==', companyKey), where('employeeId', '==', employeeId), where('targetYearMonth', '==', targetYearMonth), where('paymentDate', '==', paymentDate));
+    const snap = await getDocs(q);
+    for (const docSnap of snap.docs) {
+      await deleteDoc(doc(this.firestore, 'bonuses', docSnap.id));
+    }
+  }
 }

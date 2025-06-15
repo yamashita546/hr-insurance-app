@@ -23,6 +23,10 @@
               <input type="checkbox" [(ngModel)]="excludeRegisteredEmployees" (change)="onExcludeRegisteredChange()" name="excludeRegisteredEmployees" style="margin-right: 0.3em;">
               登録済み従業員を除外
             </label>
+            <label *ngIf="selectedType === 'bonus'" style="margin-left: 1em; display: flex; align-items: center;">
+              <input type="checkbox" [(ngModel)]="excludeNoBonusEmployees" name="excludeNoBonusEmployees" style="margin-right: 0.3em;">
+              ボーナス支給のない従業員を除外
+            </label>
         </div>
         <div class="form-row" style="margin-bottom: 1em;">
             <label>対象年月</label>
@@ -46,6 +50,7 @@
               <thead>
                   <tr>
                       <th>支社</th>
+                      <th>従業員ID</th>
                       <th>従業員名</th>
                       <th>介護保険適用</th>
                       <th>当月給与総支給</th>
@@ -65,6 +70,7 @@
                   <ng-container *ngFor="let row of previewList; let i = index">
                     <tr>
                       <td>{{ row.officeName }}</td>
+                      <td>{{ row.employeeId }}</td>
                       <td>{{ row.employeeName }}</td>
                       <td>{{ row.careInsurance }}</td>
                       <td>{{ row.salaryTotal }}</td>
@@ -83,14 +89,7 @@
                         <div *ngIf="selectedPopoverIndex === i" class="popover-content">
                           <button class="popover-close" (click)="closePopover()">×</button>
                           <div>
-                            <strong>給与内訳:</strong>
-                            基本給: {{ row.salaryBreakdown.basic | number }}円 /
-                            残業代: {{ row.salaryBreakdown.overtime | number }}円 /
-                            通勤費: {{ row.salaryBreakdown.commute | number }}円 /
-                            役職手当: {{ row.salaryBreakdown.position | number }}円 /
-                            その他手当: {{ row.salaryBreakdown.other | number }}円<br>
-                            <strong>合計:</strong> {{ row.salaryBreakdown.calcTotal | number }}円
-                            <span *ngIf="!row.salaryBreakdown.isMatch" style="color:red;">（DB合計と不一致）</span>
+                            <strong>給与支給合計:</strong> {{ row.salaryTotal }}円
                           </div>
                           <div style="margin-top:0.5em;">
                             <strong>標準報酬月額:</strong>
@@ -131,10 +130,13 @@
             <thead>
                 <tr>
                     <th>支社</th>
+                    <th>従業員ID</th>
                     <th>従業員名</th>
                     <th>介護保険適用</th>
-                    <th>当月賞与</th>
+                    <th>賞与支給額</th>
+                    <th>賞与支給日</th>
                     <th>標準賞与額</th> <!-- 1000円未満切り捨て -->
+                    <th>累計賞与額</th>
                     <th>年度賞与合計</th>
                     <th>健康保険料</th>
                     <th>健康保険料控除額</th>
@@ -149,10 +151,13 @@
             <tbody>
                 <tr *ngFor="let row of previewList; let i = index">
                     <td>{{ row.officeName }}</td>
+                    <td>{{ row.employeeId }}</td>
                     <td>{{ row.employeeName }}</td>
                     <td>{{ row.careInsurance }}</td>
-                    <td>{{ row.bonus }}</td>
+                    <td>{{ row.bonus}}</td>
+                    <td>{{ row.bonusDate }}</td>
                     <td>{{ row.standardBonus }}</td>
+                    <td>{{ row.annualBonusTotalBefore }}</td>
                     <td>{{ row.annualBonusTotal }}</td>
                     <td>{{ row.healthInsurance }}</td>
                     <td>{{ row.healthInsuranceDeduction }}</td>

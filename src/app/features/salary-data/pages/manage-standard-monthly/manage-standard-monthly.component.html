@@ -14,20 +14,22 @@
     <table class="standard-monthly-table">
       <thead>
         <tr>
-          <th>支社</th>
-          <th>従業員名</th>
-          <th>現在の等級</th>
-          <th>現在の報酬月額</th>
-          <th>適用開始日</th>
-          <th>次回等級</th>
-          <th>新報酬月額</th>
-          <th>適用開始予定</th>
+          <th (click)="onSort('office')">支社 <span *ngIf="sortColumn==='office'">{{sortDirection==='asc'?'▲':'▼'}}</span></th>
+          <th (click)="onSort('employeeId')">従業員ID <span *ngIf="sortColumn==='employeeId'">{{sortDirection==='asc'?'▲':'▼'}}</span></th>
+          <th (click)="onSort('employeeName')">従業員名 <span *ngIf="sortColumn==='employeeName'">{{sortDirection==='asc'?'▲':'▼'}}</span></th>
+          <th (click)="onSort('currentGrade')">現在の等級 <span *ngIf="sortColumn==='currentGrade'">{{sortDirection==='asc'?'▲':'▼'}}</span></th>
+          <th (click)="onSort('currentMonthly')">現在の報酬月額 <span *ngIf="sortColumn==='currentMonthly'">{{sortDirection==='asc'?'▲':'▼'}}</span></th>
+          <th (click)="onSort('applyYearMonth')">適用開始日 <span *ngIf="sortColumn==='applyYearMonth'">{{sortDirection==='asc'?'▲':'▼'}}</span></th>
+          <th (click)="onSort('nextGrade')">次回等級 <span *ngIf="sortColumn==='nextGrade'">{{sortDirection==='asc'?'▲':'▼'}}</span></th>
+          <th (click)="onSort('nextMonthly')">新報酬月額 <span *ngIf="sortColumn==='nextMonthly'">{{sortDirection==='asc'?'▲':'▼'}}</span></th>
+          <th (click)="onSort('nextApplyYearMonth')">適用開始予定 <span *ngIf="sortColumn==='nextApplyYearMonth'">{{sortDirection==='asc'?'▲':'▼'}}</span></th>
           <th>詳細</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let row of getCurrentStandardMonthlyList()">
           <td>{{ getOfficeName(getLatestOfficeId(row.employeeId) || '') }}</td>
+          <td>{{ row.employeeId }}</td>
           <td>{{ getEmployeeName(row.employeeId) }}</td>
           <td>
             <ng-container *ngIf="getCurrentDecision(row) as current; else noCurrent">

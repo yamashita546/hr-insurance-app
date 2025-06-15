@@ -50,6 +50,11 @@ export class DetailSalaryComponent implements OnInit {
   filteredEmployees: any[] = [];
   selectedEmployeeId: string = '';
 
+  // --- 賞与個別編集用 ---
+  editBonusIndex: number | null = null;
+  isAddingBonus: boolean = false;
+  editBonusForm: any = {};
+
   constructor(
     private route: ActivatedRoute,
     private firestoreService: FirestoreService,
@@ -344,24 +349,43 @@ export class DetailSalaryComponent implements OnInit {
     await this.loadHistory();
   }
 
-  async onSaveBonusEdit() {
+  // 賞与編集開始
+  onEditBonus(i: number) {
+    this.editBonusIndex = i;
+    this.isAddingBonus = false;
+    this.editBonusForm = { ...this.bonuses[i] };
+  }
+  // 賞与新規追加
+  onAddBonus() {
+    this.editBonusIndex = -1;
+    this.isAddingBonus = true;
+    this.editBonusForm = { bonusType: '', bonusName: '', paymentDate: '', bonus: '', remarks: '' };
+  }
+  // 賞与編集キャンセル
+  onCancelBonusEdit() {
+    this.editBonusIndex = null;
+    this.isAddingBonus = false;
+    this.editBonusForm = {};
+  }
+  // 賞与保存（編集）
+  async onSaveBonusEdit(i: number) {
     if (!this.employee) return;
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
-    // Firestore更新
-    for (const bonus of this.editBonusForms) {
-      const newBonus = {
-        ...bonus,
-        employeeId: this.employee.employeeId,
-        companyKey: this.companyKey,
-        targetYearMonth: ym,
-        paymentDate: bonus.paymentDate || '',
-        bonus: Number(bonus.bonus) || 0,
-      };
-      await this.firestoreService.updateBonus(this.companyKey, this.employee.employeeId, ym, newBonus);
-    }
-    // 履歴保存
-    await this.saveHistory('bonus', this.bonuses, this.editBonusForms);
-    this.editMode = null;
+    const bonus = { ...this.editBonusForm, employeeId: this.employee.employeeId, companyKey: this.companyKey, targetYearMonth: ym, paymentDate: this.editBonusForm.paymentDate || '', bonus: Number(this.editBonusForm.bonus) || 0 };
+    await this.firestoreService.updateBonus(this.companyKey, this.employee.employeeId, ym, bonus);
+    this.editBonusIndex = null;
+    this.editBonusForm = {};
+    await this.loadSalaryAndBonus();
+    await this.loadHistory();
+  }
+  // 賞与保存（新規追加）
+  async onSaveBonusAdd() {
+    if (!this.employee) return;
+    const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+    const bonus = { ...this.editBonusForm, employeeId: this.employee.employeeId, companyKey: this.companyKey, targetYearMonth: ym, paymentDate: this.editBonusForm.paymentDate || '', bonus: Number(this.editBonusForm.bonus) || 0 };
+    await this.firestoreService.updateBonus(this.companyKey, this.employee.employeeId, ym, bonus);
+    this.isAddingBonus = false;
+    this.editBonusForm = {};
     await this.loadSalaryAndBonus();
     await this.loadHistory();
   }
@@ -439,5 +463,15 @@ export class DetailSalaryComponent implements OnInit {
 
   onBack() {
     this.location.back();
+  }
+
+  // ボーナス削除
+  async onDeleteBonus(i: number) {
+    if (!this.employee) return;
+    const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+    const bonus = this.bonuses[i];
+    await this.firestoreService.deleteBonus(this.companyKey, this.employee.employeeId, ym, bonus.paymentDate);
+    await this.loadSalaryAndBonus();
+    await this.loadHistory();
   }
 }

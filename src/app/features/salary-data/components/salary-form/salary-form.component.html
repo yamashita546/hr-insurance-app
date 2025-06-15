@@ -129,7 +129,7 @@
 
     <div *ngIf="activeTab === 'bonus'" class="bonus-input-area">
       <div class="bonus-input-grid">
-        <div class="bonus-block" *ngFor="let bonus of bonusForms; let i = index">
+        <div class="bonus-block">
           <div class="bonus-block-row">
             <label>賞与種類 <span style="color:red">*</span></label>
             <select [(ngModel)]="bonus.bonusType" required>
@@ -153,12 +153,8 @@
             <label>支給日</label>
             <input type="date" [(ngModel)]="bonus.paymentDate">
           </div>
-          <div class="bonus-block-row" style="text-align:right;">
-            <button type="button" (click)="removeBonusRow(i)" *ngIf="bonusForms.length > 1">削除</button>
-          </div>
         </div>
       </div>
-      <button type="button" (click)="addBonusRow()">入力欄を追加</button>
       <div class="bonus-input-row">
         <label>備考</label>
         <input type="text" [(ngModel)]="bonusRemark" placeholder="備考があれば入力">

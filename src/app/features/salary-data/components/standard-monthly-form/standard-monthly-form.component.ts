@@ -404,7 +404,26 @@ export class StandardMonthlyFormComponent implements OnInit {
       alert('従業員を選択してください');
       return;
     }
+    // 契約開始年月チェック
     const emp = this.employees.find(e => e.employeeId === this.selectedEmployeeId);
+    const applyYm = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
+    if (emp && emp.contractStartDate) {
+      const contractDate = new Date(emp.contractStartDate);
+      if (!isNaN(contractDate.getTime())) {
+        const contractYm = `${contractDate.getFullYear()}-${String(contractDate.getMonth() + 1).padStart(2, '0')}`;
+        if (applyYm < contractYm) {
+          alert('適用開始年月が契約開始年月より前になっています。適用開始年月を正しく設定してください。');
+          return;
+        }
+      }
+    }
+    // 算出根拠年月が適用対象年月より未来の場合のチェック
+    const salaryFromYm = `${this.salaryFromYear}-${String(this.salaryFromMonth).padStart(2, '0')}`;
+    const salaryToYm = `${this.salaryToYear}-${String(this.salaryToMonth).padStart(2, '0')}`;
+    if (salaryFromYm > applyYm || salaryToYm > applyYm) {
+      alert('算出根拠年月が適用対象年月より未来になっています。算出根拠年月を正しく設定してください。');
+      return;
+    }
     if (emp && !this.isFixedDecisionTarget(emp)) {
       if (!confirm('定時算定の非対象者が選択されています。続けて操作をしますか？')) {
         return;
@@ -671,6 +690,24 @@ export class StandardMonthlyFormComponent implements OnInit {
    * 保存ボタンクリック時の処理
    */
   onSave(): void {
+    // 随時改定の等級差チェック
+    if (this.decisionType === 'occasional' && this.resultList && this.resultList.length > 0) {
+      const current = this.currentDecision;
+      const newGrade = this.resultList[0].judgedGrade;
+      if (current && current.healthGrade && newGrade) {
+        // 等級を数値化して比較（数字以外はパース不可なのでNumberで）
+        const currentNum = Number(current.healthGrade);
+        const newNum = Number(newGrade);
+        if (!isNaN(currentNum) && !isNaN(newNum)) {
+          const diff = Math.abs(newNum - currentNum);
+          if (diff < 2) {
+            if (!confirm('新しい等級は現在の等級から2等級以上離れていません。このまま保存しますか？')) {
+              return;
+            }
+          }
+        }
+      }
+    }
     if (this.decisionType === 'entry') {
       this.saveEntryDecision();
     } else {
@@ -788,7 +825,8 @@ export class StandardMonthlyFormComponent implements OnInit {
         const exists = this.standardMonthlyDecisions.some(dec =>
           dec.employeeId === (emp ? emp.employeeId : '') &&
           dec.applyYearMonth === applyYearMonth &&
-          dec.type === 'fixed'
+          dec.type === 'fixed' &&
+          dec.isActive === true
         );
         if (exists) {
           alreadyRegistered.push(`${row.employeeName} の ${this.startYear}年${this.startMonth}月適用には既に標準報酬月額が登録されています。`);
@@ -924,7 +962,7 @@ export class StandardMonthlyFormComponent implements OnInit {
       isCareInsuranceApplicable: false
     }));
     if (this.resultList.length === 0) {
-      alert('対象の従業員が存在しません。');
+      alert('選択した対象年月に入社の従業員ではありません。');
     }
     this.isConfirmed = false;
   }

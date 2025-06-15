@@ -144,23 +144,33 @@
     </div>
     <div *ngIf="activeTab === 'bonus'">
       <h3>賞与情報</h3>
-      <button class="edit-btn" (click)="onEdit('bonus')" *ngIf="!editMode">修正</button>
-      <form *ngIf="editMode === 'bonus'" (ngSubmit)="onSaveBonusEdit()" class="edit-form">
-        <table class="detail-table">
-          <thead>
-            <tr>
-              <th>賞与種類</th>
-              <th>賞与名</th>
-              <th>支給日</th>
-              <th>金額</th>
-              <th>備考</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let bonus of editBonusForms; let i = index">
+      <table class="detail-table" *ngIf="bonuses.length > 0">
+        <thead>
+          <tr>
+            <th>賞与種類</th>
+            <th>賞与名</th>
+            <th>支給日</th>
+            <th>金額</th>
+            <th>備考</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let bonus of bonuses; let i = index">
+            <ng-container *ngIf="editBonusIndex !== i">
+              <td>{{ bonus.bonusType }}</td>
+              <td>{{ bonus.bonusName }}</td>
+              <td>{{ bonus.paymentDate }}</td>
+              <td>{{ bonus.bonus | number }} 円</td>
+              <td>{{ bonus.remarks }}</td>
               <td>
-                <select [(ngModel)]="bonus.bonusType" name="bonusType{{i}}" required>
+                <button type="button" (click)="onEditBonus(i)">編集</button>
+                <button type="button" (click)="onDeleteBonus(i)">削除</button>
+              </td>
+            </ng-container>
+            <ng-container *ngIf="editBonusIndex === i">
+              <td>
+                <select [(ngModel)]="editBonusForm.bonusType" name="bonusTypeEdit{{i}}" required>
                   <option value="">選択</option>
                   <option value="年間賞与">年間賞与</option>
                   <option value="半年賞与">半年賞与</option>
@@ -170,40 +180,42 @@
                 </select>
               </td>
               <td>
-                <input type="text" [(ngModel)]="bonus.bonusName" name="bonusName{{i}}" *ngIf="bonus.bonusType === 'その他賞与'">
+                <input type="text" [(ngModel)]="editBonusForm.bonusName" name="bonusNameEdit{{i}}" *ngIf="editBonusForm.bonusType === 'その他賞与'">
               </td>
-              <td><input type="date" [(ngModel)]="bonus.paymentDate" name="bonusPaymentDate{{i}}"></td>
-              <td><input type="number" [(ngModel)]="bonus.bonus" name="bonus{{i}}"></td>
-              <td><input type="text" [(ngModel)]="bonus.remarks" name="remarks{{i}}"></td>
-              <td><button type="button" (click)="removeBonusRow(i)" *ngIf="editBonusForms.length > 1">削除</button></td>
-            </tr>
-          </tbody>
-        </table>
-        <button type="button" (click)="addBonusRow()">入力欄を追加</button>
-        <button type="submit">保存</button>
-        <button type="button" (click)="onCancelEdit()">キャンセル</button>
-      </form>
-      <table class="detail-table" *ngIf="!editMode && bonuses.length > 0">
-        <thead>
-          <tr>
-            <th>賞与種類</th>
-            <th>賞与名</th>
-            <th>支給日</th>
-            <th>金額</th>
-            <th>備考</th>
+              <td><input type="date" [(ngModel)]="editBonusForm.paymentDate" name="bonusPaymentDateEdit{{i}}"></td>
+              <td><input type="number" [(ngModel)]="editBonusForm.bonus" name="bonusEdit{{i}}"></td>
+              <td><input type="text" [(ngModel)]="editBonusForm.remarks" name="remarksEdit{{i}}"></td>
+              <td>
+                <button type="button" (click)="onSaveBonusEdit(i)">保存</button>
+                <button type="button" (click)="onCancelBonusEdit()">キャンセル</button>
+              </td>
+            </ng-container>
           </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let bonus of bonuses">
-            <td>{{ bonus.bonusType }}</td>
-            <td>{{ bonus.bonusName }}</td>
-            <td>{{ bonus.paymentDate }}</td>
-            <td>{{ bonus.bonus | number }} 円</td>
-            <td>{{ bonus.remarks }}</td>
+          <tr *ngIf="editBonusIndex === -1 && isAddingBonus">
+            <td>
+              <select [(ngModel)]="editBonusForm.bonusType" name="bonusTypeAdd" required>
+                <option value="">選択</option>
+                <option value="年間賞与">年間賞与</option>
+                <option value="半年賞与">半年賞与</option>
+                <option value="四半期賞与">四半期賞与</option>
+                <option value="月次賞与">月次賞与</option>
+                <option value="その他賞与">その他賞与</option>
+              </select>
+            </td>
+            <td>
+              <input type="text" [(ngModel)]="editBonusForm.bonusName" name="bonusNameAdd" *ngIf="editBonusForm.bonusType === 'その他賞与'">
+            </td>
+            <td><input type="date" [(ngModel)]="editBonusForm.paymentDate" name="bonusPaymentDateAdd"></td>
+            <td><input type="number" [(ngModel)]="editBonusForm.bonus" name="bonusAdd"></td>
+            <td><input type="text" [(ngModel)]="editBonusForm.remarks" name="remarksAdd"></td>
+            <td>
+              <button type="button" (click)="onSaveBonusAdd()">保存</button>
+              <button type="button" (click)="onCancelBonusEdit()">キャンセル</button>
+            </td>
           </tr>
         </tbody>
       </table>
-      <div *ngIf="bonuses.length === 0 && !editMode" style="color: #d9534f; margin-top: 1em;">該当月の賞与データがありません。</div>
+      <div *ngIf="bonuses.length === 0 && !isAddingBonus" style="color: #d9534f; margin-top: 1em;">該当月の賞与データがありません。</div>
     </div>
   </div>
 </div>

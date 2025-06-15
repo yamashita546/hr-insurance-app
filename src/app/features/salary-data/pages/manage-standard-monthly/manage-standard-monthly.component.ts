@@ -21,6 +21,10 @@ export class ManageStandardMonthlyComponent implements OnInit {
   standardMonthlyList: StandardMonthlyDecision[] = [];
   employees: any[] = [];
 
+  // ソート用
+  sortColumn: string = '';
+  sortDirection: 'asc' | 'desc' = 'asc';
+
   constructor(private userCompanyService: UserCompanyService, private firestoreService: FirestoreService, private router: Router) {}
 
   ngOnInit() {
@@ -104,6 +108,16 @@ export class ManageStandardMonthlyComponent implements OnInit {
     return candidates[0] || null;
   }
 
+  // ソート切り替え
+  onSort(column: string) {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+  }
+
   getCurrentStandardMonthlyList(): StandardMonthlyDecision[] {
     const today = new Date();
     const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -119,8 +133,62 @@ export class ManageStandardMonthlyComponent implements OnInit {
           map.set(key, decision);
         }
       });
-    const arr = Array.from(map.values());
-    console.log('getCurrentStandardMonthlyListで返す配列:', arr);
+    let arr = Array.from(map.values());
+    // ソート処理
+    if (this.sortColumn) {
+      arr = arr.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+        switch (this.sortColumn) {
+          case 'office':
+            aValue = this.getOfficeName(this.getLatestOfficeId(a.employeeId) || '');
+            bValue = this.getOfficeName(this.getLatestOfficeId(b.employeeId) || '');
+            break;
+          case 'employeeId':
+            aValue = a.employeeId;
+            bValue = b.employeeId;
+            break;
+          case 'employeeName':
+            aValue = this.getEmployeeName(a.employeeId);
+            bValue = this.getEmployeeName(b.employeeId);
+            break;
+          case 'currentGrade':
+            aValue = this.getCurrentDecision(a)?.healthGrade || '';
+            bValue = this.getCurrentDecision(b)?.healthGrade || '';
+            break;
+          case 'currentMonthly':
+            aValue = this.getCurrentDecision(a)?.healthMonthly || 0;
+            bValue = this.getCurrentDecision(b)?.healthMonthly || 0;
+            break;
+          case 'applyYearMonth':
+            aValue = a.applyYearMonth;
+            bValue = b.applyYearMonth;
+            break;
+          case 'nextGrade':
+            aValue = this.getNextDecision(a)?.healthGrade || '';
+            bValue = this.getNextDecision(b)?.healthGrade || '';
+            break;
+          case 'nextMonthly':
+            aValue = this.getNextDecision(a)?.healthMonthly || 0;
+            bValue = this.getNextDecision(b)?.healthMonthly || 0;
+            break;
+          case 'nextApplyYearMonth':
+            aValue = this.getNextDecision(a)?.applyYearMonth || '';
+            bValue = this.getNextDecision(b)?.applyYearMonth || '';
+            break;
+          default:
+            aValue = (a as any)[this.sortColumn];
+            bValue = (b as any)[this.sortColumn];
+        }
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return this.sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+        } else {
+          return this.sortDirection === 'asc'
+            ? String(aValue).localeCompare(String(bValue), 'ja')
+            : String(bValue).localeCompare(String(aValue), 'ja');
+        }
+      });
+    }
     return arr;
   }
 }

@@ -7,9 +7,10 @@ import { FormsModule } from '@angular/forms';
 import { ChildcareInsuranceRate } from '../../../../core/models/insurance-rate.model';
 import { Router, RouterModule  } from '@angular/router';
 import { PREFECTURES } from '../../../../core/models/prefecture.model';
-import { isMaternityLeaveExempted, isChildcareLeaveExempted } from '../../../../core/services/childcare.leave.decision';
+import { isMaternityLeaveExempted, isChildcareLeaveExempted } from '../../service/check.service';
 import { getAllAgeArrivalDates } from '../../../../core/services/age.determination';
 import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
+import { generateBonusPreviewList } from '../../service/bonus.check';
 
 @Component({
   selector: 'app-insurance-form',
@@ -40,6 +41,7 @@ export class InsuranceFormComponent implements OnInit {
   insuranceSalaryCalculations: any[] = [];
   insuranceBonusCalculations: any[] = [];
   selectedPopoverIndex: number | null = null;
+  excludeNoBonusEmployees: boolean = false;
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -239,26 +241,27 @@ export class InsuranceFormComponent implements OnInit {
       }
     }
 
+    // 共通の従業員filter
+    targetEmployees = targetEmployees.filter(emp => {
+      // 入社前・退社後は対象外
+      if (!this.isActiveEmployeeForTargetMonth(emp, this.selectedYear, this.selectedMonth)) return false;
+      // 社会保険未加入は対象外
+      if (!emp.healthInsuranceStatus?.isApplicable) return false;
+      // 喪失日がある場合、対象年月の月末より前なら対象外
+      const lossDateRaw = emp.healthInsuranceStatus?.lossDate;
+      if (lossDateRaw) {
+        const lossDate = new Date(lossDateRaw);
+        if (!isNaN(lossDate.getTime()) && lossDate < targetMonthEnd) {
+          return false;
+        }
+      }
+      return true;
+    });
+
     console.log('onDecision: targetEmployees', targetEmployees.map(e => e.lastName + e.firstName));
 
     if (this.selectedType === 'salary') {
       this.previewList = targetEmployees
-        .filter(emp => {
-          // 入社前・退社後は対象外
-          if (!this.isActiveEmployeeForTargetMonth(emp, this.selectedYear, this.selectedMonth)) return false;
-          // 社会保険未加入は対象外
-          if (!emp.healthInsuranceStatus?.isApplicable) return false;
-          // 喪失日がある場合、対象年月の月末より前なら対象外
-          const lossDateRaw = emp.healthInsuranceStatus?.lossDate;
-          if (lossDateRaw) {
-            const lossDate = new Date(lossDateRaw);
-            const targetMonthEnd = new Date(this.selectedYear, this.selectedMonth, 0); // 月末
-            if (!isNaN(lossDate.getTime()) && lossDate < targetMonthEnd) {
-              return false;
-            }
-          }
-          return true;
-        })
         .map(emp => {
           // 対象年月の1日
           const ymDate = new Date(this.selectedYear, this.selectedMonth - 1, 1);
@@ -457,159 +460,26 @@ export class InsuranceFormComponent implements OnInit {
           };
         });
     } else if (this.selectedType === 'bonus') {
-      this.previewList = targetEmployees
-        .filter(emp => {
-          // 入社前・退社後は対象外
-          if (!this.isActiveEmployeeForTargetMonth(emp, this.selectedYear, this.selectedMonth)) return false;
-          // 社会保険未加入は対象外
-          if (!emp.healthInsuranceStatus?.isApplicable) return false;
-          // 喪失日がある場合、対象年月の月末より前なら対象外
-          return true;
-        })
-        .map(emp => {
-          const ymStr = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
-          // 産前産後休業・育児休業の免除判定
-          const isMaternityExempted = isMaternityLeaveExempted(emp, ymStr);
-          const isChildcareExempted = isChildcareLeaveExempted(emp, ymStr);
-          const std = this.getStandardMonthlyForEmployee(emp.employeeId, emp.officeId);
-          const bonus = this.getBonusForEmployee(emp.employeeId);
-          const rate = this.getInsuranceRateForOffice(emp.officeId);
-          // 各保険の適用判定
-          let healthApplicable = emp.healthInsuranceStatus?.isApplicable;
-          const ageArrival = this.isAgeArrivalInMonth(emp, this.selectedYear, this.selectedMonth);
-          // 75歳到達月は健康保険対象外
-          if (ageArrival[75]) {
-            healthApplicable = false;
-          }
-          let careInsurance = '×';
-          let isCare = false;
-          if (emp.birthday) {
-            const age = this.getAgeAtYearMonth1st(emp.birthday, this.selectedYear, this.selectedMonth);
-            // 介護保険の適用判定: 40歳到達月から65歳到達月の前月まで
-            // 給与と同じロジック
-            if (emp.isCareInsuranceApplicable) {
-              const isAfter40 = age > 40 || (age === 40) || ageArrival[40];
-              const isBefore65 = age < 65 || (age === 65 && !ageArrival[65]);
-              isCare = isAfter40 && isBefore65;
-            }
-            careInsurance = isCare ? '〇' : '×';
-          }
-          let bonusAmount = bonus ? Number(bonus.bonusTotal) : null;
-          let bonusDisplay = bonusAmount !== null ? bonusAmount.toLocaleString() : 'ー';
-          // 標準賞与額（1000円未満切り捨て）
-          let standardBonus: number | null = bonusAmount !== null ? Math.floor(bonusAmount / 1000) * 1000 : null;
-          let standardBonusDisplay = standardBonus !== null ? standardBonus.toLocaleString() : 'ー';
-          // 年度賞与合計
-          let annualBonusTotal = 0;
-          let annualBonusTotalDisplay = 'ー';
-          if (emp.birthday) {
-            // 年度の開始・終了年月
-            const year = this.selectedYear;
-            const month = this.selectedMonth;
-            let fiscalYearStart, fiscalYearEnd;
-            if (month >= 4) {
-              fiscalYearStart = `${year}-04`;
-              fiscalYearEnd = `${year + 1}-03`;
-            } else {
-              fiscalYearStart = `${year - 1}-04`;
-              fiscalYearEnd = `${year}-03`;
-            }
-            // 対象従業員の年度内の賞与データを取得し、標準賞与額合計を算出
-            const bonusesInYear = this.bonuses.filter(b => b.employeeId === emp.employeeId && b.targetYearMonth >= fiscalYearStart && b.targetYearMonth <= fiscalYearEnd);
-            annualBonusTotal = bonusesInYear.reduce((acc, b) => acc + Math.floor(Number(b.bonusTotal) / 1000) * 1000, 0);
-            annualBonusTotalDisplay = annualBonusTotal ? annualBonusTotal.toLocaleString() : 'ー';
-          }
-          // 休業特例による免除（健康保険・厚生年金）
-          let healthExempted = isMaternityExempted || isChildcareExempted;
-          // 健康保険料計算
-          let healthInsurance = 'ー';
-          let pension = 'ー';
-          let childcare = 'ー';
-          let healthInsuranceDeduction = 'ー';
-          let pensionDeduction = 'ー';
-          let deductionTotal = 'ー';
-          let companyShare = 'ー';
-          if (standardBonus !== null && rate) {
-            // 年度賞与合計が573万円を超える場合の調整
-            const limit = 5730000;
-            let available = limit - (annualBonusTotal - standardBonus);
-            let targetBonus = standardBonus;
-            if (available <= 0 || healthExempted) {
-              healthInsurance = '0';
-              pension = '0';
-              childcare = '0';
-              healthInsuranceDeduction = '0';
-              pensionDeduction = '0';
-              deductionTotal = '0';
-              companyShare = '0';
-            } else {
-              if (annualBonusTotal > limit) {
-                targetBonus = 0;
-              } else if (annualBonusTotal > 0 && (annualBonusTotal - standardBonus) < limit && annualBonusTotal > limit) {
-                targetBonus = available;
-              } else if (annualBonusTotal + standardBonus > limit) {
-                targetBonus = limit - (annualBonusTotal - standardBonus);
-              }
-              // 料率
-              let healthRate = rate.healthInsuranceRate;
-              let careRate = isCare && rate.careInsuranceRate ? rate.careInsuranceRate : 0;
-              let totalHealthRate = healthRate + careRate;
-              // 健康保険料
-              const health = targetBonus * (totalHealthRate / 100);
-              healthInsurance = this.formatDecimal(health);
-              // 厚生年金保険料（標準賞与額は150万円上限）
-              const pensionTarget = Math.min(targetBonus, 1500000);
-              const pensionVal = pensionTarget * (rate.employeePensionInsuranceRate / 100);
-              pension = this.formatDecimal(pensionVal);
-              // 子ども子育て拠出金（標準賞与額は150万円上限）
-              const childcareVal = pensionTarget * (Number(ChildcareInsuranceRate.CHILDCARE_INSURANCE_RATE) / 100);
-              childcare = this.formatDecimal(childcareVal);
-              // 健康保険料控除額
-              const healthDeduct = this.roundSocialInsurance(health / 2);
-              healthInsuranceDeduction = healthDeduct.toLocaleString();
-              // 厚生年金保険料控除額
-              const pensionDeduct = this.roundSocialInsurance(pensionVal / 2);
-              pensionDeduction = pensionDeduct.toLocaleString();
-              // 控除額合計
-              const deductionSum = healthDeduct + pensionDeduct;
-              deductionTotal = deductionSum.toLocaleString();
-              // 会社負担
-              const companyShareVal = deductionSum + childcareVal;
-              companyShare = this.formatDecimal(companyShareVal);
-            }
-          }
-          // ここで免除特例を取得
-          const appliedExemptions = this.getAppliedExemptions(emp, this.selectedYear, this.selectedMonth);
-          return {
-            officeId: emp.officeId,
-            employeeId: emp.employeeId,
-            officeName: this.offices.find(o => o.id === emp.officeId)?.name || '',
-            employeeName: emp.lastName + ' ' + emp.firstName,
-            careInsurance,
-            bonus: bonusDisplay,
-            grade: std ? `${std.healthGrade}（${std.pensionGrade}）` : 'ー',
-            monthly: std ? Number(std.healthMonthly).toLocaleString() : 'ー',
-            standardBonus,
-            annualBonusTotal,
-            standardBonusDisplay,
-            annualBonusTotalDisplay,
-            healthInsurance,
-            healthInsuranceDeduction,
-            pension,
-            pensionDeduction,
-            deductionTotal,
-            childcare,
-            companyShare,
-            // 追加項目
-            prefectureName: '',
-            healthRate: 0,
-            careRate: 0,
-            pensionRate: 0,
-            childcareRate: 0,
-            insuranceTotal: 0,
-            appliedExemptions,
-          };
-        });
+      this.previewList = generateBonusPreviewList({
+        employees: targetEmployees,
+        bonuses: this.bonuses,
+        standardMonthlyDecisions: this.standardMonthlyDecisions,
+        offices: this.offices,
+        insuranceRates: this.insuranceRates,
+        selectedYear: this.selectedYear,
+        selectedMonth: this.selectedMonth,
+        excludeNoBonusEmployees: this.excludeNoBonusEmployees,
+        getStandardMonthlyForEmployee: this.getStandardMonthlyForEmployee.bind(this),
+        getBonusForEmployee: this.getBonusForEmployee.bind(this),
+        getInsuranceRateForOffice: this.getInsuranceRateForOffice.bind(this),
+        getAgeAtYearMonth1st: this.getAgeAtYearMonth1st.bind(this),
+        isAgeArrivalInMonth: this.isAgeArrivalInMonth.bind(this),
+        isMaternityLeaveExempted,
+        isChildcareLeaveExempted,
+        getAppliedExemptions: this.getAppliedExemptions.bind(this),
+        formatDecimal: this.formatDecimal.bind(this),
+        roundSocialInsurance: this.roundSocialInsurance.bind(this)
+      });
     }
     console.log('previewListに入る従業員:', this.previewList ? this.previewList.map(e => e.employeeName) : []);
     // 標準報酬・給与データ取得時

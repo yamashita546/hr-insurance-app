@@ -25,6 +25,7 @@
     <table class="employee-salary-table">
       <thead>
         <tr>
+          <th (click)="sortBy('employeeId')">従業員ID</th>
           <th (click)="sortBy('name')">従業員名</th>
           <th (click)="sortBy('branch')">支社</th>
           <th>基本給</th>
@@ -37,6 +38,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let employee of filteredEmployees">
+          <td>{{ employee.employeeId }}</td>
           <td>{{ employee.name }}</td>
           <td>{{ employee.branch }}</td>
           <td>{{ employee.baseSalary | currency:'JPY':'symbol' }}</td>

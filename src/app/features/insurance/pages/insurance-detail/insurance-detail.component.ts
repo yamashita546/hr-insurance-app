@@ -37,10 +37,14 @@ export class InsuranceDetailComponent implements OnInit {
         this.employees = employees;
         this.insuranceSalaryCalculations = await this.firestoreService.getInsuranceSalaryCalculationsByCompanyKey(companyKey);
         this.insuranceBonusCalculations = await this.firestoreService.getInsuranceBonusCalculationsByCompanyKey(companyKey);
-        // 初期値として最初の従業員を選択
-        if (this.employees.length > 0) {
-          this.selectedEmployeeId = String(this.employees[0].employeeId);
+        // isActiveがtrueの従業員のみ初期選択
+        const active = this.activeEmployees;
+        if (active.length > 0) {
+          this.selectedEmployeeId = String(active[0].employeeId);
           this.setEmployeeInfo();
+        } else {
+          this.selectedEmployeeId = '';
+          this.employeeInfo = null;
         }
       });
   }
@@ -50,9 +54,13 @@ export class InsuranceDetailComponent implements OnInit {
   }
 
   get selectedEmployeeSalaryCalculations() {
+    const emp = this.employees.find(e => String(e.employeeId) === String(this.selectedEmployeeId));
+    if (!emp || emp.isActive === false) return [];
     return this.insuranceSalaryCalculations.filter(row => row.employeeId === this.selectedEmployeeId);
   }
   get selectedEmployeeBonusCalculations() {
+    const emp = this.employees.find(e => String(e.employeeId) === String(this.selectedEmployeeId));
+    if (!emp || emp.isActive === false) return [];
     return this.insuranceBonusCalculations.filter(row => row.employeeId === this.selectedEmployeeId);
   }
 
@@ -67,5 +75,10 @@ export class InsuranceDetailComponent implements OnInit {
   getEmployeeTypeName(code: string): string {
     const type = EMPLOYEE_TYPES.find(t => t.code === code);
     return type ? type.name : 'ー';
+  }
+
+  // isActiveがtrueの従業員のみ返すgetterを追加
+  get activeEmployees() {
+    return this.employees.filter(e => e.isActive !== false);
   }
 }

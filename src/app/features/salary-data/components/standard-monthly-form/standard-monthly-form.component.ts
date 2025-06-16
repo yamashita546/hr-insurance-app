@@ -1261,6 +1261,10 @@ export class StandardMonthlyFormComponent implements OnInit {
     if (key === 'inKind') row.adjustInKind = '';
     if (key === 'inKindRetro') row.adjustInKindRetro = '';
   }
+
+  get activeOffices() {
+    return this.offices.filter(o => o.isActive !== false);
+  }
 }
 
 

@@ -147,6 +147,7 @@
                     <th>子ども子育て拠出金</th>
                     <th>会社負担</th>
                     <th>免除特例</th>
+                    <th>操作</th>
                 </tr>
             </thead>
             <tbody>
@@ -174,6 +175,9 @@
                         <li *ngFor="let ex of row.appliedExemptions">{{ ex }}</li>
                       </ul>
                       <span *ngIf="row.appliedExemptions.length === 0">なし</span>
+                    </td>
+                    <td>
+                      <button type="button" class="remove-row-btn" (click)="removeBonusRow(i)">削除</button>
                     </td>
                 </tr>
             </tbody>

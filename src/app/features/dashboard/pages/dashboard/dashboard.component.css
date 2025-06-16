@@ -67,33 +67,36 @@
   flex-direction: column;
   align-items: center;
 }
-.insurance-info-table {
+.insurance-info-table,
+.dashboard-insurance-table {
   width: 100%;
   max-width: 800px;
   margin: 0 auto 1.5em auto;
   border-collapse: collapse;
-  font-size: 1.12em;
+  font-size: 0.88em;
   table-layout: fixed;
 }
-.insurance-info-table th, .insurance-info-table td {
+.insurance-info-table th, .insurance-info-table td,
+.dashboard-insurance-table th, .dashboard-insurance-table td {
   border: 1px solid #e0e0e0;
-  padding: 1.1em 0.8em;
+  padding: 0.5em 0.4em;
   text-align: right;
-  font-size: 1.08em;
-  min-width: 120px;
+  font-size: 0.88em;
+  min-width: 80px;
   word-break: keep-all;
 }
-.insurance-info-table th {
+.insurance-info-table th, .dashboard-insurance-table th {
   background: #e3f2fd;
   color: #1976d2;
   font-weight: bold;
   text-align: center;
-  font-size: 0.9em;
+  font-size: 0.85em;
 }
-.insurance-info-table td:first-child, .insurance-info-table th:first-child {
+.insurance-info-table td:first-child, .insurance-info-table th:first-child,
+.dashboard-insurance-table td:first-child, .dashboard-insurance-table th:first-child {
   text-align: center;
-  min-width: 70px;
-  font-size: 1.08em;
+  min-width: 60px;
+  font-size: 0.88em;
 }
 .insurance-info-table td {
   font-variant-numeric: tabular-nums;
@@ -243,4 +246,56 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: #fff;
+  padding: 2em;
+  border-radius: 8px;
+  min-width: 400px;
+  max-width: 90vw;
+  position: relative;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+}
+.modal-close {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1em;
+  font-size: 0.88em;
+}
+.detail-table th, .detail-table td {
+  border: 1px solid #b0bec5;
+  padding: 0.4em 0.4em;
+  text-align: right;
+  font-size: 0.88em;
+}
+.detail-table th {
+  background: #e3f2fd;
+  color: #1976d2;
+  font-weight: bold;
+  text-align: center;
+  font-size: 0.88em;
+}
+.detail-table td:first-child, .detail-table th:first-child {
+  text-align: center;
 }

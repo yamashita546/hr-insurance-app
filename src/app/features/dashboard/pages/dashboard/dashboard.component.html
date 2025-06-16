@@ -1,10 +1,10 @@
 <div class="dashboard-container">
   <!-- アラート一覧 -->
-  <div class="dashboard-alerts" *ngIf="alerts && alerts.length">
+  <!-- <div class="dashboard-alerts" *ngIf="alerts && alerts.length">
     <div class="alert-item" *ngFor="let alert of alerts">
       <i class="fas fa-exclamation-triangle alert-icon"></i> {{ alert }}
     </div>
-  </div>
+  </div> -->
 
   <div class="dashboard-company-info dashboard-card" style="margin-bottom: 2em;">
     <h3>会社情報</h3>
@@ -38,7 +38,7 @@
           <td>社会保険料</td>
           <td>{{ insuranceRegisteredCount }}/{{ insuranceRequiredCount }}件</td>
           <td>
-            <a *ngIf="insuranceRegisteredCount !== insuranceRequiredCount" routerLink="/insurance/calc">登録</a>
+            <a *ngIf="insuranceRegisteredCount !== insuranceRequiredCount" routerLink="/insurance-calc">登録</a>
             <span *ngIf="insuranceRegisteredCount === insuranceRequiredCount">登録済み</span>
           </td>
         </tr>
@@ -46,7 +46,7 @@
           <td>給与</td>
           <td>{{ salaryRegisteredCount }}/{{ salaryRequiredCount }}件</td>
           <td>
-            <a *ngIf="salaryRegisteredCount !== salaryRequiredCount" routerLink="/salary-form">登録</a>
+            <a *ngIf="salaryRegisteredCount !== salaryRequiredCount" routerLink="/salary-registration">登録</a>
             <span *ngIf="salaryRegisteredCount === salaryRequiredCount">登録済み</span>
           </td>
         </tr>
@@ -54,7 +54,7 @@
           <td>賞与</td>
           <td>{{ bonusRegisteredCount }}/{{ bonusRequiredCount }}件</td>
           <td>
-            <a *ngIf="bonusRegisteredCount !== bonusRequiredCount" routerLink="/salary-form">登録</a>
+            <a *ngIf="bonusRegisteredCount !== bonusRequiredCount" routerLink="/salary-registration">登録</a>
             <span *ngIf="bonusRegisteredCount === bonusRequiredCount">登録済み</span>
           </td>
         </tr>
@@ -62,7 +62,7 @@
           <td>勤怠</td>
           <td>{{ attendanceRegisteredCount }}/{{ attendanceRequiredCount }}件</td>
           <td>
-            <a *ngIf="attendanceRegisteredCount !== attendanceRequiredCount" routerLink="/attendance-form">登録</a>
+            <a *ngIf="attendanceRegisteredCount !== attendanceRequiredCount" routerLink="/attendance">登録</a>
             <span *ngIf="attendanceRegisteredCount === attendanceRequiredCount">登録済み</span>
           </td>
         </tr>
@@ -105,6 +105,7 @@
               <th>会社負担</th>
               <th>子ども子育て<br>拠出金</th>
               <th>会社負担<br>合計</th>
+              <th>詳細</th>
             </tr>
           </thead>
           <tbody>
@@ -116,13 +117,59 @@
               <td class="right">{{ info.companyShare | number }} 円</td>
               <td class="right">{{ info.childcareDeduction | number }} 円</td>
               <td class="right strong">{{ info.companyShareTotal | number }} 円</td>
+              <td class="right strong">
+                <button type="button" (click)="openInsuranceDetailModal(info.officeId)">詳細</button>
+              </td>
             </tr>
             <tr class="total-row">
               <td colspan="6" style="text-align: right; font-weight: bold; font-size: 1em; background: #e3f2fd;">会社負担額合計</td>
               <td class="right strong" style="font-size: 1.1em; background: #e3f2fd;">{{ officeCompanyShareTotal | number }} 円</td>
+             
             </tr>
           </tbody>
         </table>
       </div>
+      <div style="text-align: right; margin-top: 0.5em;">
+        <button type="button" (click)="exportInsuranceTableToCSV()">CSV出力</button>
+      </div>
     </div>
   </div>
+
+  <!-- ここから詳細モーダル -->
+  <div *ngIf="detailModalVisible" class="modal-overlay">
+    <div class="modal-content">
+      <h3>詳細（端数処理前の合計値）</h3>
+      <button class="modal-close" (click)="closeInsuranceDetailModal()">×</button>
+      <div>
+        <h4>給与</h4>
+        <table class="detail-table">
+          <tr><th>件数</th><th>支給合計</th><th>保険料合計</th><th>従業員控除額合計</th><th>会社負担</th><th>子ども子育て拠出金</th><th>会社負担合計</th></tr>
+          <tr>
+            <td>{{ detailModalData?.salaryDetail?.count }}</td>
+            <td>{{ detailModalData?.salaryDetail?.salaryTotal | number }}</td>
+            <td>{{ detailModalData?.salaryDetail?.insuranceTotal | number }}</td>
+            <td>{{ detailModalData?.salaryDetail?.employeeDeduction | number }}</td>
+            <td>{{ detailModalData?.salaryDetail?.companyShare | number }}</td>
+            <td>{{ detailModalData?.salaryDetail?.childcare | number }}</td>
+            <td>{{ detailModalData?.salaryDetail?.companyShareTotal | number }}</td>
+          </tr>
+        </table>
+      </div>
+      <div style="margin-top:1em;">
+        <h4>賞与</h4>
+        <table class="detail-table">
+          <tr><th>件数</th><th>支給合計</th><th>保険料合計</th><th>従業員控除額合計</th><th>会社負担</th><th>子ども子育て拠出金</th><th>会社負担合計</th></tr>
+          <tr>
+            <td>{{ detailModalData?.bonusDetail?.count }}</td>
+            <td>{{ detailModalData?.bonusDetail?.bonusTotal | number }}</td>
+            <td>{{ detailModalData?.bonusDetail?.insuranceTotal | number }}</td>
+            <td>{{ detailModalData?.bonusDetail?.employeeDeduction | number }}</td>
+            <td>{{ detailModalData?.bonusDetail?.companyShare | number }}</td>
+            <td>{{ detailModalData?.bonusDetail?.childcare | number }}</td>
+            <td>{{ detailModalData?.bonusDetail?.companyShareTotal | number }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

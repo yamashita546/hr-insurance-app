@@ -77,6 +77,9 @@ export class InsuranceListComponent implements OnInit {
     const sourceList = this.selectedType === 'salary' ? this.salaryList : this.bonusList;
     // 支社・従業員・年月でフィルタ
     const filtered = sourceList.filter(row => {
+      // 従業員データが存在しない、またはisActiveがfalseなら除外
+      const emp = this.employees.find(e => e.employeeId === row.employeeId);
+      if (!emp || emp.isActive === false) return false;
       const officeMatch = !this.selectedOfficeId || row.officeId === this.selectedOfficeId;
       const empMatch = !this.selectedEmployeeId || row.employeeId === this.selectedEmployeeId;
       let ymMatch = true;

@@ -292,7 +292,7 @@ export class FirestoreService {
 
   // 給与計算結果保存
   async addInsuranceSalaryCalculation(calculation: Omit<InsuranceSalaryCalculation, 'createdAt' | 'updatedAt' | 'id'>) {
-    if (!calculation.employeeId || !calculation.officeId) return; // id欠損時は保存しない
+    if (!calculation.employeeId || !calculation.companyKey) return;
     const col = collection(this.firestore, 'insuranceSalaryCalculations');
     const now = Timestamp.now();
     const docRef = await addDoc(col, {
@@ -305,7 +305,7 @@ export class FirestoreService {
 
   // 賞与計算結果保存
   async addInsuranceBonusCalculation(calculation: Omit<InsuranceBonusCalculation, 'createdAt' | 'updatedAt' | 'id'>) {
-    if (!calculation.employeeId || !calculation.officeId) return; // id欠損時は保存しない
+    if (!calculation.employeeId || !calculation.companyKey) return;
     const col = collection(this.firestore, 'insuranceBonusCalculations');
     const now = Timestamp.now();
     const docRef = await addDoc(col, {
@@ -519,9 +519,13 @@ export class FirestoreService {
 
   // 給与計算結果の上書き保存
   async updateInsuranceSalaryCalculation(calculation: Omit<InsuranceSalaryCalculation, 'createdAt' | 'updatedAt' | 'id'>) {
-    if (!calculation.employeeId || !calculation.officeId) return;
+    if (!calculation.employeeId || !calculation.companyKey) return;
     const col = collection(this.firestore, 'insuranceSalaryCalculations');
-    const q_ = query(col, where('employeeId', '==', calculation.employeeId), where('officeId', '==', calculation.officeId), where('applyYearMonth', '==', calculation.applyYearMonth));
+    const q_ = query(col, 
+      where('employeeId', '==', calculation.employeeId), 
+      where('companyKey', '==', calculation.companyKey), 
+      where('applyYearMonth', '==', calculation.applyYearMonth)
+    );
     const snap = await getDocs(q_);
     if (!snap.empty) {
       const docRef = doc(this.firestore, 'insuranceSalaryCalculations', snap.docs[0].id);
@@ -531,9 +535,13 @@ export class FirestoreService {
 
   // 賞与計算結果の上書き保存
   async updateInsuranceBonusCalculation(calculation: Omit<InsuranceBonusCalculation, 'createdAt' | 'updatedAt' | 'id'>) {
-    if (!calculation.employeeId || !calculation.officeId) return;
+    if (!calculation.employeeId || !calculation.companyKey) return;
     const col = collection(this.firestore, 'insuranceBonusCalculations');
-    const q_ = query(col, where('employeeId', '==', calculation.employeeId), where('officeId', '==', calculation.officeId), where('applyYearMonth', '==', calculation.applyYearMonth));
+    const q_ = query(col, 
+      where('employeeId', '==', calculation.employeeId), 
+      where('companyKey', '==', calculation.companyKey), 
+      where('applyYearMonth', '==', calculation.applyYearMonth)
+    );
     const snap = await getDocs(q_);
     if (!snap.empty) {
       const docRef = doc(this.firestore, 'insuranceBonusCalculations', snap.docs[0].id);

@@ -4,7 +4,7 @@
 <div class="form-row">
   <label>従業員</label>
   <select [(ngModel)]="selectedEmployeeId" (ngModelChange)="onEmployeeChange()">
-    <option *ngFor="let emp of employees" [value]="emp.employeeId">{{ emp.employeeId }} {{ emp.lastName }} {{ emp.firstName }}</option>
+    <option *ngFor="let emp of activeEmployees" [value]="emp.employeeId">{{ emp.employeeId }} {{ emp.lastName }} {{ emp.firstName }}</option>
   </select>
 </div>
 

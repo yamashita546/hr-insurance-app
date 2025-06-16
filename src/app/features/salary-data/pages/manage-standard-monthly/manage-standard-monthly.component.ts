@@ -125,6 +125,9 @@ export class ManageStandardMonthlyComponent implements OnInit {
     this.standardMonthlyList
       .filter(decision => decision.isActive !== false) // 無効データ除外
       .forEach(decision => {
+        // 対象従業員が存在しない、またはisActiveがfalseならスキップ
+        const emp = this.employees.find(e => e.employeeId === decision.employeeId);
+        if (!emp || emp.isActive === false) return;
         if (decision.applyYearMonth > currentYm) return; // 未来は除外
         // 最新officeIdでキーを作成
         const latestOfficeId = this.getLatestOfficeId(decision.employeeId);

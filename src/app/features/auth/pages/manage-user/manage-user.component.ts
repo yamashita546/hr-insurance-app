@@ -4,6 +4,7 @@ import { UserCompanyService } from '../../../../core/services/user-company.servi
 import { filter, take } from 'rxjs/operators';
 import { AuthService } from '../../../../core/services/auth.service';
 import { FormsModule } from '@angular/forms';
+import { Auth, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from '@angular/fire/auth';
 
 
 @Component({
@@ -23,8 +24,11 @@ export class ManageUserComponent implements OnInit {
   uid: string = '';
   showPasswordInput = false;
   inputPassword = '';
+  showPasswordModal = false;
+  currentPassword = '';
+  newPassword = '';
 
-  constructor(private userCompanyService: UserCompanyService, private authService: AuthService) {}
+  constructor(private userCompanyService: UserCompanyService, private authService: AuthService, private auth: Auth) {}
 
   ngOnInit(): void {
     this.userCompanyService.company$
@@ -69,6 +73,26 @@ export class ManageUserComponent implements OnInit {
       this.inputPassword = '';
     } catch (e: any) {
       alert(e.message || 'Google認証のリンクに失敗しました');
+    }
+  }
+
+  async onChangePassword() {
+    if (!this.currentPassword || !this.newPassword) {
+      alert('両方のパスワードを入力してください');
+      return;
+    }
+    try {
+      const user = this.auth.currentUser;
+      if (!user || !user.email) throw new Error('ユーザー情報が取得できません');
+      const credential = EmailAuthProvider.credential(user.email, this.currentPassword);
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, this.newPassword);
+      alert('パスワードを変更しました');
+      this.showPasswordModal = false;
+      this.currentPassword = '';
+      this.newPassword = '';
+    } catch (e: any) {
+      alert(e.message || 'パスワード変更に失敗しました');
     }
   }
 }

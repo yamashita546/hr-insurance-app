@@ -34,5 +34,33 @@
         </div>
       </td>
     </tr>
+    <tr>
+      <th>パスワード変更</th>
+      <td>
+        <button style="margin-left: 10px;" (click)="showPasswordModal = true">パスワード変更</button>
+      </td>
+    </tr>
   </table>
+
+  <!-- パスワード変更モーダル -->
+  <div *ngIf="showPasswordModal" class="modal-overlay">
+    <div class="modal-content" style="min-width:320px;max-width:90vw;position:relative;">
+      <h3>パスワード変更</h3>
+      <button class="modal-close" (click)="showPasswordModal = false">×</button>
+      <form (ngSubmit)="onChangePassword()">
+        <div style="margin-bottom:1em;">
+          <label>現在のパスワード</label><br>
+          <input type="password" [(ngModel)]="currentPassword" name="currentPassword" required style="width:100%;padding:0.5em;">
+        </div>
+        <div style="margin-bottom:1em;">
+          <label>新しいパスワード</label><br>
+          <input type="password" [(ngModel)]="newPassword" name="newPassword" required style="width:100%;padding:0.5em;">
+        </div>
+        <div style="text-align:right;">
+          <button type="button" (click)="showPasswordModal = false" style="margin-right:1em;">キャンセル</button>
+          <button type="submit">変更</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

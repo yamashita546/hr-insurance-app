@@ -90,6 +90,10 @@ export class DashboardComponent implements OnInit {
     companyShareTotal: number;
   }[] = [];
   officeCompanyShareTotal: number = 0;
+  detailModalVisible: boolean = false;
+  detailModalData: any = null;
+  insuranceSalaryCalculations: any[] = [];
+  insuranceBonusCalculations: any[] = [];
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -129,14 +133,7 @@ export class DashboardComponent implements OnInit {
     console.log('[updateCurrentMonthStatus] called');
     console.log('  selectedOfficeId:', this.selectedOfficeId);
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
-    // 事業所リストの再取得は削除し、this.officesをそのまま使う
-    // const newOffices = await this.firestoreService.getOffices(this.companyKey);
-    // console.log('  offices(before):', this.offices.map(o => ({id: o.id, name: o.name, isActive: o.isActive})));
-    // console.log('  newOffices:', newOffices.map(o => ({id: o.id, name: o.name, isActive: o.isActive})));
-
-    // 新旧事業所リストのID集合で比較は不要
-    // const newOfficeIds = newOffices.map(o => o.id);
-    // this.offices = newOffices;
+    
 
     // filteredOfficesを更新
     this.filteredOffices = this.selectedOfficeId
@@ -147,6 +144,17 @@ export class DashboardComponent implements OnInit {
     // Firestoreから給与・賞与データ取得
     const insuranceSalaryList = (await this.firestoreService.getInsuranceSalaryCalculations()).filter((c: any) => c.companyKey === this.companyKey && c.applyYearMonth === ym);
     const insuranceBonusList = (await this.firestoreService.getInsuranceBonusCalculations()).filter((c: any) => c.companyKey === this.companyKey && c.applyYearMonth === ym);
+
+    // 北海道支社のofficeIdを取得
+    const hokkaidoOffice = this.offices.find(o => o.name === '北海道支社' || o.officeName === '北海道支社');
+    if (hokkaidoOffice) {
+      const hokkaidoSalary = insuranceSalaryList.filter(row => row.officeId === hokkaidoOffice.id);
+      const hokkaidoBonus = insuranceBonusList.filter(row => row.officeId === hokkaidoOffice.id);
+      console.log('【北海道支社】給与データ:', hokkaidoSalary);
+      console.log('【北海道支社】賞与データ:', hokkaidoBonus);
+    } else {
+      console.log('北海道支社のofficeIdが見つかりません');
+    }
 
     // 1. 事業所ごとに給与データを集計
     const salaryOfficeMap = new Map<string, any>();
@@ -388,6 +396,10 @@ export class DashboardComponent implements OnInit {
 
   async onOfficeChange() {
     console.log('[onOfficeChange] called, selectedOfficeId:', this.selectedOfficeId);
+    // 追加: 選択直後の状態を出力
+    console.log('  selectedOfficeName:', this.selectedOfficeName);
+    console.log('  filteredOffices:', this.filteredOffices.map(o => ({id: o.id, name: o.name})));
+    console.log('  displayedOfficeInsuranceInfo:', this.displayedOfficeInsuranceInfo.map(i => ({officeId: i.officeId, officeName: i.officeName})));
     await this.updateCurrentMonthStatus();
   }
 
@@ -406,5 +418,97 @@ export class DashboardComponent implements OnInit {
     if (!this.selectedOfficeId) return '全事業所';
     const office = this.activeOffices.find(o => o.id === this.selectedOfficeId);
     return office?.officeName || office?.name || '';
+  }
+
+  async openInsuranceDetailModal(officeId: string) {
+    // officeIdが空文字なら全事業所
+    const targetOffices = officeId
+      ? this.offices.filter(o => o.id === officeId)
+      : this.offices.filter(o => o.isActive !== false);
+
+    // 対象年月
+    const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+
+    // Firestoreから最新データ取得
+    const insuranceSalaryList = (await this.firestoreService.getInsuranceSalaryCalculations())
+      .filter((c: any) => c.companyKey === this.companyKey && c.applyYearMonth === ym && targetOffices.some(o => o.id === c.officeId));
+    const insuranceBonusList = (await this.firestoreService.getInsuranceBonusCalculations())
+      .filter((c: any) => c.companyKey === this.companyKey && c.applyYearMonth === ym && targetOffices.some(o => o.id === c.officeId));
+
+    // デバッグ用ログ
+    console.log('[openInsuranceDetailModal] officeId:', officeId);
+    console.log('  targetOffices:', targetOffices);
+    console.log('  salaryList:', insuranceSalaryList);
+    console.log('  bonusList:', insuranceBonusList);
+
+    // 給与集計
+    const salaryDetail = {
+      count: insuranceSalaryList.length,
+      salaryTotal: insuranceSalaryList.reduce((sum: any, row: any) => sum + Number(row.salaryTotal || 0), 0),
+      insuranceTotal: insuranceSalaryList.reduce((sum: any, row: any) => sum + Number(row.healthInsurance || 0) + Number(row.pension || 0), 0),
+      employeeDeduction: insuranceSalaryList.reduce((sum: any, row: any) => sum + Number(row.healthInsuranceDeduction || 0) + Number(row.pensionDeduction || 0), 0),
+      // 会社負担 = 保険料合計 - 従業員控除額合計
+      companyShare: 0, // 後で上書き
+      childcare: insuranceSalaryList.reduce((sum: any, row: any) => sum + Number(row.childcare || 0), 0),
+      companyShareTotal: 0, // 後で上書き
+    };
+    salaryDetail.companyShare = salaryDetail.insuranceTotal - salaryDetail.employeeDeduction;
+    salaryDetail.companyShareTotal = salaryDetail.companyShare + salaryDetail.childcare;
+    console.log('  salaryDetail:', salaryDetail);
+
+    // 賞与集計
+    const bonusDetail = {
+      count: insuranceBonusList.length,
+      bonusTotal: insuranceBonusList.reduce((sum: any, row: any) => sum + Number(row.bonusTotal || 0), 0),
+      insuranceTotal: insuranceBonusList.reduce((sum: any, row: any) => sum + Number(row.healthInsurance || 0) + Number(row.pension || 0), 0),
+      employeeDeduction: insuranceBonusList.reduce((sum: any, row: any) => sum + Number(row.healthInsuranceDeduction || 0) + Number(row.pensionDeduction || 0), 0),
+      // 会社負担 = 保険料合計 - 従業員控除額合計
+      companyShare: 0, // 後で上書き
+      childcare: insuranceBonusList.reduce((sum: any, row: any) => sum + Number(row.childcare || 0), 0),
+      companyShareTotal: 0, // 後で上書き
+    };
+    bonusDetail.companyShare = bonusDetail.insuranceTotal - bonusDetail.employeeDeduction;
+    bonusDetail.companyShareTotal = bonusDetail.companyShare + bonusDetail.childcare;
+    console.log('  bonusDetail:', bonusDetail);
+
+    this.detailModalData = { salaryDetail, bonusDetail };
+    this.detailModalVisible = true;
+  }
+
+  closeInsuranceDetailModal() {
+    this.detailModalVisible = false;
+    this.detailModalData = null;
+  }
+
+  exportInsuranceTableToCSV() {
+    // 選択年月
+    const ymLabel = `${this.selectedYear}年${this.selectedMonth}月`;
+    // ヘッダー
+    const headers = [
+      '年月', '事業所名', '支給総額', '保険料合計', '従業員控除額', '会社負担', '子ども子育て拠出金', '会社負担合計'
+    ];
+    // データ行
+    const rows = this.displayedOfficeInsuranceInfo.map((info: any) => [
+      ymLabel,
+      info.officeName,
+      info.salaryTotal,
+      info.insuranceTotal,
+      info.employeeDeduction,
+      info.companyShare,
+      info.childcareDeduction,
+      info.companyShareTotal
+    ]);
+    // CSV文字列生成
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(val => `"${val}"`).join(','))
+      .join('\r\n');
+    // ダウンロード処理
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'insurance_table.csv';
+    a.click();
+    URL.revokeObjectURL(url);
   }
 }

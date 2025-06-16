@@ -21,7 +21,7 @@
         <label>事業所</label>
         <select [(ngModel)]="selectedOfficeId" name="office" [disabled]="editMode" (change)="onOfficeChange()">
           <option value="">全事業所</option>
-          <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
+          <option *ngFor="let office of activeOffices" [value]="office.id">{{ office.name }}</option>
         </select>
         <label>従業員</label>
         <select [(ngModel)]="selectedEmployeeId" name="employeeId" [disabled]="editMode" (change)="onEmployeeChange()">

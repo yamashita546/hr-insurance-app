@@ -542,9 +542,9 @@ export class InsuranceFormComponent implements OnInit {
     // 当月データ存在チェック
     if (this.selectedType === 'salary') {
       // 既存給与計算結果の重複チェック
-      const existingCalcs = this.insuranceSalaryCalculations.filter(s => s.applyYearMonth === applyYearMonth);
+      const existingCalcs = this.insuranceSalaryCalculations.filter(s => s.applyYearMonth === applyYearMonth && s.companyKey === this.companyKey);
       const duplicateRows = this.previewList.filter(row =>
-        existingCalcs.some(s => s.employeeId === row.employeeId)
+        existingCalcs.some(s => s.employeeId === row.employeeId && s.companyKey === this.companyKey)
       );
       if (duplicateRows.length > 0) {
         const names = duplicateRows.map(row => `${row.officeName} ${row.employeeName}`).join('\n');
@@ -620,9 +620,9 @@ export class InsuranceFormComponent implements OnInit {
         return;
       }
       // 既存賞与計算結果の重複チェック
-      const existingCalcs = this.insuranceBonusCalculations.filter(s => s.applyYearMonth === applyYearMonth);
+      const existingCalcs = this.insuranceBonusCalculations.filter(s => s.applyYearMonth === applyYearMonth && s.companyKey === this.companyKey);
       const duplicateRows = this.previewList.filter(row =>
-        existingCalcs.some(s => s.employeeId === row.employeeId)
+        existingCalcs.some(s => s.employeeId === row.employeeId && s.companyKey === this.companyKey)
       );
       if (duplicateRows.length > 0) {
         const names = duplicateRows.map(row => `${row.officeName} ${row.employeeName}`).join('\n');

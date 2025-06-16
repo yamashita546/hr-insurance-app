@@ -14,7 +14,7 @@
       <option *ngFor="let month of months" [value]="month">{{ month }}月</option>
     </select>
     <select [(ngModel)]="selectedBranch" (change)="onBranchChange()">
-      <option value="">全支社</option>
+      <!-- <option value="">全支社</option> -->
       <option *ngFor="let branch of branches" [value]="branch">{{ branch }}</option>
     </select>
     <input type="text" [(ngModel)]="searchKeyword" placeholder="従業員検索">

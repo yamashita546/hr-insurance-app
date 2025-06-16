@@ -43,6 +43,10 @@ export class InsuranceListComponent implements OnInit {
     return result;
   }
 
+  get activeOffices() {
+    return this.offices.filter(o => o.isActive !== false);
+  }
+
   constructor(
     private firestoreService: FirestoreService,
     private userCompanyService: UserCompanyService
@@ -127,7 +131,7 @@ export class InsuranceListComponent implements OnInit {
     this.resultList = sorted.map(row => {
       const officeName = this.offices.find(o => o.id === row.officeId)?.name || '';
       const emp = this.employees.find(e => e.employeeId === row.employeeId);
-      const employeeName = emp ? `${emp.employeeId} ${emp.lastName} ${emp.firstName}` : row.employeeId;
+      const employeeName = emp ? `${emp.lastName} ${emp.firstName}` : row.employeeId;
       const careInsurance = row.careInsurance === true ? '〇' : row.careInsurance === false ? '×' : 'ー';
       // 数値はカンマ区切り、未定義は「ー」
       const format = (v: any) => (v === undefined || v === null || v === '' || isNaN(v)) ? 'ー' : Number(v).toLocaleString();

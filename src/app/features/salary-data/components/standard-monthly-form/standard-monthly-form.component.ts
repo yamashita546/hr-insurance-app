@@ -722,11 +722,14 @@ export class StandardMonthlyFormComponent implements OnInit {
     if (!this.resultList || this.resultList.length === 0) return;
 
     const result = this.resultList[0];
+    // 従業員のofficeIdを必ずセット
+    const emp = this.employees.find(e => e.employeeId === this.selectedEmployeeId);
+    const officeId = emp ? emp.officeId : this.selectedOfficeId;
     const data = {
       companyId: this.companyId,
       companyKey: this.companyKey,
       employeeId: this.selectedEmployeeId,
-      officeId: this.selectedOfficeId,
+      officeId: officeId,
       decisionType: this.decisionType,
       type: this.decisionType,
       applyYearMonth: `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`,

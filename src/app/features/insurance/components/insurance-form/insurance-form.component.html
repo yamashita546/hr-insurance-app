@@ -12,12 +12,12 @@
             <label>支社</label>
             <select [(ngModel)]="selectedOfficeId" name="office">
                 <option value="">全支社</option>
-                <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
+                <option *ngFor="let office of activeOffices" [value]="office.id">{{ office.name }}</option>
             </select>
             <label style="margin-left: 1em;">従業員</label>
             <select [(ngModel)]="selectedEmployeeId" name="employee">
                 <option value="">全従業員</option>
-                <option *ngFor="let emp of filteredEmployees" [value]="emp.employeeId">{{ emp.lastName }} {{ emp.firstName }}</option>
+                <option *ngFor="let emp of filteredEmployees" [value]="emp.employeeId">{{ emp.employeeId }} {{ emp.lastName }} {{ emp.firstName }}</option>
             </select>
             <label style="margin-left: 1em; display: flex; align-items: center;">
               <input type="checkbox" [(ngModel)]="excludeRegisteredEmployees" (change)="onExcludeRegisteredChange()" name="excludeRegisteredEmployees" style="margin-right: 0.3em;">
@@ -75,7 +75,7 @@
                       <td>{{ row.careInsurance }}</td>
                       <td>{{ row.salaryTotal }}</td>
                       <td>{{ row.grade }}</td>
-                      <td>{{ row.monthly }}</td>
+                      <td>{{ row.monthly }}円<br>（{{ row.pensionMonthly !== undefined && row.pensionMonthly !== null ? row.pensionMonthly : row.monthly }}円）</td>
                       <td>{{ row.healthInsurance }}</td>
                       <td>{{ row.healthInsuranceDeduction }}</td>
                       <td>{{ row.pension }}</td>
@@ -93,7 +93,7 @@
                           </div>
                           <div style="margin-top:0.5em;">
                             <strong>標準報酬月額:</strong>
-                            {{ row.monthly }}（{{ row.grade }}）
+                            {{ row.monthly }}円（{{ row.pensionMonthly !== undefined && row.pensionMonthly !== null ? row.pensionMonthly : row.monthly }}円）
                           </div>
                           <div style="margin-top:0.5em;">
                             <strong>控除・会社負担計算根拠:</strong><br>

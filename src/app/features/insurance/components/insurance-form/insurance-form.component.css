@@ -138,3 +138,41 @@ button:hover {
     font-size: 0.88em;
   }
 }
+
+.dashboard-insurance-table {
+  width: 100%;
+  min-width: 800px;
+  border-collapse: collapse;
+  background: #fafbfc;
+  font-size: 0.92em;
+}
+.dashboard-insurance-table th, .dashboard-insurance-table td {
+  font-size: 0.92em;
+  padding: 6px 8px;
+  border: 1px solid #e0e0e0;
+  white-space: nowrap;
+}
+.dashboard-insurance-table th {
+  background: #e3f2fd;
+  color: #1976d2;
+  font-weight: bold;
+}
+.dashboard-insurance-table td.right, .dashboard-insurance-table th.right {
+  text-align: right;
+}
+.dashboard-insurance-table td.left, .dashboard-insurance-table th.left {
+  text-align: left;
+}
+.dashboard-insurance-table td.strong, .dashboard-insurance-table th.strong {
+  font-weight: bold;
+  color: #1565c0;
+}
+.dashboard-insurance-table tr.total-row {
+  background: #e3f2fd;
+}
+@media (max-width: 900px) {
+  .dashboard-insurance-table {
+    min-width: 480px;
+    font-size: 0.85em;
+  }
+}

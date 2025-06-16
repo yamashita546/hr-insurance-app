@@ -28,10 +28,10 @@
         </label>
       </div>
       <div class="row-group">
-        <label>支社：
+        <label>事業所：
           <select [(ngModel)]="selectedOfficeId" (change)="onOfficeChange()">
-            <option value="">全支社</option>
-            <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
+            <option value="">全事業所</option>
+            <option *ngFor="let office of activeOffices" [value]="office.id">{{ office.name }}</option>
           </select>
         </label>
       </div>

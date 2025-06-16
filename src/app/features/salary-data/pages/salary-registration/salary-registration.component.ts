@@ -266,7 +266,7 @@ export class SalaryRegistrationComponent {
         this.companyName = company!.name;
         // 支社一覧をFirestoreから取得
         const offices = await this.firestoreService.getOffices(this.companyKey);
-        this.branches = ['全支社', ...offices.map(o => o.name)];
+        this.branches = ['全事業所', ...offices.map(o => o.name)];
         // 初期化後に必ずloadDataを呼ぶ
         setTimeout(() => this.loadData(), 0);
       });

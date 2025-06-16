@@ -189,8 +189,11 @@ export class InsuranceFormComponent implements OnInit {
     const startDate = emp.contractStartDate ? new Date(emp.contractStartDate) : null;
     const endDate = emp.contractEndDate ? new Date(emp.contractEndDate) : null;
     const targetDate = new Date(year, month - 1, 1);
-    if (startDate && targetDate < startDate) return false;
-    if (endDate && targetDate > endDate) return false;
+
+    // 日付部分だけで比較
+    const toYMD = (d: Date | null) => d ? `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}` : '';
+    if (startDate && toYMD(targetDate) < toYMD(startDate)) return false;
+    if (endDate && toYMD(targetDate) > toYMD(endDate)) return false;
     return true;
   }
 
@@ -227,6 +230,9 @@ export class InsuranceFormComponent implements OnInit {
     const targetYm = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
     const targetMonthEnd = new Date(this.selectedYear, this.selectedMonth, 0); // 月末日
 
+    // アラート用: 除外理由リスト
+    const excludedReasons: string[] = [];
+
     // 追加: 給与データ未登録者チェック
     if (this.selectedType === 'salary') {
       const missingSalaryEmployees = targetEmployees.filter(emp => {
@@ -236,27 +242,40 @@ export class InsuranceFormComponent implements OnInit {
       });
       if (missingSalaryEmployees.length > 0) {
         const names = missingSalaryEmployees.map(emp => `${this.offices.find(o => o.id === emp.officeId)?.name || ''} ${emp.lastName} ${emp.firstName}`).join('\n');
-        alert(`当月給与データが登録されていない従業員がいます:\n${names}`);
-        return;
+        excludedReasons.push(`当月給与データが登録されていない従業員:\n${names}`);
       }
     }
 
     // 共通の従業員filter
-    targetEmployees = targetEmployees.filter(emp => {
+    const beforeFilterCount = targetEmployees.length;
+    const filteredEmployees = targetEmployees.filter(emp => {
       // 入社前・退社後は対象外
-      if (!this.isActiveEmployeeForTargetMonth(emp, this.selectedYear, this.selectedMonth)) return false;
+      if (!this.isActiveEmployeeForTargetMonth(emp, this.selectedYear, this.selectedMonth)) {
+        excludedReasons.push(`${emp.lastName} ${emp.firstName}: 在籍期間外`);
+        return false;
+      }
       // 社会保険未加入は対象外
-      if (!emp.healthInsuranceStatus?.isApplicable) return false;
+      if (!emp.healthInsuranceStatus?.isApplicable) {
+        excludedReasons.push(`${emp.lastName} ${emp.firstName}: 社会保険未加入`);
+        return false;
+      }
       // 喪失日がある場合、対象年月の月末より前なら対象外
       const lossDateRaw = emp.healthInsuranceStatus?.lossDate;
       if (lossDateRaw) {
         const lossDate = new Date(lossDateRaw);
         if (!isNaN(lossDate.getTime()) && lossDate < targetMonthEnd) {
+          excludedReasons.push(`${emp.lastName} ${emp.firstName}: 喪失日が対象月より前`);
           return false;
         }
       }
       return true;
     });
+    if (filteredEmployees.length === 0 && excludedReasons.length > 0) {
+      alert('プレビューに表示できる従業員がいません。\n\n理由:\n' + excludedReasons.join('\n'));
+      this.previewList = [];
+      return;
+    }
+    targetEmployees = filteredEmployees;
 
     console.log('onDecision: targetEmployees', targetEmployees.map(e => e.lastName + e.firstName));
 
@@ -353,7 +372,7 @@ export class InsuranceFormComponent implements OnInit {
           let childcare = 'ー';
           let companyShare = 'ー';
           let grade = std ? `${std.healthGrade}（${std.pensionGrade}）` : 'ー';
-          let monthly = std ? std.healthMonthly : 'ー';
+          let monthly = std ? Number(std.healthMonthly).toLocaleString() : 'ー';
           let careRate = 0;
           let insuranceTotal = 0;
           let healthRate = 0;
@@ -396,14 +415,16 @@ export class InsuranceFormComponent implements OnInit {
               // 控除額合計（健康保険分のみ）
               deductionTotal = healthDeduct.toLocaleString();
               // 子ども子育て拠出金
-              const childcareVal = std.healthMonthly * (Number(ChildcareInsuranceRate.CHILDCARE_INSURANCE_RATE) / 100);
+              const childcareBase = std.pensionMonthly !== undefined && std.pensionMonthly !== null ? Number(std.pensionMonthly) : Number(std.healthMonthly);
+              const childcareVal = childcareBase * (Number(ChildcareInsuranceRate.CHILDCARE_INSURANCE_RATE) / 100);
               childcare = this.formatDecimal(childcareVal);
               // 会社負担（健康保険分のみ＋子ども子育て拠出金）
               companyShare = this.formatDecimal(healthCompany + childcareVal);
             }
             // 厚生年金保険料
             if (pensionApplicable) {
-              const pensionTotal = std.healthMonthly * (pensionRate / 100); // 保険料総額
+              const pensionBase = std.pensionMonthly !== undefined ? std.pensionMonthly : std.healthMonthly;
+              const pensionTotal = pensionBase * (pensionRate / 100); // 保険料総額
               pension = this.formatDecimal(pensionTotal);
               // 厚生年金保険料控除額（労働者負担額）
               const pensionDeduct = this.roundSocialInsurance(pensionTotal / 2);
@@ -458,6 +479,9 @@ export class InsuranceFormComponent implements OnInit {
             },
             grade,
             monthly: std ? Number(std.healthMonthly).toLocaleString() : 'ー',
+            pensionMonthly: std && std.pensionMonthly !== undefined && std.pensionMonthly !== null
+              ? Number(std.pensionMonthly)
+              : (std ? Number(std.healthMonthly) : null),
             healthInsurance,
             healthInsuranceDeduction,
             pension,
@@ -524,7 +548,36 @@ export class InsuranceFormComponent implements OnInit {
       );
       if (duplicateRows.length > 0) {
         const names = duplicateRows.map(row => `${row.officeName} ${row.employeeName}`).join('\n');
-        alert(`既に社会保険料計算結果が登録されている従業員がいます:\n${names}`);
+        if (!confirm(`既に社会保険料計算結果が登録されている従業員がいます:\n${names}\n\n上書き保存しますか？`)) {
+          return;
+        }
+        // 上書き保存
+        const promises = this.previewList.map(async row => {
+          const calculation: Omit<import('../../../../core/models/insurance-calculation.model').InsuranceSalaryCalculation, 'createdAt' | 'updatedAt'> = {
+            companyKey: this.companyKey,
+            officeId: row.officeId,
+            employeeId: row.employeeId,
+            applyYearMonth,
+            healthGrade: row.grade,
+            healthMonthly: Number(row.monthly.toString().replace(/,/g, '')),
+            pensionGrade: '', // 必要に応じてrowから取得
+            pensionMonthly: row.pensionMonthly,
+            salaryTotal: row.salaryTotal ? Number(row.salaryTotal.toString().replace(/,/g, '')) : 0,
+            salaryAvg: 0, // 必要に応じて計算
+            careInsurance: row.careInsurance === '〇',
+            healthInsurance: Number(row.healthInsurance.toString().replace(/,/g, '')),
+            healthInsuranceDeduction: Number(row.healthInsuranceDeduction.toString().replace(/,/g, '')),
+            pension: Number(row.pension.toString().replace(/,/g, '')),
+            pensionDeduction: Number(row.pensionDeduction.toString().replace(/,/g, '')),
+            deductionTotal: Number(row.deductionTotal.toString().replace(/,/g, '')),
+            childcare: Number(row.childcare.toString().replace(/,/g, '')),
+            companyShare: Number(row.companyShare.toString().replace(/,/g, '')),
+          };
+          await this.firestoreService.updateInsuranceSalaryCalculation(calculation);
+        });
+        await Promise.all(promises);
+        alert(`${this.previewList.length}件の給与社会保険料計算結果を上書き保存しました。`);
+        this.router.navigate(['/insurance-calc']);
         return;
       }
       const hasSalary = this.previewList.some(row => row.salaryTotal && row.salaryTotal !== 'ー');
@@ -541,7 +594,7 @@ export class InsuranceFormComponent implements OnInit {
           healthGrade: row.grade,
           healthMonthly: Number(row.monthly.toString().replace(/,/g, '')),
           pensionGrade: '', // 必要に応じてrowから取得
-          pensionMonthly: 0, // 必要に応じてrowから取得
+          pensionMonthly: row.pensionMonthly,
           salaryTotal: row.salaryTotal ? Number(row.salaryTotal.toString().replace(/,/g, '')) : 0,
           salaryAvg: 0, // 必要に応じて計算
           careInsurance: row.careInsurance === '〇',
@@ -566,6 +619,52 @@ export class InsuranceFormComponent implements OnInit {
         alert(`当月賞与データが登録されていない従業員がいます:\n${names}`);
         return;
       }
+      // 既存賞与計算結果の重複チェック
+      const existingCalcs = this.insuranceBonusCalculations.filter(s => s.applyYearMonth === applyYearMonth);
+      const duplicateRows = this.previewList.filter(row =>
+        existingCalcs.some(s => s.employeeId === row.employeeId)
+      );
+      if (duplicateRows.length > 0) {
+        const names = duplicateRows.map(row => `${row.officeName} ${row.employeeName}`).join('\n');
+        if (!confirm(`既に賞与社会保険料計算結果が登録されている従業員がいます:\n${names}\n\n上書き保存しますか？`)) {
+          return;
+        }
+        // 上書き保存
+        const promises = this.previewList.map(async row => {
+          const calculation: Omit<import('../../../../core/models/insurance-calculation.model').InsuranceBonusCalculation, 'createdAt' | 'updatedAt'> = {
+            companyKey: this.companyKey,
+            officeId: row.officeId,
+            employeeId: row.employeeId,
+            applyYearMonth,
+            healthGrade: row.grade,
+            healthMonthly: Number(row.monthly.toString().replace(/,/g, '')),
+            pensionGrade: '', // 必要に応じてrowから取得
+            pensionMonthly:
+              (row.pensionMonthly !== undefined && row.pensionMonthly !== null && row.pensionMonthly !== 'ー'
+                ? Number(row.pensionMonthly.toString().replace(/,/g, ''))
+                : null) as number,
+            bonusTotal: row.bonus ? Number(row.bonus.toString().replace(/,/g, '')) : 0,
+            bonusAvg: row.bonus ? Number(row.bonus.toString().replace(/,/g, '')) : 0, // 必要に応じて平均値を計算
+            careInsurance: row.careInsurance === '〇',
+            healthInsurance: Number(row.healthInsurance.toString().replace(/,/g, '')),
+            healthInsuranceDeduction: Number(row.healthInsuranceDeduction.toString().replace(/,/g, '')),
+            pension: Number(row.pension.toString().replace(/,/g, '')),
+            pensionDeduction: Number(row.pensionDeduction.toString().replace(/,/g, '')),
+            deductionTotal: Number(row.deductionTotal.toString().replace(/,/g, '')),
+            childcare: Number(row.childcare.toString().replace(/,/g, '')),
+            companyShare: Number(row.companyShare.toString().replace(/,/g, '')),
+            standardBonus: row.standardBonus ?? 0,
+            annualBonusTotal: row.annualBonusTotal ?? 0,
+            annualBonusTotalBefore: row.annualBonusTotalBefore ?? 0,
+            bonusDiff: row.bonusDiff ?? 0,
+          };
+          await this.firestoreService.updateInsuranceBonusCalculation(calculation);
+        });
+        await Promise.all(promises);
+        alert(`${this.previewList.length}件の賞与社会保険料計算結果を上書き保存しました。`);
+        this.router.navigate(['/insurance-calc']);
+        return;
+      }
       const promises = this.previewList.map(async row => {
         const calculation: Omit<import('../../../../core/models/insurance-calculation.model').InsuranceBonusCalculation, 'createdAt' | 'updatedAt'> = {
           companyKey: this.companyKey,
@@ -575,7 +674,10 @@ export class InsuranceFormComponent implements OnInit {
           healthGrade: row.grade,
           healthMonthly: Number(row.monthly.toString().replace(/,/g, '')),
           pensionGrade: '', // 必要に応じてrowから取得
-          pensionMonthly: 0, // 必要に応じてrowから取得
+          pensionMonthly:
+            (row.pensionMonthly !== undefined && row.pensionMonthly !== null && row.pensionMonthly !== 'ー'
+              ? Number(row.pensionMonthly.toString().replace(/,/g, ''))
+              : null) as number,
           bonusTotal: row.bonus ? Number(row.bonus.toString().replace(/,/g, '')) : 0,
           bonusAvg: row.bonus ? Number(row.bonus.toString().replace(/,/g, '')) : 0, // 必要に応じて平均値を計算
           careInsurance: row.careInsurance === '〇',
@@ -674,5 +776,9 @@ export class InsuranceFormComponent implements OnInit {
       result.push('健康保険：75歳到達による資格喪失');
     }
     return result;
+  }
+
+  get activeOffices() {
+    return this.offices.filter(o => o.isActive !== false);
   }
 }

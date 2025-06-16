@@ -61,6 +61,10 @@ export class SalaryFormComponent implements OnInit {
     return Number(this.bonus?.bonus) || 0;
   }
 
+  get activeOffices() {
+    return this.offices.filter(o => o.isActive !== false);
+  }
+
   constructor(
     private userCompanyService: UserCompanyService,
     private firestoreService: FirestoreService

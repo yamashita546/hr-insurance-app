@@ -14,8 +14,8 @@ export interface StandardMonthlyDecision {
   officeId: string;
   employeeId: string;
   applyYearMonth: string; // 例: "2025-09"
-  healthGrade: number | string;
-  healthMonthly: number;
+  healthGrade: number | string;//健康保険等級
+  healthMonthly: number;//健康保険標準月額
   pensionGrade: number | string;
   pensionMonthly: number;
   salaryTotal: number;

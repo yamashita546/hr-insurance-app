@@ -75,25 +75,21 @@ export class DashboardComponent implements OnInit {
   attendanceRequiredCount = 0;
   standardMonthlyRegisteredCount = 0;
   standardMonthlyRequiredCount = 0;
-  // グラフ用
-  graphPeriodOptions = [
-    { label: '1年', value: 12 },
-    { label: '半年', value: 6 },
-    { label: '3ヶ月', value: 3 }
-  ];
-  selectedGraphPeriod = 12;
-  graphLabels: string[] = [];
-  salaryData: number[] = [];
-  insuranceData: number[] = [];
-  employeeDeductionData: number[] = [];
-  companyShareData: number[] = [];
-  chartData: ChartConfiguration<'line'>['data'] = { labels: [], datasets: [] };
-  chartOptions: ChartConfiguration<'line'>['options'] = {
-    responsive: true,
-    plugins: { legend: { display: true } },
-    scales: { x: {}, y: { beginAtZero: true } }
-  };
-  chartType: 'line' = 'line';
+  offices: any[] = [];
+  selectedOfficeId: string = '';
+  selectedType: 'salary' | 'bonus' = 'salary';
+  filteredOffices: any[] = [];
+  officeInsuranceInfo: {
+    officeId: string;
+    officeName: string;
+    salaryTotal: number;
+    insuranceTotal: number;
+    employeeDeduction: number;
+    companyShare: number;
+    childcareDeduction: number;
+    companyShareTotal: number;
+  }[] = [];
+  officeCompanyShareTotal: number = 0;
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -108,11 +104,109 @@ export class DashboardComponent implements OnInit {
     return null;
   }
 
+  // NaNやカンマ付き文字列を安全に数値化する関数
+  private safeNumber(val: any): number {
+    if (val === null || val === undefined) return 0;
+    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+    if (typeof val === 'string') {
+      const n = Number(val.replace(/,/g, ''));
+      return isNaN(n) ? 0 : n;
+    }
+    return 0;
+  }
+
+  // 端数処理（0.50円以下切り捨て、0.51円以上切り上げ、0.50は切り捨て）
+  private roundInsurance(val: number): number {
+    const intPart = Math.floor(val);
+    const decimal = val - intPart;
+    if (decimal < 0.5) return intPart;
+    if (decimal > 0.5) return intPart + 1;
+    // ちょうど0.5の場合は切り捨て
+    return intPart;
+  }
+
   async updateCurrentMonthStatus() {
+    console.log('[updateCurrentMonthStatus] called');
+    console.log('  selectedOfficeId:', this.selectedOfficeId);
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
-    // 社会保険料計算結果
+    // 事業所リストの再取得は削除し、this.officesをそのまま使う
+    // const newOffices = await this.firestoreService.getOffices(this.companyKey);
+    // console.log('  offices(before):', this.offices.map(o => ({id: o.id, name: o.name, isActive: o.isActive})));
+    // console.log('  newOffices:', newOffices.map(o => ({id: o.id, name: o.name, isActive: o.isActive})));
+
+    // 新旧事業所リストのID集合で比較は不要
+    // const newOfficeIds = newOffices.map(o => o.id);
+    // this.offices = newOffices;
+
+    // filteredOfficesを更新
+    this.filteredOffices = this.selectedOfficeId
+      ? this.offices.filter(o => o.id === this.selectedOfficeId && o.isActive !== false)
+      : this.offices.filter(o => o.isActive !== false);
+    console.log('  filteredOffices:', this.filteredOffices.map(o => ({id: o.id, name: o.name})));
+
+    // Firestoreから給与・賞与データ取得
     const insuranceSalaryList = (await this.firestoreService.getInsuranceSalaryCalculations()).filter((c: any) => c.companyKey === this.companyKey && c.applyYearMonth === ym);
     const insuranceBonusList = (await this.firestoreService.getInsuranceBonusCalculations()).filter((c: any) => c.companyKey === this.companyKey && c.applyYearMonth === ym);
+
+    // 1. 事業所ごとに給与データを集計
+    const salaryOfficeMap = new Map<string, any>();
+    this.filteredOffices.forEach(office => {
+      const salaryList = insuranceSalaryList.filter(row => row.officeId === office.id);
+      const salaryTotal = salaryList.reduce((sum, row) => sum + this.safeNumber(row.salaryTotal), 0);
+      const insuranceTotal = salaryList.reduce((sum, row) => sum + this.safeNumber(row.healthInsurance) + this.safeNumber(row.pension), 0);
+      const employeeDeduction = salaryList.reduce((sum, row) => sum + this.safeNumber(row.healthInsuranceDeduction) + this.safeNumber(row.pensionDeduction), 0);
+      const childcareDeduction = salaryList.reduce((sum, row) => sum + this.safeNumber(row.childcare), 0);
+      salaryOfficeMap.set(office.id, {
+        salaryTotal,
+        insuranceTotal,
+        employeeDeduction,
+        childcareDeduction
+      });
+    });
+
+    // 2. 事業所ごとに賞与データを集計
+    const bonusOfficeMap = new Map<string, any>();
+    this.filteredOffices.forEach(office => {
+      const bonusList = insuranceBonusList.filter(row => row.officeId === office.id);
+      const bonusTotal = bonusList.reduce((sum, row) => sum + this.safeNumber(row.bonusTotal), 0);
+      const insuranceTotal = bonusList.reduce((sum, row) => sum + this.safeNumber(row.healthInsurance) + this.safeNumber(row.pension), 0);
+      const employeeDeduction = bonusList.reduce((sum, row) => sum + this.safeNumber(row.healthInsuranceDeduction) + this.safeNumber(row.pensionDeduction), 0);
+      const childcareDeduction = bonusList.reduce((sum, row) => sum + this.safeNumber(row.childcare), 0);
+      bonusOfficeMap.set(office.id, {
+        bonusTotal,
+        insuranceTotal,
+        employeeDeduction,
+        childcareDeduction
+      });
+    });
+
+    // 3. 給与・賞与の集計データを合計し、端数処理・会社合計を集計
+    this.officeInsuranceInfo = this.filteredOffices.map(office => {
+      const salary = salaryOfficeMap.get(office.id) || { salaryTotal: 0, insuranceTotal: 0, employeeDeduction: 0, childcareDeduction: 0 };
+      const bonus = bonusOfficeMap.get(office.id) || { bonusTotal: 0, insuranceTotal: 0, employeeDeduction: 0, childcareDeduction: 0 };
+      const salaryTotal = salary.salaryTotal + (bonus.bonusTotal || 0);
+      const insuranceTotalRaw = salary.insuranceTotal + bonus.insuranceTotal;
+      const employeeDeduction = salary.employeeDeduction + bonus.employeeDeduction;
+      const childcareDeductionRaw = salary.childcareDeduction + bonus.childcareDeduction;
+      // 端数処理
+      const insuranceTotal = this.roundInsurance(insuranceTotalRaw);
+      const childcareDeduction = this.roundInsurance(childcareDeductionRaw);
+      const companyShare = insuranceTotal - employeeDeduction;
+      const companyShareTotal = companyShare + childcareDeduction;
+      return {
+        officeId: office.id,
+        officeName: office.name,
+        salaryTotal,
+        insuranceTotal,
+        employeeDeduction,
+        companyShare,
+        childcareDeduction,
+        companyShareTotal
+      };
+    });
+    console.log('  officeInsuranceInfo:', this.officeInsuranceInfo.map(o => ({officeId: o.officeId, officeName: o.officeName})));
+    // 会社負担額合計（子ども子育て拠出金含む）
+    this.officeCompanyShareTotal = this.officeInsuranceInfo.reduce((sum, o) => sum + o.companyShareTotal, 0);
 
     // === 重複チェック付き登録数集計 ===
     // 社会保険料（給与）
@@ -221,48 +315,8 @@ export class DashboardComponent implements OnInit {
     }, 0);
   }
 
-  async updateGraphData() {
-    // 選択期間分の月ラベルを生成
-    const now = new Date(this.selectedYear, this.selectedMonth - 1);
-    const months: { ym: string, label: string }[] = [];
-    for (let i = this.selectedGraphPeriod - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      months.push({ ym, label: `${d.getFullYear()}/${d.getMonth() + 1}` });
-    }
-    this.graphLabels = months.map(m => m.label);
-    // データ取得
-    const salaryCalcs = await this.firestoreService.getInsuranceSalaryCalculations();
-    // 月ごとに集計
-    this.salaryData = months.map(m =>
-      salaryCalcs.filter(c => c.companyKey === this.companyKey && c.applyYearMonth === m.ym)
-        .reduce((sum, row) => sum + (Number(row.salaryTotal) || 0), 0)
-    );
-    this.insuranceData = months.map(m =>
-      salaryCalcs.filter(c => c.companyKey === this.companyKey && c.applyYearMonth === m.ym)
-        .reduce((sum, row) => sum + (Number(row.healthInsurance) || 0) + (Number(row.pension) || 0), 0)
-    );
-    this.employeeDeductionData = months.map(m =>
-      salaryCalcs.filter(c => c.companyKey === this.companyKey && c.applyYearMonth === m.ym)
-        .reduce((sum, row) => sum + (Number(row.healthInsuranceDeduction) || 0) + (Number(row.pensionDeduction) || 0), 0)
-    );
-    this.companyShareData = months.map(m =>
-      salaryCalcs.filter(c => c.companyKey === this.companyKey && c.applyYearMonth === m.ym)
-        .reduce((sum, row) => sum + (Number(row.companyShare) || 0), 0)
-    );
-    // グラフデータセット
-    this.chartData = {
-      labels: this.graphLabels,
-      datasets: [
-        { label: '給与総額', data: this.salaryData, borderColor: '#1976d2', backgroundColor: 'rgba(25,118,210,0.08)', yAxisID: 'y' },
-        { label: '保険料総額', data: this.insuranceData, borderColor: '#43a047', backgroundColor: 'rgba(67,160,71,0.08)', yAxisID: 'y' },
-        { label: '従業員控除額', data: this.employeeDeductionData, borderColor: '#ffa000', backgroundColor: 'rgba(255,160,0,0.08)', yAxisID: 'y' },
-        { label: '会社負担額', data: this.companyShareData, borderColor: '#d32f2f', backgroundColor: 'rgba(211,47,47,0.08)', yAxisID: 'y' }
-      ]
-    };
-  }
-
   async ngOnInit() {
+    console.log('[ngOnInit] called');
     this.userCompanyService.company$.subscribe(company => {
       if (company) {
         this.companyId = company.companyId || '';
@@ -272,13 +326,16 @@ export class DashboardComponent implements OnInit {
     this.userCompanyService.company$
       .pipe(filter(company => !!company && !!company.companyKey), take(1))
       .subscribe(async company => {
+        console.log('[ngOnInit] company$ loaded, companyKey:', company!.companyKey);
         this.companyKey = company!.companyKey;
         // 支社・従業員数取得
         const [offices, employees] = await Promise.all([
           this.firestoreService.getOffices(this.companyKey),
           this.firestoreService.getEmployeesByCompanyKey(this.companyKey)
         ]);
+        this.offices = offices;
         this.officeCount = offices.length;
+        console.log('[ngOnInit] offices loaded:', offices.map(o => ({id: o.id, name: o.name, isActive: o.isActive})));
 
         // === 集計処理 ===
         const now = new Date();
@@ -322,16 +379,32 @@ export class DashboardComponent implements OnInit {
 
         // 当月データ登録状況を取得
         await this.updateCurrentMonthStatus();
-        await this.updateGraphData();
       });
-  }
-
-  async onGraphPeriodChange() {
-    await this.updateGraphData();
   }
 
   async onYearMonthChange() {
     await this.updateCurrentMonthStatus();
-    await this.updateGraphData();
+  }
+
+  async onOfficeChange() {
+    console.log('[onOfficeChange] called, selectedOfficeId:', this.selectedOfficeId);
+    await this.updateCurrentMonthStatus();
+  }
+
+  get activeOffices() {
+    return this.offices.filter(o => o.isActive !== false);
+  }
+
+  get displayedOfficeInsuranceInfo() {
+    if (!this.selectedOfficeId) {
+      return this.officeInsuranceInfo;
+    }
+    return this.officeInsuranceInfo.filter(info => info.officeId === this.selectedOfficeId);
+  }
+
+  get selectedOfficeName() {
+    if (!this.selectedOfficeId) return '全事業所';
+    const office = this.activeOffices.find(o => o.id === this.selectedOfficeId);
+    return office?.officeName || office?.name || '';
   }
 }

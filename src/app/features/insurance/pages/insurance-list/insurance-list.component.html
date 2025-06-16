@@ -10,7 +10,7 @@
       <label>事業所</label>
       <select [(ngModel)]="selectedOfficeId" name="office" (ngModelChange)="updateResultList()">
         <option value="">全事業所</option>
-        <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
+        <option *ngFor="let office of activeOffices" [value]="office.id">{{ office.name }}</option>
       </select>
       <label>従業員</label>
       <select [(ngModel)]="selectedEmployeeId" name="employee" (ngModelChange)="updateResultList()">

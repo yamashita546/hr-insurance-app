@@ -516,4 +516,28 @@ export class FirestoreService {
       await deleteDoc(doc(this.firestore, 'bonuses', docSnap.id));
     }
   }
+
+  // 給与計算結果の上書き保存
+  async updateInsuranceSalaryCalculation(calculation: Omit<InsuranceSalaryCalculation, 'createdAt' | 'updatedAt' | 'id'>) {
+    if (!calculation.employeeId || !calculation.officeId) return;
+    const col = collection(this.firestore, 'insuranceSalaryCalculations');
+    const q_ = query(col, where('employeeId', '==', calculation.employeeId), where('officeId', '==', calculation.officeId), where('applyYearMonth', '==', calculation.applyYearMonth));
+    const snap = await getDocs(q_);
+    if (!snap.empty) {
+      const docRef = doc(this.firestore, 'insuranceSalaryCalculations', snap.docs[0].id);
+      await setDoc(docRef, { ...calculation, updatedAt: Timestamp.now() }, { merge: true });
+    }
+  }
+
+  // 賞与計算結果の上書き保存
+  async updateInsuranceBonusCalculation(calculation: Omit<InsuranceBonusCalculation, 'createdAt' | 'updatedAt' | 'id'>) {
+    if (!calculation.employeeId || !calculation.officeId) return;
+    const col = collection(this.firestore, 'insuranceBonusCalculations');
+    const q_ = query(col, where('employeeId', '==', calculation.employeeId), where('officeId', '==', calculation.officeId), where('applyYearMonth', '==', calculation.applyYearMonth));
+    const snap = await getDocs(q_);
+    if (!snap.empty) {
+      const docRef = doc(this.firestore, 'insuranceBonusCalculations', snap.docs[0].id);
+      await setDoc(docRef, { ...calculation, updatedAt: Timestamp.now() }, { merge: true });
+    }
+  }
 }

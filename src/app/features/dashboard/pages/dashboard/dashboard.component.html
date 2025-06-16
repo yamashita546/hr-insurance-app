@@ -46,7 +46,7 @@
           <td>給与</td>
           <td>{{ salaryRegisteredCount }}/{{ salaryRequiredCount }}件</td>
           <td>
-            <a *ngIf="salaryRegisteredCount !== salaryRequiredCount" routerLink="/salary">登録</a>
+            <a *ngIf="salaryRegisteredCount !== salaryRequiredCount" routerLink="/salary-form">登録</a>
             <span *ngIf="salaryRegisteredCount === salaryRequiredCount">登録済み</span>
           </td>
         </tr>
@@ -54,7 +54,7 @@
           <td>賞与</td>
           <td>{{ bonusRegisteredCount }}/{{ bonusRequiredCount }}件</td>
           <td>
-            <a *ngIf="bonusRegisteredCount !== bonusRequiredCount" routerLink="/bonus">登録</a>
+            <a *ngIf="bonusRegisteredCount !== bonusRequiredCount" routerLink="/salary-form">登録</a>
             <span *ngIf="bonusRegisteredCount === bonusRequiredCount">登録済み</span>
           </td>
         </tr>
@@ -62,7 +62,7 @@
           <td>勤怠</td>
           <td>{{ attendanceRegisteredCount }}/{{ attendanceRequiredCount }}件</td>
           <td>
-            <a *ngIf="attendanceRegisteredCount !== attendanceRequiredCount" routerLink="/attendance">登録</a>
+            <a *ngIf="attendanceRegisteredCount !== attendanceRequiredCount" routerLink="/attendance-form">登録</a>
             <span *ngIf="attendanceRegisteredCount === attendanceRequiredCount">登録済み</span>
           </td>
         </tr>
@@ -88,63 +88,41 @@
         <select [(ngModel)]="selectedMonth" (ngModelChange)="onYearMonthChange()">
           <option *ngFor="let m of months" [value]="m">{{ m }}月</option>
         </select>
+        <label style="margin-left: 1em;">事業所：</label>
+        <select [(ngModel)]="selectedOfficeId" (ngModelChange)="onOfficeChange()">
+          <option value="">全事業所</option>
+          <option *ngFor="let office of activeOffices" [value]="office.id">{{ office.officeName || office.name }}</option>
+        </select>
       </div>
-      <table class="insurance-info-table">
-        <thead>
-          <tr>
-            <th></th>
-            <th>総額</th>
-            <th>保険料総額</th>
-            <th>従業員控除額</th>
-            <th>会社負担額</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>給与</td>
-            <td>{{ salaryTotal | number }} 円</td>
-            <td>{{ salaryInsuranceTotal | number }} 円</td>
-            <td>{{ salaryEmployeeDeduction | number }} 円</td>
-            <td>{{ salaryCompanyShare | number }} 円</td>
-          </tr>
-          <tr>
-            <td>賞与</td>
-            <td>{{ bonusTotal | number }} 円</td>
-            <td>{{ bonusInsuranceTotal | number }} 円</td>
-            <td>{{ bonusEmployeeDeduction | number }} 円</td>
-            <td>{{ bonusCompanyShare | number }} 円</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="insurance-table-wrapper" style="overflow-x:auto;">
+        <table class="insurance-info-table dashboard-insurance-table">
+          <thead>
+            <tr>
+              <th class="left" style="min-width:120px;">事業所名</th>
+              <th>支給総額</th>
+              <th>保険料<br>合計</th>
+              <th>従業員<br>控除額</th>
+              <th>会社負担</th>
+              <th>子ども子育て<br>拠出金</th>
+              <th>会社負担<br>合計</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let info of displayedOfficeInsuranceInfo">
+              <td class="left">{{ selectedOfficeId ? selectedOfficeName : info.officeName }}</td>
+              <td class="right">{{ info.salaryTotal | number }} 円</td>
+              <td class="right">{{ info.insuranceTotal | number }} 円</td>
+              <td class="right">{{ info.employeeDeduction | number }} 円</td>
+              <td class="right">{{ info.companyShare | number }} 円</td>
+              <td class="right">{{ info.childcareDeduction | number }} 円</td>
+              <td class="right strong">{{ info.companyShareTotal | number }} 円</td>
+            </tr>
+            <tr class="total-row">
+              <td colspan="6" style="text-align: right; font-weight: bold; font-size: 1em; background: #e3f2fd;">会社負担額合計</td>
+              <td class="right strong" style="font-size: 1.1em; background: #e3f2fd;">{{ officeCompanyShareTotal | number }} 円</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
-
-  <!-- 月別給与・保険料推移グラフ -->
-  <div class="dashboard-section">
-    <h2>月別給与・保険料推移</h2>
-    <div class="graph-toolbar">
-      <label>表示期間：</label>
-      <select [(ngModel)]="selectedGraphPeriod" (ngModelChange)="onGraphPeriodChange()">
-        <option *ngFor="let opt of graphPeriodOptions" [value]="opt.value">{{ opt.label }}</option>
-      </select>
-    </div>
-    <div class="chart-area">
-      <canvas baseChart
-        [data]="chartData"
-        [options]="chartOptions"
-        [type]="chartType"
-        style="max-width: 100%; height: 340px; display: block; margin: 0 auto;"
-      ></canvas>
-    </div>
-  </div>
-
-  <!-- 直近のアクティビティ・履歴エリア -->
-  <div class="dashboard-section">
-    <h2>直近のアクティビティ・履歴</h2>
-    <ul class="activity-list">
-      <li *ngFor="let activity of activities">
-        <i class="fas fa-history activity-icon"></i> {{ activity }}
-      </li>
-    </ul>
-  </div>
-</div>

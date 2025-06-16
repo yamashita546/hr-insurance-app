@@ -26,12 +26,12 @@
       <tr>
         <th>対象年月</th>
         <th>標準月額</th>
+        <th>介護保険料<br>適用</th>
         <th>健康保険料<br>合計</th>
         <th>健康保険料<br>個人負担</th>
-        <th>介護保険料<br>合計</th>
-        <th>介護保険料<br>個人負担</th>
         <th>厚生年金保険料<br>合計</th>
         <th>厚生年金保険料<br>個人負担</th>
+        <th>控除額<br>合計</th>
         <th>子ども子育て<br>拠出金</th>
         <th>会社負担<br>合計</th>
       </tr>
@@ -40,12 +40,12 @@
       <tr *ngFor="let row of selectedEmployeeSalaryCalculations">
         <td>{{ row.applyYearMonth }}</td>
         <td>{{ isNumber(row.healthMonthly) ? (row.healthMonthly | number) : 'ー' }}</td>
+        <td>{{ row.careInsurance === true ? '〇' : row.careInsurance === false ? '×' : 'ー' }}</td>
         <td>{{ isNumber(row.healthInsurance) ? (row.healthInsurance | number) : 'ー' }}</td>
         <td>{{ isNumber(row.healthInsuranceDeduction) ? (row.healthInsuranceDeduction | number) : 'ー' }}</td>
-        <td>{{ isNumber(row.careInsurance) ? (row.careInsurance | number) : 'ー' }}</td>
-        <td>{{ isNumber(row.careInsuranceDeduction) ? (row.careInsuranceDeduction | number) : 'ー' }}</td>
         <td>{{ isNumber(row.pension) ? (row.pension | number) : 'ー' }}</td>
         <td>{{ isNumber(row.pensionDeduction) ? (row.pensionDeduction | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.deductionTotal) ? (row.deductionTotal | number) : 'ー' }}</td>
         <td>{{ isNumber(row.childcare) ? (row.childcare | number) : 'ー' }}</td>
         <td>{{ isNumber(row.companyShare) ? (row.companyShare | number) : 'ー' }}</td>
       </tr>
@@ -62,24 +62,22 @@
       <tr>
         <th>対象年月</th>
         <th>標準賞与額</th>
-        <th>健康保険料合計</th>
-        <th>健康保険料個人負担</th>
-        <th>介護保険料合計</th>
-        <th>介護保険料個人負担</th>
-        <th>厚生年金保険料合計</th>
-        <th>厚生年金保険料個人負担</th>
-        <th>子ども子育て拠出金</th>
-        <th>会社負担合計</th>
+        <th>介護保険<br>適用</th>
+        <th>健康保険料<br>合計</th>
+        <th>健康保険料<br>個人負担</th>
+        <th>厚生年金保険料<br>合計</th>
+        <th>厚生年金保険料<br>個人負担</th>
+        <th>子ども子育て<br>拠出金</th>
+        <th>会社負担<br>合計</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let row of selectedEmployeeBonusCalculations">
         <td>{{ row.applyYearMonth }}</td>
         <td>{{ isNumber(row.standardBonus) ? (row.standardBonus | number) : 'ー' }}</td>
+        <td>{{ row.careInsurance === true ? '〇' : row.careInsurance === false ? '×' : 'ー' }}</td>
         <td>{{ isNumber(row.healthInsurance) ? (row.healthInsurance | number) : 'ー' }}</td>
         <td>{{ isNumber(row.healthInsuranceDeduction) ? (row.healthInsuranceDeduction | number) : 'ー' }}</td>
-        <td>{{ isNumber(row.careInsurance) ? (row.careInsurance | number) : 'ー' }}</td>
-        <td>{{ isNumber(row.careInsuranceDeduction) ? (row.careInsuranceDeduction | number) : 'ー' }}</td>
         <td>{{ isNumber(row.pension) ? (row.pension | number) : 'ー' }}</td>
         <td>{{ isNumber(row.pensionDeduction) ? (row.pensionDeduction | number) : 'ー' }}</td>
         <td>{{ isNumber(row.childcare) ? (row.childcare | number) : 'ー' }}</td>

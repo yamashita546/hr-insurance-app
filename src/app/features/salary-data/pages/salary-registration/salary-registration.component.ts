@@ -47,7 +47,7 @@ export class SalaryRegistrationComponent {
     let result = this.employees.filter(emp =>
       isEmployeeSelectable(emp, this.selectedYear?.toString(), this.selectedMonth?.toString())
     );
-    if (this.selectedBranch) {
+    if (this.selectedBranch && this.selectedBranch !== '全事業所') {
       result = result.filter(e => e.branch === this.selectedBranch);
     }
     if (this.searchKeyword) {

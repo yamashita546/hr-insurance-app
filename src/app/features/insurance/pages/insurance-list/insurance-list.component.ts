@@ -193,6 +193,112 @@ export class InsuranceListComponent implements OnInit {
     this.updateResultList();
   }
 
+  exportCsv() {
+    // ヘッダー行の作成（共通部分）
+    let headers = ['対象年月', '給与/賞与区分', '支社', '従業員ID', '従業員名', '介護保険適用'];
+    
+    // 給与/賞与に応じて異なるヘッダーを追加
+    if (this.selectedType === 'salary') {
+      headers = headers.concat([
+        '当月給与総支給',
+        '等級',
+        '標準報酬月額',
+        '健康保険料',
+        '健康保険料控除額',
+        '厚生年金保険料',
+        '厚生年金保険料控除額',
+        '控除額合計',
+        '子ども子育て拠出金',
+        '会社負担'
+      ]);
+    } else {
+      headers = headers.concat([
+        '当月賞与',
+        '標準賞与額',
+        '年度賞与合計',
+        '健康保険料',
+        '健康保険料控除額',
+        '厚生年金保険料',
+        '厚生年金保険料控除額',
+        '控除額合計',
+        '子ども子育て拠出金',
+        '会社負担'
+      ]);
+    }
+
+    // 対象年月の文字列を作成
+    const yearMonthStr = this.selectedYear && this.selectedMonth
+      ? `${this.selectedYear}年${this.selectedMonth}月`
+      : this.selectedYear
+        ? `${this.selectedYear}年全期間`
+        : this.selectedMonth
+          ? `全年${this.selectedMonth}月`
+          : '全期間';
+
+    // データ行の作成
+    const rows = this.resultList.map(row => {
+      const commonData = [
+        yearMonthStr,
+        this.selectedType === 'salary' ? '給与' : '賞与',
+        row.officeName,
+        row.employeeId,
+        row.employeeName,
+        row.careInsurance
+      ];
+
+      if (this.selectedType === 'salary') {
+        return commonData.concat([
+          row.salaryTotal,
+          row.grade,
+          row.monthly,
+          row.healthInsurance,
+          row.healthInsuranceDeduction,
+          row.pension,
+          row.pensionDeduction,
+          row.deductionTotal,
+          row.childcare,
+          row.companyShare
+        ]);
+      } else {
+        return commonData.concat([
+          row.bonus,
+          row.standardBonus,
+          row.annualBonusTotal,
+          row.healthInsurance,
+          row.healthInsuranceDeduction,
+          row.pension,
+          row.pensionDeduction,
+          row.deductionTotal,
+          row.childcare,
+          row.companyShare
+        ]);
+      }
+    });
+
+    // CSVデータの作成
+    const csvContent = [headers].concat(rows)
+      .map(row => row.map(cell => {
+        // セルの値に「,」や「"」が含まれている場合は、「"」で囲み、「"」は「""」にエスケープする
+        const cellStr = String(cell).replace(/"/g, '""');
+        return cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')
+          ? `"${cellStr}"`
+          : cellStr;
+      }).join(','))
+      .join('\n');
+
+    // BOMを付与してUTF-8でエンコード
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8' });
+    
+    // ダウンロードリンクを作成して自動クリック
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `社会保険料一覧_${yearMonthStr}_${this.selectedType === 'salary' ? '給与' : '賞与'}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   // ngModelの双方向バインドでselectedTypeが変わったときに呼ばれる
   // (AngularのngModelChangeイベントを使う場合は明示的に呼び出し可)
 }

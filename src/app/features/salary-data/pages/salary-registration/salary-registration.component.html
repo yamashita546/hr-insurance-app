@@ -18,7 +18,6 @@
       <option *ngFor="let branch of branches" [value]="branch">{{ branch }}</option>
     </select>
     <input type="text" [(ngModel)]="searchKeyword" placeholder="従業員検索">
-    <button (click)="onSearch()">🔍</button>
     <button routerLink="/salary-form">給与・賞与登録</button>
   </div>
   <div class="employee-salary-table-wrapper">

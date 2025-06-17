@@ -25,6 +25,8 @@ export class EmployeeListComponent {
   selectedOffice: string = '';
   selectedDepartment: string = '';
   selectedEmploymentType: string = '';
+  offices: any[] = [];
+  departments: any[] = [];
 
   constructor(
     private userCompanyService: UserCompanyService,
@@ -43,6 +45,13 @@ export class EmployeeListComponent {
     const q = query(employeesCol, where('companyKey', '==', companyKey));
     const snap = await getDocs(q);
     this.employees = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // 事業所・部署もFirestoreから取得
+    const officesCol = collection(this.firestore, 'offices');
+    const officesSnap = await getDocs(query(officesCol, where('companyKey', '==', companyKey)));
+    this.offices = officesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const departmentsCol = collection(this.firestore, 'departments');
+    const departmentsSnap = await getDocs(query(departmentsCol, where('companyKey', '==', companyKey)));
+    this.departments = departmentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   }
 
   showDetail(employee: any) {
@@ -50,19 +59,30 @@ export class EmployeeListComponent {
   }
 
   onAddEmployee() {
+    if (this.activeOfficeList.length === 0) {
+      alert('有効な事業所情報が登録されてません。\n会社情報設定より事業所を登録してください。');
+      return;
+    }
     alert('従業員追加ダイアログを開く想定です');
   }
 
+  get activeOfficeList() {
+    return this.offices.filter(o => o.isActive !== false).map(o => o.name);
+  }
+  get activeDepartmentList() {
+    return this.departments.filter(d => d.isActive !== false).map(d => d.name);
+  }
+  get employmentTypeNameList() {
+    return EMPLOYEE_TYPES.map(t => t.name);
+  }
   get officeList() {
-    return Array.from(new Set(this.employees.map(e => e.officeName).filter(Boolean)));
+    return this.activeOfficeList;
   }
-
   get departmentList() {
-    return Array.from(new Set(this.employees.map(e => e.department).filter(Boolean)));
+    return this.activeDepartmentList;
   }
-
   get employmentTypeList() {
-    return Array.from(new Set(this.employees.map(e => e.employeeType).filter(Boolean)));
+    return this.employmentTypeNameList;
   }
 
   get filteredEmployees() {

@@ -82,11 +82,9 @@ export class AddOfficeComponent implements OnInit {
 
     // 郵便番号の値が変わるたびにバリデーション状態を出力
     this.form.get('address.postalCodeFirst')?.valueChanges.subscribe(val => {
-      console.log('postalCodeFirst:', val, this.form.get('address.postalCodeFirst')?.errors);
       this.form.get('address')?.updateValueAndValidity();
     });
     this.form.get('address.postalCodeLast')?.valueChanges.subscribe(val => {
-      console.log('postalCodeLast:', val, this.form.get('address.postalCodeLast')?.errors);
       this.form.get('address')?.updateValueAndValidity();
     });
 
@@ -94,9 +92,6 @@ export class AddOfficeComponent implements OnInit {
     if (typeof this.office.industryClassification === 'object' && this.office.industryClassification?.code) {
       this.office.industryClassification = this.office.industryClassification.code;
     }
-
-    console.log(this.form.get('address.postalCodeFirst')?.value, this.form.get('address.postalCodeFirst')?.errors);
-    console.log(this.form.get('address.postalCodeLast')?.value, this.form.get('address.postalCodeLast')?.errors);
   }
 
   onSave() {

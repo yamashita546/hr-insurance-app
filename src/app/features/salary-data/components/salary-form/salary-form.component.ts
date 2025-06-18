@@ -309,10 +309,8 @@ export class SalaryFormComponent implements OnInit {
   }
 
   onCsvUpload(event: Event) {
-    console.log('onCsvUpload called', event);
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    console.log('selected file:', file);
     this.csvFileName = file ? file.name : '';
     if (!file) return;
     const reader = new FileReader();
@@ -462,7 +460,6 @@ export class SalaryFormComponent implements OnInit {
           commuteAllowancePeriodTo: row.commuteAllowancePeriodTo || '',
           commuteAllowanceMonths: Number(row.commuteAllowanceMonths) || 1,
         };
-        console.log('import salary:', salary);
         const isOverwrite = overwriteRows.some(orow => orow.employeeId === row.employeeId && orow.targetYear === row.targetYear && orow.targetMonth === row.targetMonth);
         if (isOverwrite) {
           await this.firestoreService.updateSalary(salary.companyKey!, salary.employeeId, salary.targetYearMonth, salary);
@@ -487,7 +484,6 @@ export class SalaryFormComponent implements OnInit {
           commuteAllowancePeriodTo: row.commuteAllowancePeriodTo || '',
           commuteAllowanceMonths: Number(row.commuteAllowanceMonths) || 1,
         };
-        console.log('import bonus:', bonusData);
         const isOverwrite = overwriteRows.some(orow => orow.employeeId === row.employeeId && orow.targetYear === row.targetYear && orow.targetMonth === row.targetMonth);
         if (isOverwrite) {
           await this.firestoreService.updateBonus(bonusData.companyKey!, bonusData.employeeId, bonusData.targetYearMonth, bonusData);
@@ -511,8 +507,6 @@ export class SalaryFormComponent implements OnInit {
   }
 
   async onDownloadCsvTemplate() {
-    console.log('onDownloadCsvTemplate called');
-    console.log('offices:', this.offices);
     this.csvYear = this.selectedYear;
     this.csvMonth = this.selectedMonth;
     this.csvOfficeId = '';

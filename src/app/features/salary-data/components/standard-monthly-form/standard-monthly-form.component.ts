@@ -918,7 +918,6 @@ export class StandardMonthlyFormComponent implements OnInit {
   }
 
   onEmployeeChange() {
-    console.log('selectedEmployeeId:', this.selectedEmployeeId);
     this.isConfirmed = false;
     this.isCalculated = false;
   }

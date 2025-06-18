@@ -51,22 +51,13 @@ export class CompaniesComponent {
   }
 
   openEditCompanyDialog() {
-    console.log('openEditCompanyDialog called');
-    if (this.dialogRef) {
-      console.log('dialogRef exists, returning');
-      return;
-    }
-    if (this.selectedCompanies.length === 0) {
-      console.log('selectedCompanies.length === 0, returning');
-      return;
-    }
+    if (this.dialogRef) return;
+    if (this.selectedCompanies.length === 0) return;
     if (this.selectedCompanies.length > 1) {
-      console.log('selectedCompanies.length > 1, showing alert');
       alert('編集は1件ずつ選択してください');
       return;
     }
     const company = this.selectedCompanies[0];
-    console.log('opening dialog for company:', company);
     this.dialogRef = this.dialog.open(EditCompanyComponent, {
       width: '500px',
       height: '90vh',

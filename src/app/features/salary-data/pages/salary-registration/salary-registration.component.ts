@@ -85,9 +85,6 @@ export class SalaryRegistrationComponent {
     this.allEmployees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
     this.allSalaries = await this.firestoreService.getSalariesByCompanyKey(this.companyKey);
     this.allBonuses = await this.firestoreService.getBonusesByCompanyKey(this.companyKey);
-    console.log('従業員:', this.allEmployees);
-    console.log('給与:', this.allSalaries);
-    console.log('賞与:', this.allBonuses);
     // 年月でフィルタ
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
     // isEmployeeSelectableでフィルタし、表示用データを作成
@@ -126,14 +123,12 @@ export class SalaryRegistrationComponent {
   }
 
   async onRegisterSalary(employee: any) {
-    console.log('onRegisterSalary called', employee);
     // 編集種別ダイアログを表示
     this.editEmployee = employee;
     this.showEditTypeDialog = true;
   }
 
   async onEditTypeSelect(type: 'salary' | 'bonus') {
-    console.log('onEditTypeSelect called', type, this.editEmployee);
     this.showEditTypeDialog = false;
     if (type === 'salary') {
       await this.openSalaryEdit(this.editEmployee);
@@ -143,7 +138,6 @@ export class SalaryRegistrationComponent {
   }
 
   async openSalaryEdit(employee: any) {
-    console.log('openSalaryEdit called', employee);
     this.editMode = 'salary';
     this.editTarget = employee;
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
@@ -163,7 +157,6 @@ export class SalaryRegistrationComponent {
   }
 
   async onEditBonus(employee: any) {
-    console.log('onEditBonus called', employee);
     this.editMode = 'bonus';
     this.editTarget = employee;
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;

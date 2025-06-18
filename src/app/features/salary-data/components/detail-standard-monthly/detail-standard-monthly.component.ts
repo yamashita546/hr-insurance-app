@@ -42,12 +42,10 @@ export class DetailStandardMonthlyComponent implements OnInit {
       this.companyKey = company.companyKey;
       // Firestoreからデータ取得
       const allDecisions = await this.firestoreService.getStandardMonthlyDecisionsByCompanyKey(this.companyKey);
-      console.log('Firestoreから取得したdecision:', allDecisions);
       this.decisions = allDecisions
         .filter(d => d.employeeId === this.employeeId)
         .map(d => ({ ...d, companyKey: this.companyKey }))
         .sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth));
-      console.log('フィルタ後のdecisions:', this.decisions);
       // 履歴も取得（officeIdは検索条件から除外）
       this.historyList = await this.firestoreService.getStandardMonthlyDecisionHistory(this.companyKey, this.employeeId, '');
       // 適用年月で現在・今後を正しく判定
@@ -60,20 +58,15 @@ export class DetailStandardMonthlyComponent implements OnInit {
       // 今後適用予定
       const future = this.decisions
         .filter(d => d.applyYearMonth > currentYm && d.isActive !== false);
-      console.log('未来のdecision:', future);
       this.nextDecision = future.sort((a, b) => a.applyYearMonth.localeCompare(b.applyYearMonth))[0] || null;
-      console.log('nextDecision after set:', this.nextDecision);
       // Firestoreから従業員・事業所情報も取得
       const employees = await this.firestoreService.getEmployeesByCompanyKey(this.companyKey);
       this.employeeInfo = employees.find(e => e.employeeId === this.employeeId) || null;
       const offices = await this.firestoreService.getOffices(this.companyKey);
       this.officeInfo = null;
     });
-    console.log('employeeId:', this.employeeId);
-    console.log('officeId:', this.officeId);
     // currentDecisionの内容を確認
     setTimeout(() => {
-      console.log('currentDecision:', this.currentDecision);
     }, 1000);
   }
 
@@ -82,7 +75,6 @@ export class DetailStandardMonthlyComponent implements OnInit {
   }
 
   onEditDecision(decision: any) {
-    console.log('編集対象decision:', decision);
     const decisionId = `${decision.companyKey}_${decision.officeId}_${decision.employeeId}_${decision.applyYearMonth}`;
     this.router.navigate(['/standard-monthly-form'], { queryParams: { mode: 'edit', decisionId } });
   }

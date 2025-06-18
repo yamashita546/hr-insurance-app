@@ -160,20 +160,12 @@ export class StandardMonthlyComponent {
     if (instance) {
       instance.data = { ...target };
       instance.saved.subscribe((updated: any) => {
-        console.log('[StandardMonthlyComponent] onEdit updated:', updated);
-        // 調査用: findIndexの各条件で一致するか確認
         this.grades.forEach((g, i) => {
-          console.log(`[findIndex調査] index:${i} id一致:${g.id === updated.id} gradeType一致:${g.gradeType === updated.gradeType} insuranceType一致:${g.insuranceType === updated.insuranceType}`, g, updated);
+          if (g.id === updated.id && g.gradeType === updated.gradeType && g.insuranceType === updated.insuranceType) {
+            this.grades[i] = { ...updated };
+          }
         });
-        const idx = this.grades.findIndex(g => g.id === updated.id && g.gradeType === updated.gradeType && g.insuranceType === updated.insuranceType);
-        console.log('[StandardMonthlyComponent] findIndex result idx:', idx);
-        if (idx !== -1) {
-          this.grades[idx] = { ...updated };
-          console.log('[StandardMonthlyComponent] grades after update:', this.grades);
-          this.applyFilter();
-        } else {
-          console.warn('[StandardMonthlyComponent] 編集対象が見つかりませんでした', updated);
-        }
+        this.applyFilter();
         this.dialogRef.close();
         this.dialogRef = null;
       });
@@ -196,7 +188,6 @@ export class StandardMonthlyComponent {
     }
     const promises = updatedGrades.map(grade => {
       const docId = `${String(grade.gradeType).trim()}_${String(grade.insuranceType).trim()}_${String(grade.grade).trim()}_${String(grade.validFrom).trim()}`;
-      console.log('[StandardMonthlyComponent] applyChanges docId:', docId, 'grade:', grade);
       return this.firestore.addOrUpdateStandardMonthlyGradeById(docId, grade);
     });
     await Promise.all(promises);

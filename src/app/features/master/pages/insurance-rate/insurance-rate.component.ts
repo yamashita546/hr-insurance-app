@@ -80,7 +80,6 @@ export class InsuranceRateComponent {
       const typeMatch = !this.selectedInsuranceType || (rate.insuranceType === this.selectedInsuranceType);
       return yearMatch && prefMatch && typeMatch;
     });
-    console.log('applyFilter後のfilteredRates:', this.filteredRates);
     this.selectedRate = null;
   }
 

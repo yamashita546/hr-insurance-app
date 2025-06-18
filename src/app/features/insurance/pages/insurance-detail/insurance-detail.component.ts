@@ -81,4 +81,33 @@ export class InsuranceDetailComponent implements OnInit {
   get activeEmployees() {
     return this.employees.filter(e => e.isActive !== false);
   }
+
+  // 年齢到達月以降かどうか判定
+  isAgeArrivedOrAfter(emp: any, targetAge: number): boolean {
+    if (!emp || !emp.birthday) return false;
+    const birth = new Date(emp.birthday);
+    const now = new Date();
+    const arrival = new Date(birth.getFullYear() + targetAge, birth.getMonth(), 1);
+    return now >= arrival;
+  }
+
+  // 外国人特例判定
+  isSpecialExemption(emp: any): boolean {
+    const val = emp.foreignWorker?.hasSpecialExemption;
+    if (typeof val === 'boolean') return val;
+    if (typeof val === 'string') return val.toLowerCase() === 'true';
+    return false;
+  }
+
+  // 産前産後休暇リスト取得
+  getMaternityLeaves(emp: any): any[] {
+    if (!emp || !Array.isArray(emp.extraordinaryLeaves)) return [];
+    return emp.extraordinaryLeaves.filter((leave: any) => leave.leaveTypeCode === 'maternity');
+  }
+
+  // 育児休業リスト取得
+  getChildcareLeaves(emp: any): any[] {
+    if (!emp || !Array.isArray(emp.childcareLeaves)) return [];
+    return emp.childcareLeaves;
+  }
 }

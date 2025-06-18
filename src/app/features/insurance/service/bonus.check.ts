@@ -1,5 +1,6 @@
 import { isMaternityLeaveExempted, isChildcareLeaveExempted, checkInsuranceExemption } from './check.service';
 import { ChildcareInsuranceRate } from '../../../core/models/insurance-rate.model';
+import { getAllAgeArrivalDates } from '../../../core/services/age.determination';
 
 // 賞与計算プレビューリスト生成
 export function generateBonusPreviewList({
@@ -76,10 +77,15 @@ export function generateBonusPreviewList({
       const rate = getInsuranceRateForOffice(emp.officeId);
       // 各保険の適用判定
       let healthApplicable = emp.healthInsuranceStatus?.isApplicable;
+      let pensionApplicable = true;
       const ageArrival = isAgeArrivalInMonth(emp, selectedYear, selectedMonth);
       // 75歳到達月は健康保険対象外
-      if (ageArrival[75]) {
+      if (isAgeArrivedOrAfter(emp, selectedYear, selectedMonth, 75)) {
         healthApplicable = false;
+      }
+      // 70歳到達月は厚生年金対象外
+      if (isAgeArrivedOrAfter(emp, selectedYear, selectedMonth, 70)) {
+        pensionApplicable = false;
       }
       let careInsurance = '×';
       let isCare = false;
@@ -207,6 +213,21 @@ export function generateBonusPreviewList({
         const companyShareVal = deductionSum + childcareVal;
         companyShare = formatDecimal(companyShareVal);
       }
+      // 年齢による資格喪失を金額に反映
+      if (!healthApplicable) {
+        healthInsurance = '0';
+        healthInsuranceDeduction = '0';
+      }
+      if (!pensionApplicable) {
+        pension = '0';
+        pensionDeduction = '0';
+        childcare = '0'; // 70歳厚生年金免除時も拠出金免除
+      }
+      if (!healthApplicable && !pensionApplicable) {
+        deductionTotal = '0';
+        companyShare = '0';
+        childcare = '0';
+      }
       // ここで免除特例を取得
       const appliedExemptions = getAppliedExemptions(emp, selectedYear, selectedMonth);
       // 退職日・入社日による社会保険免除判定
@@ -268,4 +289,13 @@ export function generateBonusPreviewList({
     });
   }
   return previewList;
+}
+
+function isAgeArrivedOrAfter(emp: any, year: number, month: number, targetAge: number): boolean {
+  if (!emp.birthday) return false;
+  const arrivalDates = getAllAgeArrivalDates(emp.birthday);
+  const arrival = arrivalDates[targetAge];
+  if (!arrival) return false;
+  const targetDate = new Date(year, month - 1, 1);
+  return targetDate >= arrival;
 }

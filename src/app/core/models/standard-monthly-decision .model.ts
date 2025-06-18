@@ -39,6 +39,15 @@ export interface StandardMonthlyDecision {
   isActive?: boolean; // 論理削除用
   checklist?: any;
   calculationRows?: any[];
+  estimatedSalary?: {
+    baseSalary?: number;
+    overtime?: number;
+    commute?: number;
+    positionAllowance?: number;
+    otherAllowance?: number;
+    inKind?: number;
+    total?: number;
+  };
 }
 
 export interface StandardBonusDecision {

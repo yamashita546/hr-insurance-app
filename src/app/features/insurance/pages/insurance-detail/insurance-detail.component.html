@@ -18,6 +18,32 @@
   <div>雇用形態: {{ getEmployeeTypeName(employeeInfo.employeeType) }}</div>
 </div>
 
+<!-- 免除・特例情報ブロック追加 -->
+<div class="exemption-info" *ngIf="employeeInfo">
+  <h3>免除・特例情報</h3>
+  <ul>
+    <!-- 70歳・75歳資格喪失 -->
+    <li *ngIf="employeeInfo.birthday && isAgeArrivedOrAfter(employeeInfo, 70)">
+      厚生年金：70歳到達月以降による資格喪失
+    </li>
+    <li *ngIf="employeeInfo.birthday && isAgeArrivedOrAfter(employeeInfo, 75)">
+      健康保険：75歳到達月以降による資格喪失
+    </li>
+    <!-- 外国人特例 -->
+    <li *ngIf="employeeInfo.isForeignWorker && isSpecialExemption(employeeInfo)">
+      外国人特例（厚生年金免除）
+    </li>
+    <!-- 産前産後休暇期間 -->
+    <li *ngFor="let leave of getMaternityLeaves(employeeInfo)">
+      産前産後休業免除期間: {{ leave.leaveStartDate | date:'yyyy-MM-dd' }} ～ {{ leave.leaveEndDate | date:'yyyy-MM-dd' }}
+    </li>
+    <!-- 育児休業期間 -->
+    <li *ngFor="let leave of getChildcareLeaves(employeeInfo)">
+      育児休業免除期間: {{ leave.leaveStartDate | date:'yyyy-MM-dd' }} ～ {{ leave.leaveEndDate | date:'yyyy-MM-dd' }}
+    </li>
+  </ul>
+</div>
+
 <!-- 給与 社会保険料テーブル -->
 <div class="history-table">
   <h3>給与計算結果</h3>

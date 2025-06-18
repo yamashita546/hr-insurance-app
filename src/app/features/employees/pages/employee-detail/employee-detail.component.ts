@@ -127,6 +127,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   async saveEdit() {
     this.validationErrors = [];
     this.saveMessage = '';
+    this.validateExtraordinaryLeaves();
     if (!this.docId) return;
     this.isUploading = true;
     try {
@@ -554,6 +555,17 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     const office = this.offices.find(o => o.id === this.editEmployee.officeId);
     if (office) {
       this.editEmployee.officeName = office.name;
+    }
+  }
+
+  // extraordinaryLeavesのバリデーション追加
+  validateExtraordinaryLeaves() {
+    if (Array.isArray(this.editEmployee.extraordinaryLeaves)) {
+      this.editEmployee.extraordinaryLeaves.forEach((leave: any, idx: number) => {
+        if (leave.leaveStartDate && !leave.leaveEndDate) {
+          this.validationErrors.push(`休職${idx + 1}：休職開始日が入力されている場合は休職終了日も入力してください。`);
+        }
+      });
     }
   }
 }

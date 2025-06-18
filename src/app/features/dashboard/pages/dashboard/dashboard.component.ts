@@ -8,13 +8,13 @@ import { RouterModule } from '@angular/router';
 import { ChartConfiguration, ChartType } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { Chart, registerables } from 'chart.js';
-
+import { FloorPipe } from '../../../../core/pipe/floor.pipe';
 Chart.register(...registerables);
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, BaseChartDirective],
+  imports: [CommonModule, FormsModule, RouterModule, BaseChartDirective, FloorPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
@@ -193,12 +193,9 @@ export class DashboardComponent implements OnInit {
       const salary = salaryOfficeMap.get(office.id) || { salaryTotal: 0, insuranceTotal: 0, employeeDeduction: 0, childcareDeduction: 0 };
       const bonus = bonusOfficeMap.get(office.id) || { bonusTotal: 0, insuranceTotal: 0, employeeDeduction: 0, childcareDeduction: 0 };
       const salaryTotal = salary.salaryTotal + (bonus.bonusTotal || 0);
-      const insuranceTotalRaw = salary.insuranceTotal + bonus.insuranceTotal;
+      const insuranceTotal = salary.insuranceTotal + bonus.insuranceTotal;
       const employeeDeduction = salary.employeeDeduction + bonus.employeeDeduction;
-      const childcareDeductionRaw = salary.childcareDeduction + bonus.childcareDeduction;
-      // 端数処理
-      const insuranceTotal = this.roundInsurance(insuranceTotalRaw);
-      const childcareDeduction = this.roundInsurance(childcareDeductionRaw);
+      const childcareDeduction = salary.childcareDeduction + bonus.childcareDeduction;
       const companyShare = insuranceTotal - employeeDeduction;
       const companyShareTotal = companyShare + childcareDeduction;
       return {
@@ -214,7 +211,7 @@ export class DashboardComponent implements OnInit {
     });
     console.log('  officeInsuranceInfo:', this.officeInsuranceInfo.map(o => ({officeId: o.officeId, officeName: o.officeName})));
     // 会社負担額合計（子ども子育て拠出金含む）
-    this.officeCompanyShareTotal = this.officeInsuranceInfo.reduce((sum, o) => sum + o.companyShareTotal, 0);
+    this.officeCompanyShareTotal = Math.floor(this.officeInsuranceInfo.reduce((sum, o) => sum + o.companyShareTotal, 0));
 
     // === 重複チェック付き登録数集計 ===
     // 社会保険料（給与）

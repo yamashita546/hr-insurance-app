@@ -219,6 +219,16 @@ export class InsuranceFormComponent implements OnInit {
     return result;
   }
 
+  // 年齢到達月以降かどうか判定する関数を追加
+  isAgeArrivedOrAfter(emp: any, year: number, month: number, targetAge: number): boolean {
+    if (!emp.birthday) return false;
+    const arrivalDates = getAllAgeArrivalDates(emp.birthday);
+    const arrival = arrivalDates[targetAge];
+    if (!arrival) return false;
+    const targetDate = new Date(year, month - 1, 1);
+    return targetDate >= arrival;
+  }
+
   onDecision() {
     let targetEmployees = this.filteredEmployees;
     if (this.selectedEmployeeId) {
@@ -299,12 +309,12 @@ export class InsuranceFormComponent implements OnInit {
           if (emp.isForeignWorker && this.isSpecialExemption(emp)) {
             pensionApplicable = false;
           }
-          // 70歳到達月は厚生年金対象外
-          if (ageArrival[70]) {
+          // 70歳到達月以降は厚生年金対象外
+          if (this.isAgeArrivedOrAfter(emp, this.selectedYear, this.selectedMonth, 70)) {
             pensionApplicable = false;
           }
-          // 75歳到達月は健康保険対象外
-          if (ageArrival[75]) {
+          // 75歳到達月以降は健康保険対象外
+          if (this.isAgeArrivedOrAfter(emp, this.selectedYear, this.selectedMonth, 75)) {
             healthApplicable = false;
           }
           // 休業特例による免除（健康保険・厚生年金）
@@ -440,6 +450,21 @@ export class InsuranceFormComponent implements OnInit {
                 companyShare = this.formatDecimal(pensionCompany);
               }
             }
+          }
+          // 年齢による資格喪失を金額に反映
+          if (!healthApplicable) {
+            healthInsurance = '0';
+            healthInsuranceDeduction = '0';
+          }
+          if (!pensionApplicable) {
+            pension = '0';
+            pensionDeduction = '0';
+            childcare = '0'; // 70歳厚生年金免除時も拠出金免除
+          }
+          if (!healthApplicable && !pensionApplicable) {
+            deductionTotal = '0';
+            companyShare = '0';
+            childcare = '0';
           }
           // ここで免除特例を取得
           const appliedExemptions = this.getAppliedExemptions(emp, this.selectedYear, this.selectedMonth);
@@ -755,8 +780,8 @@ export class InsuranceFormComponent implements OnInit {
   getAppliedExemptions(emp: any, year: number, month: number): string[] {
     const result: string[] = [];
     const ymStr = `${year}-${String(month).padStart(2, '0')}`;
-    // 産休
-    if (isMaternityLeaveExempted(emp, ymStr)) {
+    // 産休（給与のみ表示）
+    if (this.selectedType === 'salary' && isMaternityLeaveExempted(emp, ymStr)) {
       result.push('産前産後休業免除');
     }
     // 育休
@@ -769,11 +794,15 @@ export class InsuranceFormComponent implements OnInit {
     }
     // 年齢による資格喪失
     const ageArrival = this.isAgeArrivalInMonth(emp, year, month);
-    if (ageArrival[70]) {
-      result.push('厚生年金：70歳到達による資格喪失');
+    if (this.isAgeArrivedOrAfter(emp, year, month, 70)) {
+      result.push('厚生年金：70歳到達月以降による資格喪失');
+    } else if (ageArrival[70]) {
+      result.push('厚生年金：70歳到達月による資格喪失');
     }
-    if (ageArrival[75]) {
-      result.push('健康保険：75歳到達による資格喪失');
+    if (this.isAgeArrivedOrAfter(emp, year, month, 75)) {
+      result.push('健康保険：75歳到達月以降による資格喪失');
+    } else if (ageArrival[75]) {
+      result.push('健康保険：75歳到達月による資格喪失');
     }
     return result;
   }

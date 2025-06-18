@@ -111,19 +111,19 @@
           <tbody>
             <tr *ngFor="let info of displayedOfficeInsuranceInfo">
               <td class="left">{{ selectedOfficeId ? selectedOfficeName : info.officeName }}</td>
-              <td class="right">{{ info.salaryTotal | number }} 円</td>
-              <td class="right">{{ info.insuranceTotal | number }} 円</td>
-              <td class="right">{{ info.employeeDeduction | number }} 円</td>
-              <td class="right">{{ info.companyShare | number }} 円</td>
-              <td class="right">{{ info.childcareDeduction | number }} 円</td>
-              <td class="right strong">{{ info.companyShareTotal | number }} 円</td>
+              <td class="right">{{ info.salaryTotal | floor }} 円</td>
+              <td class="right">{{ info.insuranceTotal | floor }} 円</td>
+              <td class="right">{{ info.employeeDeduction | floor }} 円</td>
+              <td class="right">{{ info.companyShare | floor }} 円</td>
+              <td class="right">{{ info.childcareDeduction | floor }} 円</td>
+              <td class="right strong">{{ info.companyShareTotal | floor }} 円</td>
               <td class="right strong">
                 <button type="button" (click)="openInsuranceDetailModal(info.officeId)">詳細</button>
               </td>
             </tr>
             <tr class="total-row">
               <td colspan="6" style="text-align: right; font-weight: bold; font-size: 1em; background: #e3f2fd;">会社負担額合計</td>
-              <td class="right strong" style="font-size: 1.1em; background: #e3f2fd;">{{ officeCompanyShareTotal | number }} 円</td>
+              <td class="right strong" style="font-size: 1.1em; background: #e3f2fd;">{{ officeCompanyShareTotal | floor }} 円</td>
              
             </tr>
           </tbody>
@@ -132,6 +132,7 @@
       <div style="text-align: right; margin-top: 0.5em;">
         <button type="button" (click)="exportInsuranceTableToCSV()">CSV出力</button>
       </div>
+      ※
     </div>
   </div>
 

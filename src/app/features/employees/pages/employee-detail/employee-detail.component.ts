@@ -144,6 +144,24 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
       const ok = window.confirm('社会保険免除特例が有効です。健康保険・厚生年金の適用状況は正しいですか？');
       if (!ok) return;
     }
+    // 健康保険・厚生年金の適用時の必須項目チェック
+    const health = this.editEmployee.healthInsuranceStatus?.isApplicable;
+    const healthSymbol = this.editEmployee.healthInsuranceStatus?.healthInsuranceSymbol;
+    const healthNumber = this.editEmployee.healthInsuranceStatus?.healthInsuranceNumber;
+    const healthAcq = this.editEmployee.healthInsuranceStatus?.acquisitionDate;
+    if (health) {
+      if (!healthSymbol) this.validationErrors.push('健康保険記号は必須です');
+      if (!healthNumber) this.validationErrors.push('健康保険被保険者番号は必須です');
+      if (!healthAcq) this.validationErrors.push('健康保険資格取得日は必須です');
+    }
+    const pension = this.editEmployee.pensionStatus?.isApplicable;
+    const pensionBase = this.editEmployee.pensionStatus?.baseNumber;
+    const pensionNumber = this.editEmployee.pensionStatus?.insuranceNumber;
+    const pensionAcq = this.editEmployee.pensionStatus?.acquisitionDate;
+    if (pension) {
+      if (!pensionBase) this.validationErrors.push('基礎年金番号は必須です');
+      if (!pensionAcq) this.validationErrors.push('厚生年金資格取得日は必須です');
+    }
     // ③ 雇用形態・契約開始日必須
     if (!this.editEmployee.employeeType) {
       this.validationErrors.push('雇用形態は必須です');

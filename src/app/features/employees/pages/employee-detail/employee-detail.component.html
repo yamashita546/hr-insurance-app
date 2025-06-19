@@ -378,10 +378,6 @@
           <td>{{ employee.pensionStatus?.baseNumber || '未入力' }}</td>
         </tr>
         <tr>
-          <th>厚生年金被保険者番号</th>
-          <td>{{ employee.pensionStatus?.insuranceNumber || '未入力' }}</td>
-        </tr>
-        <tr>
           <th>厚生年金資格取得日</th>
           <td>{{ employee.pensionStatus?.acquisitionDate || '未入力' }}</td>
         </tr>
@@ -406,10 +402,6 @@
         <tr>
           <th>基礎年金番号</th>
           <td><input [(ngModel)]="editEmployee.pensionStatus.baseNumber"></td>
-        </tr>
-        <tr>
-          <th>厚生年金被保険者番号</th>
-          <td><input [(ngModel)]="editEmployee.pensionStatus.insuranceNumber"></td>
         </tr>
         <tr>
           <th>厚生年金資格取得日</th>

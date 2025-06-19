@@ -340,6 +340,27 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       this.validationErrors = this.getFormValidationErrors(this.form);
       return;
     }
+    // 健康保険・厚生年金の適用時の必須項目チェック
+    const health = this.form.get('healthInsuranceStatus.isApplicable')?.value;
+    const healthSymbol = this.form.get('healthInsuranceStatus.healthInsuranceSymbol')?.value;
+    const healthNumber = this.form.get('healthInsuranceStatus.healthInsuranceNumber')?.value;
+    const healthAcq = this.form.get('healthInsuranceStatus.acquisitionDate')?.value;
+    if (health) {
+      if (!healthSymbol) this.validationErrors.push('健康保険記号は必須です');
+      if (!healthNumber) this.validationErrors.push('健康保険被保険者番号は必須です');
+      if (!healthAcq) this.validationErrors.push('健康保険資格取得日は必須です');
+    }
+    const pension = this.form.get('pensionStatus.isApplicable')?.value;
+    const pensionBase = this.form.get('pensionStatus.baseNumber')?.value;
+    const pensionNumber = this.form.get('pensionStatus.insuranceNumber')?.value;
+    const pensionAcq = this.form.get('pensionStatus.acquisitionDate')?.value;
+    if (pension) {
+      if (!pensionBase) this.validationErrors.push('基礎年金番号は必須です');
+      if (!pensionAcq) this.validationErrors.push('厚生年金資格取得日は必須です');
+    }
+    if (this.validationErrors.length > 0) {
+      return;
+    }
     // ①社会保険免除特例がtrueの場合は国籍必須
     const isForeignWorker = this.form.get('isForeignWorker')?.value;
     const hasSpecialExemption = this.form.get('foreignWorker.hasSpecialExemption')?.value;

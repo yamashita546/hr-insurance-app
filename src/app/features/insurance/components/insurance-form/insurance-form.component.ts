@@ -12,6 +12,8 @@ import { getAllAgeArrivalDates } from '../../../../core/services/age.determinati
 import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
 import { generateBonusPreviewList } from '../../service/bonus.check';
 import { NATIONALITIES } from '../../../../core/models/nationalities';
+import { AgeCheck } from '../../service/age.check';
+import { checkEmployeeInputMissing } from '../../service/null.check';
 
 @Component({
   selector: 'app-insurance-form',
@@ -122,7 +124,7 @@ export class InsuranceFormComponent implements OnInit {
       )
       .sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth));
     const std = candidates[0] || null;
-    console.log(`標準報酬月額（${this.employees.find(e => e.employeeId === employeeId)?.lastName || ''} ${this.employees.find(e => e.employeeId === employeeId)?.firstName || ''}）:`, std);
+    // console.log(`標準報酬月額（${this.employees.find(e => e.employeeId === employeeId)?.lastName || ''} ${this.employees.find(e => e.employeeId === employeeId)?.firstName || ''}）:`, std);
     return std;
   }
 
@@ -130,7 +132,7 @@ export class InsuranceFormComponent implements OnInit {
   getSalaryForEmployee(employeeId: string): any {
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
     const salary = this.salaries.find(s => s.employeeId === employeeId && s.targetYearMonth === ym) || null;
-    console.log(`給与データ（${this.employees.find(e => e.employeeId === employeeId)?.lastName || ''} ${this.employees.find(e => e.employeeId === employeeId)?.firstName || ''}）:`, salary);
+    // console.log(`給与データ（${this.employees.find(e => e.employeeId === employeeId)?.lastName || ''} ${this.employees.find(e => e.employeeId === employeeId)?.firstName || ''}）:`, salary);
     return salary;
   }
   getBonusForEmployee(employeeId: string): any {
@@ -193,7 +195,27 @@ export class InsuranceFormComponent implements OnInit {
     const toYMD = (d: Date | null) => d ? `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}` : '';
     if (startDate && toYMD(targetDate) < toYMD(startDate)) return false;
     if (endDate && toYMD(targetDate) > toYMD(endDate)) return false;
-    return true;
+
+    // 健康保険・厚生年金の資格取得日・喪失日も考慮
+    // どちらか一方でも適用されていれば対象
+    let hasValidInsurance = false;
+    // 健康保険
+    if (emp.healthInsuranceStatus?.isApplicable) {
+      const acq = emp.healthInsuranceStatus.acquisitionDate ? new Date(emp.healthInsuranceStatus.acquisitionDate) : null;
+      const loss = emp.healthInsuranceStatus.lossDate ? new Date(emp.healthInsuranceStatus.lossDate) : null;
+      if ((!acq || toYMD(targetDate) >= toYMD(acq)) && (!loss || toYMD(targetDate) < toYMD(loss))) {
+        hasValidInsurance = true;
+      }
+    }
+    // 厚生年金
+    if (emp.pensionStatus?.isApplicable) {
+      const acq = emp.pensionStatus.acquisitionDate ? new Date(emp.pensionStatus.acquisitionDate) : null;
+      const loss = emp.pensionStatus.lossDate ? new Date(emp.pensionStatus.lossDate) : null;
+      if ((!acq || toYMD(targetDate) >= toYMD(acq)) && (!loss || toYMD(targetDate) < toYMD(loss))) {
+        hasValidInsurance = true;
+      }
+    }
+    return hasValidInsurance;
   }
 
   // 外国人特例判定の型吸収関数
@@ -300,7 +322,7 @@ export class InsuranceFormComponent implements OnInit {
     }
     targetEmployees = filteredEmployees;
 
-    console.log('onDecision: targetEmployees', targetEmployees.map(e => e.lastName + e.firstName));
+    console.log('filteredEmployees:', filteredEmployees.map(e => e.employeeId));
 
     if (this.selectedType === 'salary') {
       this.previewList = targetEmployees
@@ -316,8 +338,7 @@ export class InsuranceFormComponent implements OnInit {
           let pensionApplicable = emp.pensionStatus?.isApplicable;
           let employmentApplicable = emp.employmentInsuranceStatus?.isApplicable;
           let careApplicable = emp.isCareInsuranceApplicable;
-          // 年齢到達月判定
-          const ageArrival = this.isAgeArrivalInMonth(emp, this.selectedYear, this.selectedMonth);
+
           // 外国人特例（国籍ごとに判定）
           const specialExemption = this.getSpecialExemptionType(emp);
           if (specialExemption === 'pension') {
@@ -326,80 +347,38 @@ export class InsuranceFormComponent implements OnInit {
             pensionApplicable = false;
             healthApplicable = false;
           }
+
+          // 年齢による資格喪失判定
           // 70歳到達月以降は厚生年金対象外
-          if (this.isAgeArrivedOrAfter(emp, this.selectedYear, this.selectedMonth, 70)) {
+          if (AgeCheck.isPensionLostInMonth(emp, this.selectedYear, this.selectedMonth)) {
+            pensionApplicable = false;
+          } else if (this.isAgeArrivedOrAfter(emp, this.selectedYear, this.selectedMonth, 70)) {
             pensionApplicable = false;
           }
+
           // 75歳到達月以降は健康保険対象外
-          if (this.isAgeArrivedOrAfter(emp, this.selectedYear, this.selectedMonth, 75)) {
+          if (AgeCheck.isHealthLostInMonth(emp, this.selectedYear, this.selectedMonth)) {
+            healthApplicable = false;
+          } else if (this.isAgeArrivedOrAfter(emp, this.selectedYear, this.selectedMonth, 75)) {
             healthApplicable = false;
           }
+
+          // 65歳到達による介護保険資格喪失判定
+          if (AgeCheck.isCareApplicableAge(emp, this.selectedYear, this.selectedMonth)) {
+            careApplicable = true;
+          }
+
           // 休業特例による免除（健康保険・厚生年金）
           if (isMaternityExempted || isChildcareExempted) {
             healthApplicable = false;
             pensionApplicable = false;
           }
-          // 休職特例（期間中は免除）
-          if (Array.isArray(emp.extraordinaryLeaves)) {
-            for (const leave of emp.extraordinaryLeaves) {
-              // 健康保険免除
-              if (leave.isHealthInsuranceExempted && leave.leaveStartDate && leave.leaveEndDate) {
-                if (ymDate >= new Date(leave.leaveStartDate) && ymDate <= new Date(leave.leaveEndDate)) {
-                  healthApplicable = false;
-                }
-              }
-              // 厚生年金免除
-              if (leave.isPensionExempted && leave.leaveStartDate && leave.leaveEndDate) {
-                if (ymDate >= new Date(leave.leaveStartDate) && ymDate <= new Date(leave.leaveEndDate)) {
-                  pensionApplicable = false;
-                }
-              }
-              // 雇用保険免除
-              if (leave.isEmploymentInsuranceExempted && leave.leaveStartDate && leave.leaveEndDate) {
-                if (ymDate >= new Date(leave.leaveStartDate) && ymDate <= new Date(leave.leaveEndDate)) {
-                  employmentApplicable = false;
-                }
-              }
-              // 介護保険免除
-              if (leave.isCareInsuranceExempted && leave.leaveStartDate && leave.leaveEndDate) {
-                if (ymDate >= new Date(leave.leaveStartDate) && ymDate <= new Date(leave.leaveEndDate)) {
-                  careApplicable = false;
-                }
-              }
-            }
-          }
+
           // 標準報酬月額の有効性チェック
           const std = this.getStandardMonthlyForEmployee(emp.employeeId, emp.officeId);
-          // 必須項目の未入力チェック
-          let missingReason = '';
-          if (!emp.birthday) {
-            missingReason = '生年月日未入力';
-          } else if (!emp.contractStartDate) {
-            missingReason = '契約開始日未入力';
-          } else if (!emp.employeeType) {
-            missingReason = '雇用形態未入力';
-          }
-          if ((!std || missingReason) && this.isActiveEmployeeForTargetMonth(emp, this.selectedYear, this.selectedMonth)) {
-            // 標準報酬月額未登録、または必須項目未入力の場合リストに追加
-            this.missingStandardMonthlyEmployees.push({ ...emp, missingReason: missingReason || (!std ? '標準報酬月額未登録' : undefined) });
-          }
-          const salary = this.getSalaryForEmployee(emp.employeeId);
           const rate = this.getInsuranceRateForOffice(emp.officeId);
-          // 各項目取得
-          const basic = salary ? Number(salary.basicSalary || 0) : 0;
-          const overtime = salary ? Number(salary.overtimeSalary || 0) : 0;
-          const position = salary ? Number(salary.positionAllowance || 0) : 0;
-          const commute = salary ? Number(salary.commuteAllowance || 0) : 0;
-          const other = salary ? Number(salary.otherAllowance || 0) : 0;
-          // 総手当は役職手当＋通勤費＋その他手当
-          const totalAllowance = position + commute + other;
-          // 総支給額（再計算）
-          const calcTotal = basic + overtime + position + commute + other;
-          const totalSalary = salary ? Number(salary.totalSalary || 0) : 0;
-          // ダブルチェック
-          const isMatch = Math.abs(calcTotal - totalSalary) < 1; // 1円未満の誤差は許容
-          // 調査用ログ
-          // console.log('salary breakdown:', { basic, overtime, position, commute, other, totalAllowance, calcTotal, totalSalary, isMatch });
+
+          // 変数の初期化
           let careInsurance = '×';
           let healthInsurance = 'ー';
           let healthInsuranceDeduction = 'ー';
@@ -416,87 +395,173 @@ export class InsuranceFormComponent implements OnInit {
           let pensionRate = 0;
           let childcareRate = 0;
           let prefectureName = '';
+          let healthTotal = 0;
+          let pensionTotal = 0;
+          let childcareVal = 0;
+          let healthDeduct = 0;
+          let pensionDeduct = 0;
+          let healthCompany = 0;
+          let pensionCompany = 0;
+          let isCare = false;
+
           if (std && rate) {
-            // 介護保険適用判定
-            const age = this.getAgeAtYearMonth1st(emp.birthday, this.selectedYear, this.selectedMonth);
-            const ageArrival = this.isAgeArrivalInMonth(emp, this.selectedYear, this.selectedMonth);
-            // 介護保険の適用判定: 40歳到達月から65歳到達月の前月まで
-            let isCare = false;
-            if (emp.isCareInsuranceApplicable) {
-              const isAfter40 = age > 40 || (age === 40) || ageArrival[40];
-              const isBefore65 = age < 65 || (age === 65 && !ageArrival[65]);
-              isCare = isAfter40 && isBefore65;
-            }
-            careInsurance = isCare ? '〇' : '×';
-            healthRate = rate.healthInsuranceRate;
+            // 介護保険適用判定（65歳到達月の前日までが対象）
+            const isCareApplicable = !AgeCheck.isCareApplicableAge(emp, this.selectedYear, this.selectedMonth) && 
+                                   !this.isAgeArrivedOrAfter(emp, this.selectedYear, this.selectedMonth, 65) &&
+                                   this.isCareInsuranceApplicableInMonth(emp, this.selectedYear, this.selectedMonth);
+            isCare = isCareApplicable;
+            // healthRateを正しくセット
+            healthRate = rate.healthInsuranceRate || 0;
+            // 介護保険料率
             careRate = isCare && rate.careInsuranceRate ? rate.careInsuranceRate : 0;
             let totalHealthRate = healthRate + careRate;
             pensionRate = rate.employeePensionInsuranceRate;
             childcareRate = Number(ChildcareInsuranceRate.CHILDCARE_INSURANCE_RATE);
-            insuranceTotal = std.healthMonthly * (totalHealthRate / 100) + std.healthMonthly * (pensionRate / 100) + std.healthMonthly * (childcareRate / 100);
+            // まず全て計算
+            healthTotal = healthApplicable ? std.healthMonthly * (totalHealthRate / 100) : 0;
+            const pensionBaseAmount = std.pensionMonthly !== undefined && std.pensionMonthly !== null ? std.pensionMonthly : std.healthMonthly;
+            pensionTotal = pensionApplicable ? pensionBaseAmount * (pensionRate / 100) : 0;
+            childcareVal = pensionApplicable ? pensionBaseAmount * (childcareRate / 100) : 0;
+            insuranceTotal = healthTotal + pensionTotal + childcareVal;
+            // 健康保険料控除額
+            healthDeduct = healthApplicable ? this.roundSocialInsurance(healthTotal / 2) : 0;
+            // 会社負担（健康保険分のみ）
+            healthCompany = healthApplicable ? healthTotal - healthDeduct : 0;
+            // 厚生年金保険料控除額
+            pensionDeduct = pensionApplicable ? this.roundSocialInsurance(pensionTotal / 2) : 0;
+            // 会社負担（厚生年金分のみ）
+            pensionCompany = pensionApplicable ? pensionTotal - pensionDeduct : 0;
+            // 〇×表示は実際の計算での介護保険料加算有無に完全連動
+            careInsurance = (careRate > 0 && healthApplicable) ? '〇' : '×';
+            healthInsurance = this.formatDecimal(healthTotal);
+            healthInsuranceDeduction = healthDeduct.toLocaleString();
+            pension = this.formatDecimal(pensionTotal);
+            pensionDeduction = pensionDeduct.toLocaleString();
+            childcare = this.formatDecimal(childcareVal);
+            // 控除合計
+            deductionTotal = (healthDeduct + pensionDeduct).toLocaleString();
+            // 会社負担合計
+            companyShare = this.formatDecimal(healthCompany + pensionCompany + childcareVal);
             // 都道府県名
             const office = this.offices.find(o => o.id === emp.officeId);
             if (office && office.insurancePrefecture) {
               const pref = PREFECTURES.find(p => p.code === office.insurancePrefecture);
               prefectureName = pref ? pref.name : '';
             }
-            // 健康保険料
-            if (healthApplicable) {
-              const healthTotal = std.healthMonthly * (totalHealthRate / 100); // 保険料総額
-              healthInsurance = this.formatDecimal(healthTotal);
-              // 健康保険料控除額（労働者負担額）
-              const healthDeduct = this.roundSocialInsurance(healthTotal / 2);
-              healthInsuranceDeduction = healthDeduct.toLocaleString();
-              // 会社負担（健康保険分のみ）
-              const healthCompany = healthTotal - healthDeduct;
-              // 控除額合計（健康保険分のみ）
-              deductionTotal = healthDeduct.toLocaleString();
-              // 子ども子育て拠出金
-              const childcareBase = std.pensionMonthly !== undefined && std.pensionMonthly !== null ? Number(std.pensionMonthly) : Number(std.healthMonthly);
-              const childcareVal = childcareBase * (Number(ChildcareInsuranceRate.CHILDCARE_INSURANCE_RATE) / 100);
-              childcare = this.formatDecimal(childcareVal);
-              // 会社負担（健康保険分のみ＋子ども子育て拠出金）
-              // 厚生年金が適用されていない場合は拠出金を含めない
-              if (pensionApplicable) {
-                companyShare = this.formatDecimal(healthCompany + childcareVal);
-              } else {
-                companyShare = this.formatDecimal(healthCompany);
-              }
+          }
+          // 必須項目の未入力チェック
+          let missingReason = '';
+          const missingCheck = checkEmployeeInputMissing(emp, std);
+          if (missingCheck.missing && this.isActiveEmployeeForTargetMonth(emp, this.selectedYear, this.selectedMonth)) {
+            this.missingStandardMonthlyEmployees.push({ ...emp, missingReason: missingCheck.reason });
+          }
+          const salary = this.getSalaryForEmployee(emp.employeeId);
+          // 各項目取得
+          const basic = salary ? Number(salary.basicSalary || 0) : 0;
+          const overtime = salary ? Number(salary.overtimeSalary || 0) : 0;
+          const position = salary ? Number(salary.positionAllowance || 0) : 0;
+          const commute = salary ? Number(salary.commuteAllowance || 0) : 0;
+          const other = salary ? Number(salary.otherAllowance || 0) : 0;
+          // 総手当は役職手当＋通勤費＋その他手当
+          const totalAllowance = position + commute + other;
+          // 総支給額（再計算）
+          const calcTotal = basic + overtime + position + commute + other;
+          const totalSalary = salary ? Number(salary.totalSalary || 0) : 0;
+          // ダブルチェック
+          const isMatch = Math.abs(calcTotal - totalSalary) < 1; // 1円未満の誤差は許容
+          // 調査用ログ
+          // console.log('salary breakdown:', { basic, overtime, position, commute, other, totalAllowance, calcTotal, totalSalary, isMatch });
+          // 以下のコメントアウトされた変数宣言を削除（上部で既に定義済み）
+          if (std && rate) {
+            // 介護保険適用判定（65歳到達月の前日までが対象）
+            const isCareApplicable = !AgeCheck.isCareApplicableAge(emp, this.selectedYear, this.selectedMonth) && 
+                                   !this.isAgeArrivedOrAfter(emp, this.selectedYear, this.selectedMonth, 65) &&
+                                   this.isCareInsuranceApplicableInMonth(emp, this.selectedYear, this.selectedMonth);
+            if (isCareApplicable) {
+              isCare = true;
             }
-            // 厚生年金保険料
-            if (pensionApplicable) {
-              const pensionBase = std.pensionMonthly !== undefined ? std.pensionMonthly : std.healthMonthly;
-              const pensionTotal = pensionBase * (pensionRate / 100); // 保険料総額
-              pension = this.formatDecimal(pensionTotal);
-              // 厚生年金保険料控除額（労働者負担額）
-              const pensionDeduct = this.roundSocialInsurance(pensionTotal / 2);
-              pensionDeduction = pensionDeduct.toLocaleString();
-              // 会社負担（厚生年金分のみ）
-              const pensionCompany = pensionTotal - pensionDeduct;
-              // 控除額合計（健康保険＋年金）
-              if (healthApplicable) {
-                deductionTotal = (Number(healthInsuranceDeduction.replace(/,/g, '')) + pensionDeduct).toLocaleString();
-                companyShare = this.formatDecimal(Number(companyShare.replace(/,/g, '')) + pensionCompany);
-              } else {
-                deductionTotal = pensionDeduct.toLocaleString();
-                companyShare = this.formatDecimal(pensionCompany);
-              }
+            // healthRateを正しくセット
+            healthRate = rate.healthInsuranceRate || 0;
+            // 介護保険料率
+            careRate = isCare && rate.careInsuranceRate ? rate.careInsuranceRate : 0;
+            let totalHealthRate = healthRate + careRate;
+            pensionRate = rate.employeePensionInsuranceRate;
+            childcareRate = Number(ChildcareInsuranceRate.CHILDCARE_INSURANCE_RATE);
+            // まず全て計算
+            healthTotal = healthApplicable ? std.healthMonthly * (totalHealthRate / 100) : 0;
+            const pensionBaseAmount = std.pensionMonthly !== undefined && std.pensionMonthly !== null ? std.pensionMonthly : std.healthMonthly;
+            pensionTotal = pensionApplicable ? pensionBaseAmount * (pensionRate / 100) : 0;
+            childcareVal = pensionApplicable ? pensionBaseAmount * (childcareRate / 100) : 0;
+            insuranceTotal = healthTotal + pensionTotal + childcareVal;
+            // 健康保険料控除額
+            healthDeduct = healthApplicable ? this.roundSocialInsurance(healthTotal / 2) : 0;
+            // 会社負担（健康保険分のみ）
+            healthCompany = healthApplicable ? healthTotal - healthDeduct : 0;
+            // 厚生年金保険料控除額
+            pensionDeduct = pensionApplicable ? this.roundSocialInsurance(pensionTotal / 2) : 0;
+            // 会社負担（厚生年金分のみ）
+            pensionCompany = pensionApplicable ? pensionTotal - pensionDeduct : 0;
+            // 〇×表示は実際の計算での介護保険料加算有無に完全連動
+            careInsurance = (careRate > 0 && healthApplicable) ? '〇' : '×';
+            healthInsurance = this.formatDecimal(healthTotal);
+            healthInsuranceDeduction = healthDeduct.toLocaleString();
+            pension = this.formatDecimal(pensionTotal);
+            pensionDeduction = pensionDeduct.toLocaleString();
+            childcare = this.formatDecimal(childcareVal);
+            // 控除合計
+            deductionTotal = (healthDeduct + pensionDeduct).toLocaleString();
+            // 会社負担合計
+            companyShare = this.formatDecimal(healthCompany + pensionCompany + childcareVal);
+            // 都道府県名
+            const office = this.offices.find(o => o.id === emp.officeId);
+            if (office && office.insurancePrefecture) {
+              const pref = PREFECTURES.find(p => p.code === office.insurancePrefecture);
+              prefectureName = pref ? pref.name : '';
             }
+          }
+          // 70歳厚生年金資格喪失月は徴収しない（この判定は一度だけ行う）
+          if (AgeCheck.isPensionLostInMonth(emp, this.selectedYear, this.selectedMonth)) {
+            pensionApplicable = false;
+            childcare = '0';
+          }
+          // 75歳健康保険資格喪失月は徴収しない
+          if (AgeCheck.isHealthLostInMonth(emp, this.selectedYear, this.selectedMonth)) {
+            healthApplicable = false;
+          }
+          // 65歳介護保険資格喪失月は徴収しない
+          if (AgeCheck.isCareApplicableAge(emp, this.selectedYear, this.selectedMonth)) {
+            careApplicable = false;
           }
           // 年齢による資格喪失を金額に反映
           if (!healthApplicable) {
             healthInsurance = '0';
             healthInsuranceDeduction = '0';
+            healthTotal = 0;
+            healthDeduct = 0;
+            healthCompany = 0;
           }
           if (!pensionApplicable) {
             pension = '0';
             pensionDeduction = '0';
+            pensionTotal = 0;
+            pensionDeduct = 0;
+            pensionCompany = 0;
             childcare = '0'; // 70歳厚生年金免除時も拠出金免除
+            childcareVal = 0;
           }
+          if (!careApplicable) {
+            careInsurance = '×';
+          }
+          // 控除合計・会社負担合計も資格喪失月は0円に
           if (!healthApplicable && !pensionApplicable) {
             deductionTotal = '0';
             companyShare = '0';
             childcare = '0';
+            insuranceTotal = 0;
+          } else {
+            deductionTotal = (healthDeduct + pensionDeduct).toLocaleString();
+            companyShare = this.formatDecimal(healthCompany + pensionCompany + childcareVal);
+            insuranceTotal = healthTotal + pensionTotal + childcareVal;
           }
           // ここで免除特例を取得
           const appliedExemptions = this.getAppliedExemptions(emp, this.selectedYear, this.selectedMonth);
@@ -578,13 +643,13 @@ export class InsuranceFormComponent implements OnInit {
         roundSocialInsurance: this.roundSocialInsurance.bind(this)
       });
     }
-    console.log('previewListに入る従業員:', this.previewList ? this.previewList.map(e => e.employeeName) : []);
+    // console.log('previewListに入る従業員:', this.previewList ? this.previewList.map(e => e.employeeName) : []);
     // 標準報酬・給与データ取得時
     targetEmployees.forEach(emp => {
       const std = this.getStandardMonthlyForEmployee(emp.employeeId, emp.officeId);
-      console.log(`標準報酬月額（${emp.lastName}${emp.firstName}）:`, std);
+      // console.log(`標準報酬月額（${emp.lastName}${emp.firstName}）:`, std);
       const salary = this.getSalaryForEmployee(emp.employeeId);
-      console.log(`給与データ（${emp.lastName}${emp.firstName}）:`, salary);
+      // console.log(`給与データ（${emp.lastName}${emp.firstName}）:`, salary);
     });
   }
 
@@ -615,9 +680,9 @@ export class InsuranceFormComponent implements OnInit {
             officeId: row.officeId,
             employeeId: row.employeeId,
             applyYearMonth,
-            healthGrade: row.grade,
+            healthGrade: row.grade?.split('（')[0] || '',  // 健康保険等級のみ抽出
             healthMonthly: Number(row.monthly.toString().replace(/,/g, '')),
-            pensionGrade: '', // 必要に応じてrowから取得
+            pensionGrade: row.grade?.split('（')[1]?.replace('）', '') || '',  // 厚生年金等級のみ抽出
             pensionMonthly: row.pensionMonthly,
             salaryTotal: row.salaryTotal ? Number(row.salaryTotal.toString().replace(/,/g, '')) : 0,
             salaryAvg: 0, // 必要に応じて計算
@@ -648,9 +713,9 @@ export class InsuranceFormComponent implements OnInit {
           officeId: row.officeId,
           employeeId: row.employeeId,
           applyYearMonth,
-          healthGrade: row.grade,
+          healthGrade: row.grade?.split('（')[0] || '',  // 健康保険等級のみ抽出
           healthMonthly: Number(row.monthly.toString().replace(/,/g, '')),
-          pensionGrade: '', // 必要に応じてrowから取得
+          pensionGrade: row.grade?.split('（')[1]?.replace('）', '') || '',  // 厚生年金等級のみ抽出
           pensionMonthly: row.pensionMonthly,
           salaryTotal: row.salaryTotal ? Number(row.salaryTotal.toString().replace(/,/g, '')) : 0,
           salaryAvg: 0, // 必要に応じて計算
@@ -693,13 +758,10 @@ export class InsuranceFormComponent implements OnInit {
             officeId: row.officeId,
             employeeId: row.employeeId,
             applyYearMonth,
-            healthGrade: row.grade,
+            healthGrade: row.grade?.split('（')[0] || '',  // 健康保険等級のみ抽出
             healthMonthly: Number(row.monthly.toString().replace(/,/g, '')),
-            pensionGrade: '', // 必要に応じてrowから取得
-            pensionMonthly:
-              (row.pensionMonthly !== undefined && row.pensionMonthly !== null && row.pensionMonthly !== 'ー'
-                ? Number(row.pensionMonthly.toString().replace(/,/g, ''))
-                : null) as number,
+            pensionGrade: row.grade?.split('（')[1]?.replace('）', '') || '',  // 厚生年金等級のみ抽出
+            pensionMonthly: row.pensionMonthly,
             bonusTotal: row.bonus ? Number(row.bonus.toString().replace(/,/g, '')) : 0,
             bonusAvg: row.bonus ? Number(row.bonus.toString().replace(/,/g, '')) : 0, // 必要に応じて平均値を計算
             careInsurance: row.careInsurance === '〇',
@@ -728,13 +790,10 @@ export class InsuranceFormComponent implements OnInit {
           officeId: row.officeId,
           employeeId: row.employeeId,
           applyYearMonth,
-          healthGrade: row.grade,
+          healthGrade: row.grade?.split('（')[0] || '',  // 健康保険等級のみ抽出
           healthMonthly: Number(row.monthly.toString().replace(/,/g, '')),
-          pensionGrade: '', // 必要に応じてrowから取得
-          pensionMonthly:
-            (row.pensionMonthly !== undefined && row.pensionMonthly !== null && row.pensionMonthly !== 'ー'
-              ? Number(row.pensionMonthly.toString().replace(/,/g, ''))
-              : null) as number,
+          pensionGrade: row.grade?.split('（')[1]?.replace('）', '') || '',  // 厚生年金等級のみ抽出
+          pensionMonthly: row.pensionMonthly,
           bonusTotal: row.bonus ? Number(row.bonus.toString().replace(/,/g, '')) : 0,
           bonusAvg: row.bonus ? Number(row.bonus.toString().replace(/,/g, '')) : 0, // 必要に応じて平均値を計算
           careInsurance: row.careInsurance === '〇',
@@ -829,17 +888,38 @@ export class InsuranceFormComponent implements OnInit {
     }
     // 年齢による資格喪失
     const ageArrival = this.isAgeArrivalInMonth(emp, year, month);
-    if (this.isAgeArrivedOrAfter(emp, year, month, 70)) {
+    if (AgeCheck.isPensionLostInMonth(emp, year, month)) {
+      result.push('厚生年金：70歳到達月（前日）による資格喪失');
+    } else if (this.isAgeArrivedOrAfter(emp, year, month, 70)) {
       result.push('厚生年金：70歳到達月以降による資格喪失');
-    } else if (ageArrival[70]) {
-      result.push('厚生年金：70歳到達月による資格喪失');
     }
-    if (this.isAgeArrivedOrAfter(emp, year, month, 75)) {
+    if (AgeCheck.isHealthLostInMonth(emp, year, month)) {
+      result.push('健康保険：75歳到達月（当日）による資格喪失');
+    } else if (this.isAgeArrivedOrAfter(emp, year, month, 75)) {
       result.push('健康保険：75歳到達月以降による資格喪失');
-    } else if (ageArrival[75]) {
-      result.push('健康保険：75歳到達月による資格喪失');
+    }
+    if (AgeCheck.isCareApplicableAge(emp, year, month)) {
+      result.push('介護保険：65歳到達月（前日）による資格喪失');
+    } else if (this.isAgeArrivedOrAfter(emp, year, month, 65)) {
+      result.push('介護保険：65歳到達月以降による資格喪失');
     }
     return result;
+  }
+
+  // 40歳介護保険適用開始月判定（1日生まれ特例対応）
+  isCareInsuranceApplicableInMonth(emp: any, year: number, month: number): boolean {
+    if (!emp.birthday) return false;
+    const birth = new Date(emp.birthday);
+    const careStartDate = new Date(birth.getFullYear() + 40, birth.getMonth(), birth.getDate() - 1); // 40歳誕生日の前日
+    const monthStart = new Date(year, month - 1, 1);
+    const monthEnd = new Date(year, month, 0);
+    // 誕生日が1日の場合は、前日も同じ年齢として扱い、前日が属する月から適用
+    if (birth.getDate() === 1) {
+      // 例：7月1日生まれ→6月分から適用
+      return careStartDate <= monthEnd;
+    }
+    // 通常判定
+    return careStartDate <= monthEnd;
   }
 
   get activeOffices() {

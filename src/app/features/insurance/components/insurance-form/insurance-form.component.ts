@@ -14,6 +14,9 @@ import { generateBonusPreviewList } from '../../service/bonus.check';
 import { NATIONALITIES } from '../../../../core/models/nationalities';
 import { AgeCheck } from '../../service/age.check';
 import { checkEmployeeInputMissing } from '../../service/null.check';
+import { InsuranceCalculator } from '../../service/calculate.service';
+import { isCareInsuranceApplicableForDisplay } from '../../service/care-insurance.check';
+
 
 @Component({
   selector: 'app-insurance-form',
@@ -404,51 +407,7 @@ export class InsuranceFormComponent implements OnInit {
           let pensionCompany = 0;
           let isCare = false;
 
-          if (std && rate) {
-            // 介護保険適用判定（65歳到達月の前日までが対象）
-            const isCareApplicable = !AgeCheck.isCareApplicableAge(emp, this.selectedYear, this.selectedMonth) && 
-                                   !this.isAgeArrivedOrAfter(emp, this.selectedYear, this.selectedMonth, 65) &&
-                                   this.isCareInsuranceApplicableInMonth(emp, this.selectedYear, this.selectedMonth);
-            isCare = isCareApplicable;
-            // healthRateを正しくセット
-            healthRate = rate.healthInsuranceRate || 0;
-            // 介護保険料率
-            careRate = isCare && rate.careInsuranceRate ? rate.careInsuranceRate : 0;
-            let totalHealthRate = healthRate + careRate;
-            pensionRate = rate.employeePensionInsuranceRate;
-            childcareRate = Number(ChildcareInsuranceRate.CHILDCARE_INSURANCE_RATE);
-            // まず全て計算
-            healthTotal = healthApplicable ? std.healthMonthly * (totalHealthRate / 100) : 0;
-            const pensionBaseAmount = std.pensionMonthly !== undefined && std.pensionMonthly !== null ? std.pensionMonthly : std.healthMonthly;
-            pensionTotal = pensionApplicable ? pensionBaseAmount * (pensionRate / 100) : 0;
-            childcareVal = pensionApplicable ? pensionBaseAmount * (childcareRate / 100) : 0;
-            insuranceTotal = healthTotal + pensionTotal + childcareVal;
-            // 健康保険料控除額
-            healthDeduct = healthApplicable ? this.roundSocialInsurance(healthTotal / 2) : 0;
-            // 会社負担（健康保険分のみ）
-            healthCompany = healthApplicable ? healthTotal - healthDeduct : 0;
-            // 厚生年金保険料控除額
-            pensionDeduct = pensionApplicable ? this.roundSocialInsurance(pensionTotal / 2) : 0;
-            // 会社負担（厚生年金分のみ）
-            pensionCompany = pensionApplicable ? pensionTotal - pensionDeduct : 0;
-            // 〇×表示は実際の計算での介護保険料加算有無に完全連動
-            careInsurance = (careRate > 0 && healthApplicable) ? '〇' : '×';
-            healthInsurance = this.formatDecimal(healthTotal);
-            healthInsuranceDeduction = healthDeduct.toLocaleString();
-            pension = this.formatDecimal(pensionTotal);
-            pensionDeduction = pensionDeduct.toLocaleString();
-            childcare = this.formatDecimal(childcareVal);
-            // 控除合計
-            deductionTotal = (healthDeduct + pensionDeduct).toLocaleString();
-            // 会社負担合計
-            companyShare = this.formatDecimal(healthCompany + pensionCompany + childcareVal);
-            // 都道府県名
-            const office = this.offices.find(o => o.id === emp.officeId);
-            if (office && office.insurancePrefecture) {
-              const pref = PREFECTURES.find(p => p.code === office.insurancePrefecture);
-              prefectureName = pref ? pref.name : '';
-            }
-          }
+
           // 必須項目の未入力チェック
           let missingReason = '';
           const missingCheck = checkEmployeeInputMissing(emp, std);
@@ -456,62 +415,39 @@ export class InsuranceFormComponent implements OnInit {
             this.missingStandardMonthlyEmployees.push({ ...emp, missingReason: missingCheck.reason });
           }
           const salary = this.getSalaryForEmployee(emp.employeeId);
-          // 各項目取得
-          const basic = salary ? Number(salary.basicSalary || 0) : 0;
-          const overtime = salary ? Number(salary.overtimeSalary || 0) : 0;
-          const position = salary ? Number(salary.positionAllowance || 0) : 0;
-          const commute = salary ? Number(salary.commuteAllowance || 0) : 0;
-          const other = salary ? Number(salary.otherAllowance || 0) : 0;
-          // 総手当は役職手当＋通勤費＋その他手当
-          const totalAllowance = position + commute + other;
-          // 総支給額（再計算）
-          const calcTotal = basic + overtime + position + commute + other;
-          const totalSalary = salary ? Number(salary.totalSalary || 0) : 0;
-          // ダブルチェック
-          const isMatch = Math.abs(calcTotal - totalSalary) < 1; // 1円未満の誤差は許容
-          // 調査用ログ
-          // console.log('salary breakdown:', { basic, overtime, position, commute, other, totalAllowance, calcTotal, totalSalary, isMatch });
-          // 以下のコメントアウトされた変数宣言を削除（上部で既に定義済み）
+         
           if (std && rate) {
-            // 介護保険適用判定（65歳到達月の前日までが対象）
-            const isCareApplicable = !AgeCheck.isCareApplicableAge(emp, this.selectedYear, this.selectedMonth) && 
-                                   !this.isAgeArrivedOrAfter(emp, this.selectedYear, this.selectedMonth, 65) &&
-                                   this.isCareInsuranceApplicableInMonth(emp, this.selectedYear, this.selectedMonth);
-            if (isCareApplicable) {
-              isCare = true;
-            }
-            // healthRateを正しくセット
+            // 介護保険〇×表示を一度だけ判定
+            const careInsuranceFlag = isCareInsuranceApplicableForDisplay(
+              emp, std, rate, this.selectedYear, this.selectedMonth, healthApplicable, ymStr
+            );
+            careInsurance = careInsuranceFlag ? '〇' : '×';
+
             healthRate = rate.healthInsuranceRate || 0;
-            // 介護保険料率
-            careRate = isCare && rate.careInsuranceRate ? rate.careInsuranceRate : 0;
+            careRate = careInsuranceFlag && rate.careInsuranceRate ? rate.careInsuranceRate : 0;
             let totalHealthRate = healthRate + careRate;
             pensionRate = rate.employeePensionInsuranceRate;
             childcareRate = Number(ChildcareInsuranceRate.CHILDCARE_INSURANCE_RATE);
-            // まず全て計算
-            healthTotal = healthApplicable ? std.healthMonthly * (totalHealthRate / 100) : 0;
-            const pensionBaseAmount = std.pensionMonthly !== undefined && std.pensionMonthly !== null ? std.pensionMonthly : std.healthMonthly;
-            pensionTotal = pensionApplicable ? pensionBaseAmount * (pensionRate / 100) : 0;
-            childcareVal = pensionApplicable ? pensionBaseAmount * (childcareRate / 100) : 0;
-            insuranceTotal = healthTotal + pensionTotal + childcareVal;
-            // 健康保険料控除額
-            healthDeduct = healthApplicable ? this.roundSocialInsurance(healthTotal / 2) : 0;
-            // 会社負担（健康保険分のみ）
+
+            healthTotal = InsuranceCalculator.calcHealthInsurance(std.healthMonthly, totalHealthRate, healthApplicable);
+            healthDeduct = InsuranceCalculator.calcHealthInsuranceDeduction(healthTotal, healthApplicable);
             healthCompany = healthApplicable ? healthTotal - healthDeduct : 0;
-            // 厚生年金保険料控除額
-            pensionDeduct = pensionApplicable ? this.roundSocialInsurance(pensionTotal / 2) : 0;
-            // 会社負担（厚生年金分のみ）
+
+            const pensionBaseAmount = std.pensionMonthly !== undefined && std.pensionMonthly !== null ? std.pensionMonthly : std.healthMonthly;
+            pensionTotal = InsuranceCalculator.calcPensionInsurance(pensionBaseAmount, pensionRate, pensionApplicable);
+            pensionDeduct = InsuranceCalculator.calcPensionDeduction(pensionTotal, pensionApplicable);
             pensionCompany = pensionApplicable ? pensionTotal - pensionDeduct : 0;
-            // 〇×表示は実際の計算での介護保険料加算有無に完全連動
-            careInsurance = (careRate > 0 && healthApplicable) ? '〇' : '×';
+
+            childcareVal = InsuranceCalculator.calcChildcare(pensionBaseAmount, childcareRate, pensionApplicable);
+
+            insuranceTotal = healthTotal + pensionTotal + childcareVal;
             healthInsurance = this.formatDecimal(healthTotal);
             healthInsuranceDeduction = healthDeduct.toLocaleString();
             pension = this.formatDecimal(pensionTotal);
             pensionDeduction = pensionDeduct.toLocaleString();
             childcare = this.formatDecimal(childcareVal);
-            // 控除合計
             deductionTotal = (healthDeduct + pensionDeduct).toLocaleString();
-            // 会社負担合計
-            companyShare = this.formatDecimal(healthCompany + pensionCompany + childcareVal);
+            companyShare = this.formatDecimal(InsuranceCalculator.calcCompanyShare(healthCompany, pensionCompany, childcareVal));
             // 都道府県名
             const office = this.offices.find(o => o.id === emp.officeId);
             if (office && office.insurancePrefecture) {
@@ -549,9 +485,6 @@ export class InsuranceFormComponent implements OnInit {
             childcare = '0'; // 70歳厚生年金免除時も拠出金免除
             childcareVal = 0;
           }
-          if (!careApplicable) {
-            careInsurance = '×';
-          }
           // 控除合計・会社負担合計も資格喪失月は0円に
           if (!healthApplicable && !pensionApplicable) {
             deductionTotal = '0';
@@ -560,7 +493,7 @@ export class InsuranceFormComponent implements OnInit {
             insuranceTotal = 0;
           } else {
             deductionTotal = (healthDeduct + pensionDeduct).toLocaleString();
-            companyShare = this.formatDecimal(healthCompany + pensionCompany + childcareVal);
+            companyShare = this.formatDecimal(InsuranceCalculator.calcCompanyShare(healthCompany, pensionCompany, childcareVal));
             insuranceTotal = healthTotal + pensionTotal + childcareVal;
           }
           // ここで免除特例を取得
@@ -569,7 +502,7 @@ export class InsuranceFormComponent implements OnInit {
           const exemptionResult = checkInsuranceExemption(emp, ymStr);
           if (exemptionResult.exemption) {
             // 免除の場合は各保険料を0円に
-            careInsurance = '×';
+            // careInsurance = '×';
             healthInsurance = '0';
             healthInsuranceDeduction = '0';
             pension = '0';
@@ -588,17 +521,6 @@ export class InsuranceFormComponent implements OnInit {
             employeeName: emp.lastName + ' ' + emp.firstName,
             careInsurance,
             salaryTotal: salary ? Number(salary.totalSalary).toLocaleString() : 'ー',
-            salaryBreakdown: {
-              basic,
-              overtime,
-              position,
-              commute,
-              other,
-              totalAllowance,
-              calcTotal,
-              totalSalary,
-              isMatch
-            },
             grade,
             monthly: std ? Number(std.healthMonthly).toLocaleString() : 'ー',
             pensionMonthly: std && std.pensionMonthly !== undefined && std.pensionMonthly !== null
@@ -926,3 +848,4 @@ export class InsuranceFormComponent implements OnInit {
     return this.offices.filter(o => o.isActive !== false);
   }
 }
+

@@ -1,7 +1,11 @@
+body, .insurance-form-container, .insurance-form, .insurance-preview-block, .insurance-preview-table, .dashboard-insurance-table {
+  font-size: 0.88em;
+}
+
 .insurance-form-container {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 32px auto;
-  padding: 32px;
+  padding: 20px;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -65,7 +69,7 @@ button:hover {
 }
 .insurance-preview-table th, .insurance-preview-table td {
   border: 1px solid #e0e0e0;
-  padding: 10px 8px;
+  padding: 6px 4px;
   text-align: center;
   white-space: nowrap;
 }
@@ -144,11 +148,11 @@ button:hover {
   min-width: 800px;
   border-collapse: collapse;
   background: #fafbfc;
-  font-size: 0.92em;
+  font-size: 0.88em;
 }
 .dashboard-insurance-table th, .dashboard-insurance-table td {
-  font-size: 0.92em;
-  padding: 6px 8px;
+  font-size: 0.88em;
+  padding: 4px 4px;
   border: 1px solid #e0e0e0;
   white-space: nowrap;
 }
@@ -173,6 +177,6 @@ button:hover {
 @media (max-width: 900px) {
   .dashboard-insurance-table {
     min-width: 480px;
-    font-size: 0.85em;
+    font-size: 0.82em;
   }
 }

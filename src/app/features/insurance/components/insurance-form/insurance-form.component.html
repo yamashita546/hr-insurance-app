@@ -98,7 +98,7 @@
                           <div style="margin-top:0.5em;">
                             <strong>控除・会社負担計算根拠:</strong><br>
                             適用都道府県: {{ row.prefectureName || 'ー' }}<br>
-                            健康保険料率: {{ row.healthRate }}%<span *ngIf="row.careRate && row.careRate > 0">（介護保険料率: {{ row.careRate }}% も加算）</span><br>
+                            健康保険料率: {{ row.healthRate }}%<span *ngIf="row.careInsurance === '〇' && row.careRate && row.careRate > 0">（介護保険料率: {{ row.careRate }}% も加算）</span><br>
                             厚生年金保険料率: {{ row.pensionRate }}%<br>
                             子ども子育て拠出金率: {{ row.childcareRate }}%<br>
                             保険料総額: {{ row.insuranceTotal | number:'1.0-2' }}円（健康保険料＋厚生年金保険料＋子ども子育て拠出金）<br>
@@ -177,9 +177,48 @@
                       <span *ngIf="row.appliedExemptions.length === 0">なし</span>
                     </td>
                     <td>
+                      <button type="button" (click)="selectedPopoverIndex = (selectedPopoverIndex === i ? null : i)">計算根拠</button>
+                      <div *ngIf="selectedPopoverIndex === i" class="popover-overlay" (click)="closePopover()"></div>
+                      <div *ngIf="selectedPopoverIndex === i" class="popover-content">
+                        <button class="popover-close" (click)="closePopover()">×</button>
+                        <div>
+                          <strong>賞与支給額:</strong> {{ row.bonus }}円
+                        </div>
+                        <div style="margin-top:0.5em;">
+                          <strong>標準賞与額:</strong> {{ row.standardBonus }}円
+                        </div>
+                        <div style="margin-top:0.5em;">
+                          <strong>累積賞与差額:</strong> {{ row.bonusDiff }}円
+                        </div>
+                        <div style="margin-top:0.5em;">
+                          <strong>厚生年金上限:</strong> {{ row.pensionMax }}円
+                        </div>
+                        <div style="margin-top:0.5em;">
+                          <strong>控除・会社負担計算根拠:</strong><br>
+                          適用都道府県: {{ row.prefectureName || 'ー' }}<br>
+                          健康保険料率: {{ row.healthRate }}%<span *ngIf="row.careInsurance === '〇' && row.careRate && row.careRate > 0">（介護保険料率: {{ row.careRate }}% も加算）</span><br>
+                          厚生年金保険料率: {{ row.pensionRate }}%<br>
+                          子ども子育て拠出金率: {{ row.childcareRate }}%<br>
+                          保険料総額: {{ row.insuranceTotal | number:'1.0-2' }}円（健康保険料＋厚生年金保険料＋子ども子育て拠出金）<br>
+                          健康保険料: {{ row.healthInsurance }}円（標準賞与額×料率）<br>
+                          健康保険料控除額: {{ row.healthInsuranceDeduction }}円（健康保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
+                          厚生年金保険料: {{ row.pension }}円（標準賞与額×料率）<br>
+                          厚生年金保険料控除額: {{ row.pensionDeduction }}円（厚生年金保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
+                          控除額合計: {{ row.deductionTotal }}円<br>
+                          子ども子育て拠出金: {{ row.childcare }}円（標準賞与額×子ども子育て拠出金率）<br>
+                          会社負担: {{ row.companyShare }}円（保険料総額－労働者負担額＋子ども子育て拠出金）
+                        </div>
+                        <div style="margin-top:0.5em;">
+                          <strong>適用された免除特例:</strong>
+                          <ul *ngIf="row.appliedExemptions.length > 0">
+                            <li *ngFor="let ex of row.appliedExemptions">{{ ex }}</li>
+                          </ul>
+                          <span *ngIf="row.appliedExemptions.length === 0">なし</span>
+                        </div>
+                      </div>
                       <button type="button" class="remove-row-btn" (click)="removeBonusRow(i)">削除</button>
                     </td>
-                </tr>
+                  </tr>
             </tbody>
         </table>
         <div *ngIf="missingStandardMonthlyEmployees.length > 0" class="alert alert-warning" style="margin-bottom: 1em;">

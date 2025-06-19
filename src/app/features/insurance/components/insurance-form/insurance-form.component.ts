@@ -562,9 +562,10 @@ export class InsuranceFormComponent implements OnInit {
         isChildcareLeaveExempted,
         getAppliedExemptions: this.getAppliedExemptions.bind(this),
         formatDecimal: this.formatDecimal.bind(this),
-        roundSocialInsurance: this.roundSocialInsurance.bind(this)
+        roundSocialInsurance: this.roundSocialInsurance.bind(this),
+        isCareInsuranceApplicableForDisplay
       });
-    }
+    } 
     // console.log('previewListに入る従業員:', this.previewList ? this.previewList.map(e => e.employeeName) : []);
     // 標準報酬・給与データ取得時
     targetEmployees.forEach(emp => {

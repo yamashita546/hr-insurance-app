@@ -1,6 +1,7 @@
 import { isMaternityLeaveExempted, isChildcareLeaveExempted, checkInsuranceExemption } from './check.service';
 import { ChildcareInsuranceRate } from '../../../core/models/insurance-rate.model';
 import { getAllAgeArrivalDates } from '../../../core/services/age.determination';
+import { PREFECTURES } from '../../../core/models/prefecture.model';
 
 // 賞与計算プレビューリスト生成
 export function generateBonusPreviewList({
@@ -18,7 +19,8 @@ export function generateBonusPreviewList({
   isAgeArrivalInMonth,
   getAppliedExemptions,
   formatDecimal,
-  roundSocialInsurance
+  roundSocialInsurance,
+  isCareInsuranceApplicableForDisplay
 }: any) {
   const ymStr = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
   // 全従業員・該当月の全賞与を1件ごとに出力
@@ -50,6 +52,7 @@ export function generateBonusPreviewList({
           companyShare: 'ー',
           appliedExemptions: [],
           bonusDiff: 0,
+          pensionMax: 'ー',
         });
       }
       continue;
@@ -95,18 +98,26 @@ export function generateBonusPreviewList({
       if (isAgeArrivedOrAfter(emp, selectedYear, selectedMonth, 70)) {
         pensionApplicable = false;
       }
+      // 介護保険の適用判定（給与と同じロジック）
       let careInsurance = '×';
       let isCare = false;
-      if (emp.birthday) {
-        const age = getAgeAtYearMonth1st(emp.birthday, selectedYear, selectedMonth);
-        // 介護保険の適用判定: 40歳到達月から65歳到達月の前月まで
-        if (emp.isCareInsuranceApplicable) {
-          const isAfter40 = age > 40 || (age === 40) || ageArrival[40];
-          const isBefore65 = age < 65 || (age === 65 && !ageArrival[65]);
-          isCare = isAfter40 && isBefore65;
-        }
-        careInsurance = isCare ? '〇' : '×';
-      }
+      const careInsuranceFlag = isCareInsuranceApplicableForDisplay(
+        emp, std, rate, selectedYear, selectedMonth, healthApplicable, ymStr, true
+      );
+      console.log('【介護保険判定】', {
+        employeeId: emp.employeeId,
+        name: emp.lastName + emp.firstName,
+        age: getAgeAtYearMonth1st(emp.birthday, selectedYear, selectedMonth),
+        healthApplicable,
+        std,
+        rate,
+        careInsuranceApplicable: careInsuranceFlag,
+        careInsuranceRate: rate?.careInsuranceRate,
+        healthInsuranceStatus: emp.healthInsuranceStatus,
+        appliedExemptions: getAppliedExemptions(emp, selectedYear, selectedMonth)
+      });
+      careInsurance = careInsuranceFlag ? '〇' : '×';
+      isCare = careInsuranceFlag;
       let bonusAmount = bonus ? Number(bonus.bonus) : null;
       let bonusDisplay = bonusAmount !== null ? bonusAmount.toLocaleString() : 'ー';
       // 標準賞与額（1000円未満切り捨て）
@@ -181,6 +192,12 @@ export function generateBonusPreviewList({
       let pensionDeduction = 'ー';
       let deductionTotal = 'ー';
       let companyShare = 'ー';
+      let insuranceTotal = 0;
+      let pensionMonthly = std && std.pensionMonthly !== undefined && std.pensionMonthly !== null
+        ? Number(std.pensionMonthly)
+        : (std ? Number(std.healthMonthly) : null);
+      let grade = std ? `${std.healthGrade}（${std.pensionGrade}）` : 'ー';
+      let monthly = std ? Number(std.healthMonthly).toLocaleString() : 'ー';
       if (standardBonus !== null && rate) {
         // 健康保険料：573万円上限
         const limit = 5730000;
@@ -220,6 +237,8 @@ export function generateBonusPreviewList({
         // 会社負担
         const companyShareVal = deductionSum + childcareVal;
         companyShare = formatDecimal(companyShareVal);
+        // 保険料総額
+        insuranceTotal = health + pensionVal + childcareVal;
       }
       // 年齢による資格喪失を金額に反映
       if (!healthApplicable) {
@@ -254,6 +273,28 @@ export function generateBonusPreviewList({
       } else if (exemptionResult.exemptionType === '同月得喪') {
         appliedExemptions.push('同月得喪');
       }
+      // 保険料率・都道府県名のセット
+      let healthRate = 0;
+      let careRate = 0;
+      let pensionRate = 0;
+      let childcareRate = 0;
+      let prefectureName = '';
+      if (rate) {
+        healthRate = rate.healthInsuranceRate || 0;
+        careRate = rate.careInsuranceRate || 0;
+        pensionRate = rate.employeePensionInsuranceRate || 0;
+        childcareRate = Number(ChildcareInsuranceRate.CHILDCARE_INSURANCE_RATE);
+      }
+      const office = offices.find((o: any) => o.id === emp.officeId);
+      if (office && office.insurancePrefecture) {
+        const pref = (typeof PREFECTURES !== 'undefined' ? PREFECTURES : []).find((p: any) => p.code === office.insurancePrefecture);
+        prefectureName = pref ? pref.name : '';
+      }
+      // pensionMax（厚生年金上限）を計算
+      let pensionMax = 'ー';
+      if (standardBonus !== null && standardBonus > 1500000) {
+        pensionMax = '1,500,000';
+      }
       previewList.push({
         officeId: emp.officeId,
         employeeId: emp.employeeId,
@@ -262,8 +303,9 @@ export function generateBonusPreviewList({
         careInsurance,
         bonus: bonusDisplay,
         bonusDate: bonus.paymentDate || '',
-        grade: std ? `${std.healthGrade}（${std.pensionGrade}）` : 'ー',
-        monthly: std ? Number(std.healthMonthly).toLocaleString() : 'ー',
+        grade,
+        monthly,
+        pensionMonthly,
         standardBonus,
         annualBonusTotal,
         annualBonusTotalBefore,
@@ -276,15 +318,15 @@ export function generateBonusPreviewList({
         deductionTotal,
         childcare,
         companyShare,
-        // 追加項目
-        prefectureName: '',
-        healthRate: 0,
-        careRate: 0,
-        pensionRate: 0,
-        childcareRate: 0,
-        insuranceTotal: 0,
+        prefectureName,
+        healthRate,
+        careRate,
+        pensionRate,
+        childcareRate,
+        insuranceTotal,
         appliedExemptions,
         bonusDiff,
+        pensionMax,
       });
     }
   }

@@ -38,50 +38,54 @@ export function isCareInsuranceApplicableForDisplay(
     year: number,
     month: number,
     healthApplicable: boolean,
-    ymStr: string
+    ymStr: string,
+    isBonus: boolean = false
   ): boolean {
     if (!healthApplicable) {
       console.log(`[careInsurance] ×: healthApplicable=false`, emp, std, rate, year, month);
+      console.log('[careInsurance判定結果]', false);
       return false;
     }
     if (!rate || !rate.careInsuranceRate || rate.careInsuranceRate <= 0) {
       console.log(`[careInsurance] ×: careInsuranceRate missing or 0`, emp, std, rate, year, month);
+      console.log('[careInsurance判定結果]', false);
       return false;
     }
-    if (!std) {
+    if (!isBonus && !std) {
       console.log(`[careInsurance] ×: std missing`, emp, std, rate, year, month);
+      console.log('[careInsurance判定結果]', false);
       return false;
     }
 
     // 誕生日の前日が算定月内に含まれるか（1日生まれ特例も考慮）
     const birth = new Date(emp.birthday);
-    const careStartDate = new Date(birth.getFullYear() + 40, birth.getMonth(), birth.getDate() - 1);
     const monthStart = new Date(year, month - 1, 1);
     const monthEnd = new Date(year, month, 0);
-    let careApplicable = false;
-    if (careStartDate >= monthStart && careStartDate <= monthEnd) {
-      careApplicable = true;
-    } else if (birth.getDate() === 1 && careStartDate <= monthEnd) {
-      // 1日生まれ特例：前月から適用
-      careApplicable = true;
-    }
-    // 65歳到達月の前日まで
-    const careEndDate = new Date(birth.getFullYear() + 65, birth.getMonth(), birth.getDate() - 1);
-    if (careEndDate < monthStart) careApplicable = false;
-    if (!careApplicable) {
-      console.log('[careInsurance] ×: careStartDate/careEndDate条件', emp, std, rate, year, month, careStartDate, careEndDate, monthStart, monthEnd);
+
+    // 介護保険の適用期間: 40歳の誕生日の前日が含まれる月～65歳の誕生日の前日が含まれる月の前月まで
+    const care40thPrevDay = new Date(birth.getFullYear() + 40, birth.getMonth(), birth.getDate() - 1);
+    const care65thPrevDay = new Date(birth.getFullYear() + 65, birth.getMonth(), birth.getDate() - 1);
+    // 65歳の誕生日の前日が含まれる月は適用外
+    const care65thPrevDayMonthStart = new Date(care65thPrevDay.getFullYear(), care65thPrevDay.getMonth(), 1);
+    const care65thPrevDayMonthEnd = new Date(care65thPrevDay.getFullYear(), care65thPrevDay.getMonth() + 1, 0);
+    if (care40thPrevDay > monthEnd || care65thPrevDay < monthStart || (monthStart <= care65thPrevDay && care65thPrevDay <= monthEnd)) {
+      console.log('[careInsurance] ×: 40歳前日/65歳前日が月範囲外または65歳前日月', emp, std, rate, year, month, care40thPrevDay, care65thPrevDay, monthStart, monthEnd);
+      console.log('[careInsurance判定結果]', false);
       return false;
     }
 
     if (isMaternityLeaveExempted(emp, ymStr) || isChildcareLeaveExempted(emp, ymStr)) {
       console.log(`[careInsurance] ×: maternity/childcare exemption`, emp, std, rate, year, month);
+      console.log('[careInsurance判定結果]', false);
       return false;
     }
     if (emp.foreignWorker?.hasSpecialExemption) {
       console.log(`[careInsurance] ×: foreign worker special exemption`, emp, std, rate, year, month);
+      console.log('[careInsurance判定結果]', false);
       return false;
     }
     console.log(`[careInsurance] 〇: all conditions met`, emp, std, rate, year, month);
+    console.log('[careInsurance判定結果]', true);
     return true;
   }
   

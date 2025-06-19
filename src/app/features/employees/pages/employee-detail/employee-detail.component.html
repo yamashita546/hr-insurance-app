@@ -621,7 +621,13 @@
         </tr>
         <tr *ngIf="isEditMode">
           <th>国籍</th>
-          <td><input [(ngModel)]="editEmployee.foreignWorker.nationality"></td>
+          <td>
+            <select [(ngModel)]="editEmployee.foreignWorker.nationality">
+              <option value="">選択してください</option>
+              <option *ngFor="let n of nationalities" [value]="n.code">{{ n.name }}</option>
+            </select>
+            <input *ngIf="editEmployee.foreignWorker.nationality === 'OTHER'" [(ngModel)]="editEmployee.foreignWorker.nationalityOther" placeholder="国名を入力" />
+          </td>
         </tr>
         <tr *ngIf="!isEditMode">
           <th>在留資格</th>

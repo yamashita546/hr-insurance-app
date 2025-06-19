@@ -79,6 +79,14 @@ export function generateBonusPreviewList({
       let healthApplicable = emp.healthInsuranceStatus?.isApplicable;
       let pensionApplicable = true;
       const ageArrival = isAgeArrivalInMonth(emp, selectedYear, selectedMonth);
+      // 外国人特例（国籍ごとに判定）
+      const specialExemption = getSpecialExemptionType(emp);
+      if (specialExemption === 'pension') {
+        pensionApplicable = false;
+      } else if (specialExemption === 'both') {
+        pensionApplicable = false;
+        healthApplicable = false;
+      }
       // 75歳到達月は健康保険対象外
       if (isAgeArrivedOrAfter(emp, selectedYear, selectedMonth, 75)) {
         healthApplicable = false;
@@ -298,4 +306,18 @@ function isAgeArrivedOrAfter(emp: any, year: number, month: number, targetAge: n
   if (!arrival) return false;
   const targetDate = new Date(year, month - 1, 1);
   return targetDate >= arrival;
+}
+
+// 国籍ごとの免除判定関数を追加
+function getSpecialExemptionType(emp: any): 'pension' | 'both' | null {
+  if (!emp.isForeignWorker || !emp.foreignWorker?.hasSpecialExemption) return null;
+  const code = emp.foreignWorker?.nationality;
+  if (!code) return null;
+  // 厚生年金のみ免除
+  const pensionOnly = ['DE', 'KR', 'AU', 'BR', 'IN', 'CN', 'PH', 'SK', 'IE', 'IT'];
+  // 厚生年金＋健康保険免除
+  const both = ['US', 'BE', 'FR', 'NL', 'CZ', 'CH', 'HU', 'LU', 'SE', 'FI'];
+  if (pensionOnly.includes(code)) return 'pension';
+  if (both.includes(code)) return 'both';
+  return null;
 }

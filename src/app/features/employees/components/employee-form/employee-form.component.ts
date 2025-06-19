@@ -23,6 +23,7 @@ import { EMPLOYEE_CSV_FIELD_LABELS } from '../../../../core/models/employee.mode
 import { RELATIONSHIP_TYPES } from '../../../../core/models/dependents.relationship.model';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
+import { NATIONALITIES } from '../../../../core/models/nationalities';
 
 @Component({
   selector: 'app-employee-form',
@@ -59,7 +60,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   offices: Office[] = [];
   prefectures: Prefecture[] = PREFECTURES;
 
-  nationalities = ['中国', '韓国', 'ベトナム', 'フィリピン', 'ネパール', 'アメリカ', 'ブラジル', 'その他'];
+  nationalities = NATIONALITIES;
   residenceStatusList = [
     '技術・人文知識・国際業務', '技能実習', '特定技能', '永住者', '家族滞在', '留学', '特定活動', 'その他'
   ];
@@ -125,16 +126,16 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       officeName: [''],
       department: [''],
       position: [''],
-      employeeType: [''],
+      employeeType: ['', Validators.required],
       workStyle: [''],
       isStudent: [false],
       hireDate: [''],
-      contractStartDate: [''],
+      contractStartDate: ['', Validators.required],
       contractEndDate: [''],
       resignationDate: [''],
       resignationReason: [''],
       email: ['', [Validators.email]],
-      phoneNumber: ['', [Validators.pattern(/^\d+$/)]],
+      phoneNumber: ['', [Validators.pattern(/^[\d]+$/)]],
       insuranceNumber: ['', [Validators.pattern(/^[0-9]+$/)]],
       address: this.fb.group({
         postalCodeFirst: ['', [Validators.required, Validators.pattern(/^\d{3}$/)]],
@@ -180,6 +181,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       foreignWorker: this.fb.group({
         romanName: [''],
         nationality: [''],
+        nationalityOther: [''],
         residenceStatus: [''],
         residenceStatusType: [''],
         residenceCardNumber: [''],
@@ -338,6 +340,19 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       this.validationErrors = this.getFormValidationErrors(this.form);
       return;
     }
+    // ①社会保険免除特例がtrueの場合は国籍必須
+    const isForeignWorker = this.form.get('isForeignWorker')?.value;
+    const hasSpecialExemption = this.form.get('foreignWorker.hasSpecialExemption')?.value;
+    const nationality = this.form.get('foreignWorker.nationality')?.value;
+    if (isForeignWorker && hasSpecialExemption && !nationality) {
+      this.validationErrors.push('社会保険免除特例がある場合は国籍を選択してください。');
+      return;
+    }
+    // ②社会保険免除特例がtrueの場合はアラートで確認
+    if (isForeignWorker && hasSpecialExemption) {
+      const ok = window.confirm('社会保険免除特例が有効です。健康保険・厚生年金の適用状況は正しいですか？');
+      if (!ok) return;
+    }
     // companyKeyとofficeIdを従業員データに追加
     const employee = {
       ...this.form.value,
@@ -400,6 +415,18 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
         else if (dep.gender && !['male','female','other'].includes(dep.gender)) dep.gender = 'other';
         return dep;
       });
+    }
+    // 国籍コードを保存（その他の場合はnationalityOtherも保存）
+    if (employee.isForeignWorker && employee.foreignWorker) {
+      // nationalityは必ずコードで保存
+      const nationalityCode = employee.foreignWorker.nationality;
+      employee.foreignWorker.nationality = nationalityCode;
+      if (nationalityCode === 'OTHER') {
+        employee.foreignWorker.nationalityOther = employee.foreignWorker.nationalityOther || '';
+      } else {
+        // その他以外の場合はnationalityOtherを空に
+        employee.foreignWorker.nationalityOther = '';
+      }
     }
     // 既存従業員チェック
     const employeesCollection = collection(this.firestore, 'employees');
@@ -930,6 +957,9 @@ function fullTimeInsuranceValidator(control: AbstractControl): ValidationErrors 
   const employeeType = control.get('employeeType')?.value;
   const isFullTime = employeeType === 'fulltime'; // 正社員のコードに合わせて必要なら修正
   if (!isFullTime) return null;
+  // 社会保険免除特例がtrueの場合はバリデーション免除
+  const isSpecialExemption = control.get('isForeignWorker')?.value && control.get('foreignWorker.hasSpecialExemption')?.value;
+  if (isSpecialExemption) return null;
   const health = control.get('healthInsuranceStatus.isApplicable')?.value;
   const pension = control.get('pensionStatus.isApplicable')?.value;
   const errors: any = {};

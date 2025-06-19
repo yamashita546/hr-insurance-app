@@ -15,6 +15,7 @@ import { PREFECTURES } from '../../../../core/models/prefecture.model';
 import { RELATIONSHIP_TYPES } from '../../../../core/models/dependents.relationship.model';
 import { EmployeeTransferHistory } from '../../../../core/models/empoloyee.history';
 import { RelationshipNamePipe } from '../../../../core/pipe/relationship.pipe';
+import { NATIONALITIES } from '../../../../core/models/nationalities';
 
 
 @Component({
@@ -48,6 +49,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   transferPlan: any = { transferDate: '', targetOfficeId: '', targetOfficeName: '' };
   transferHistory: EmployeeTransferHistory[] = [];
   isUploading = false;
+  nationalities = NATIONALITIES;
 
   constructor(
     private route: ActivatedRoute,
@@ -129,6 +131,28 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     this.saveMessage = '';
     this.validateExtraordinaryLeaves();
     if (!this.docId) return;
+    // ① 社会保険免除特例がtrueの場合は国籍必須
+    const isForeignWorker = this.editEmployee.isForeignWorker;
+    const hasSpecialExemption = this.editEmployee.foreignWorker?.hasSpecialExemption;
+    const nationality = this.editEmployee.foreignWorker?.nationality;
+    if (isForeignWorker && hasSpecialExemption && !nationality) {
+      this.validationErrors.push('社会保険免除特例がある場合は国籍を選択してください。');
+      return;
+    }
+    // ② 社会保険免除特例がtrueの場合はアラートで確認
+    if (isForeignWorker && hasSpecialExemption) {
+      const ok = window.confirm('社会保険免除特例が有効です。健康保険・厚生年金の適用状況は正しいですか？');
+      if (!ok) return;
+    }
+    // ③ 雇用形態・契約開始日必須
+    if (!this.editEmployee.employeeType) {
+      this.validationErrors.push('雇用形態は必須です');
+      return;
+    }
+    if (!this.editEmployee.contractStartDate) {
+      this.validationErrors.push('契約開始日は必須です');
+      return;
+    }
     this.isUploading = true;
     try {
       const health = this.editEmployee.healthInsuranceStatus?.isApplicable;
@@ -164,9 +188,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
         this.editEmployee.isCareInsuranceApplicable = false;
       }
 
-      // 4. それ以外（条件に合致している場合）はアラートなしで保存
-
-      // コード値で保存するための変換処理
+      // 4. コード値で保存するための変換処理
       // 雇用形態
       if (this.editEmployee.employeeType) {
         const found = this.employeeTypes.find(t => t.code === this.editEmployee.employeeType || t.name === this.editEmployee.employeeType);
@@ -203,24 +225,31 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
           );
         }
       }
-
-      // バリデーション: 正社員なら社会保険3種のisApplicableがすべてtrueでなければならない
-      // console.log('[saveEdit] employeeType:', this.editEmployee.employeeType);
-      if (this.editEmployee.employeeType === 'regular') {
-        if (!this.editEmployee.healthInsuranceStatus?.isApplicable) {
-          this.validationErrors.push('正社員の場合、健康保険適用は必須です');
-        }
-        if (!this.editEmployee.pensionStatus?.isApplicable) {
-          this.validationErrors.push('正社員の場合、厚生年金適用は必須です');
+      // ⑤国籍コードで保存、OTHERの場合はnationalityOtherも保存
+      if (this.editEmployee.isForeignWorker && this.editEmployee.foreignWorker) {
+        const nationalityCode = this.editEmployee.foreignWorker.nationality;
+        this.editEmployee.foreignWorker.nationality = nationalityCode;
+        if (nationalityCode === 'OTHER') {
+          this.editEmployee.foreignWorker.nationalityOther = this.editEmployee.foreignWorker.nationalityOther || '';
+        } else {
+          this.editEmployee.foreignWorker.nationalityOther = '';
         }
       }
-      // console.log('[saveEdit] validationErrors:', this.validationErrors);
+      // ⑥社会保険免除特例がtrueの場合は正社員でも健康保険・厚生年金の必須バリデーションを免除
+      if (this.editEmployee.employeeType === 'regular') {
+        const isSpecialExemption = this.editEmployee.isForeignWorker && this.editEmployee.foreignWorker?.hasSpecialExemption;
+        if (!isSpecialExemption) {
+          if (!this.editEmployee.healthInsuranceStatus?.isApplicable) {
+            this.validationErrors.push('正社員の場合、健康保険適用は必須です');
+          }
+          if (!this.editEmployee.pensionStatus?.isApplicable) {
+            this.validationErrors.push('正社員の場合、厚生年金適用は必須です');
+          }
+        }
+      }
       if (this.validationErrors.length > 0) {
-        // エラーがあれば編集モードを終了しない
         return;
       }
-      // console.log('[saveEdit] updateEmployee実行:', this.docId, this.editEmployee);
-      // companyIdがなければ補完
       if (!this.editEmployee.companyId && this.companyKey) {
         this.userCompanyService.company$.subscribe(company => {
           if (company && company.companyId) {
@@ -228,7 +257,6 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
           }
         });
       }
-      // 事業所名とofficeIdの整合性を必ず保つ
       if (this.editEmployee.officeId && this.offices.length > 0) {
         const office = this.offices.find(o => o.id === this.editEmployee.officeId);
         if (office) {

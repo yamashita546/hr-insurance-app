@@ -11,6 +11,7 @@ import { isMaternityLeaveExempted, isChildcareLeaveExempted, checkInsuranceExemp
 import { getAllAgeArrivalDates } from '../../../../core/services/age.determination';
 import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
 import { generateBonusPreviewList } from '../../service/bonus.check';
+import { NATIONALITIES } from '../../../../core/models/nationalities';
 
 @Component({
   selector: 'app-insurance-form',
@@ -69,9 +70,7 @@ export class InsuranceFormComponent implements OnInit {
           this.insuranceRates = rates;
         });
         this.updateRegisteredEmployeeIds();
-        console.log('全従業員:', this.employees);
-        const satoTaro = this.employees.find(e => e.lastName === '佐藤' && e.firstName === '太郎');
-        console.log('佐藤太郎データ:', satoTaro);
+        
       });
   }
 
@@ -229,6 +228,20 @@ export class InsuranceFormComponent implements OnInit {
     return targetDate >= arrival;
   }
 
+  // 外国人特例の免除対象を国籍ごとに判定
+  getSpecialExemptionType(emp: any): 'pension' | 'both' | null {
+    if (!emp.isForeignWorker || !this.isSpecialExemption(emp)) return null;
+    const code = emp.foreignWorker?.nationality;
+    if (!code) return null;
+    // 厚生年金のみ免除
+    const pensionOnly = ['DE', 'KR', 'AU', 'BR', 'IN', 'CN', 'PH', 'SK', 'IE', 'IT'];
+    // 厚生年金＋健康保険免除
+    const both = ['US', 'BE', 'FR', 'NL', 'CZ', 'CH', 'HU', 'LU', 'SE', 'FI'];
+    if (pensionOnly.includes(code)) return 'pension';
+    if (both.includes(code)) return 'both';
+    return null;
+  }
+
   onDecision() {
     let targetEmployees = this.filteredEmployees;
     if (this.selectedEmployeeId) {
@@ -305,9 +318,13 @@ export class InsuranceFormComponent implements OnInit {
           let careApplicable = emp.isCareInsuranceApplicable;
           // 年齢到達月判定
           const ageArrival = this.isAgeArrivalInMonth(emp, this.selectedYear, this.selectedMonth);
-          // 外国人特例（厚生年金免除）
-          if (emp.isForeignWorker && this.isSpecialExemption(emp)) {
+          // 外国人特例（国籍ごとに判定）
+          const specialExemption = this.getSpecialExemptionType(emp);
+          if (specialExemption === 'pension') {
             pensionApplicable = false;
+          } else if (specialExemption === 'both') {
+            pensionApplicable = false;
+            healthApplicable = false;
           }
           // 70歳到達月以降は厚生年金対象外
           if (this.isAgeArrivedOrAfter(emp, this.selectedYear, this.selectedMonth, 70)) {
@@ -353,8 +370,18 @@ export class InsuranceFormComponent implements OnInit {
           }
           // 標準報酬月額の有効性チェック
           const std = this.getStandardMonthlyForEmployee(emp.employeeId, emp.officeId);
-          if ((healthApplicable || pensionApplicable) && !std && this.isActiveEmployeeForTargetMonth(emp, this.selectedYear, this.selectedMonth)) {
-            this.missingStandardMonthlyEmployees.push(emp);
+          // 必須項目の未入力チェック
+          let missingReason = '';
+          if (!emp.birthday) {
+            missingReason = '生年月日未入力';
+          } else if (!emp.contractStartDate) {
+            missingReason = '契約開始日未入力';
+          } else if (!emp.employeeType) {
+            missingReason = '雇用形態未入力';
+          }
+          if ((!std || missingReason) && this.isActiveEmployeeForTargetMonth(emp, this.selectedYear, this.selectedMonth)) {
+            // 標準報酬月額未登録、または必須項目未入力の場合リストに追加
+            this.missingStandardMonthlyEmployees.push({ ...emp, missingReason: missingReason || (!std ? '標準報酬月額未登録' : undefined) });
           }
           const salary = this.getSalaryForEmployee(emp.employeeId);
           const rate = this.getInsuranceRateForOffice(emp.officeId);
@@ -429,7 +456,12 @@ export class InsuranceFormComponent implements OnInit {
               const childcareVal = childcareBase * (Number(ChildcareInsuranceRate.CHILDCARE_INSURANCE_RATE) / 100);
               childcare = this.formatDecimal(childcareVal);
               // 会社負担（健康保険分のみ＋子ども子育て拠出金）
-              companyShare = this.formatDecimal(healthCompany + childcareVal);
+              // 厚生年金が適用されていない場合は拠出金を含めない
+              if (pensionApplicable) {
+                companyShare = this.formatDecimal(healthCompany + childcareVal);
+              } else {
+                companyShare = this.formatDecimal(healthCompany);
+              }
             }
             // 厚生年金保険料
             if (pensionApplicable) {
@@ -789,8 +821,11 @@ export class InsuranceFormComponent implements OnInit {
       result.push('育児休業免除');
     }
     // 外国人特例
-    if (emp.isForeignWorker && this.isSpecialExemption(emp)) {
+    const specialExemption = this.getSpecialExemptionType(emp);
+    if (specialExemption === 'pension') {
       result.push('外国人特例（厚生年金免除）');
+    } else if (specialExemption === 'both') {
+      result.push('外国人特例（厚生年金・健康保険免除）');
     }
     // 年齢による資格喪失
     const ageArrival = this.isAgeArrivalInMonth(emp, year, month);

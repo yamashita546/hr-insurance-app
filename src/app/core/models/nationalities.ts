@@ -1,0 +1,23 @@
+export const NATIONALITIES = [
+  { code: 'US', name: 'アメリカ合衆国 (United States)' },
+  { code: 'BE', name: 'ベルギー (Belgium)' },
+  { code: 'FR', name: 'フランス (France)' },
+  { code: 'NL', name: 'オランダ (Netherlands)' },
+  { code: 'CZ', name: 'チェコ (Czech Republic)' },
+  { code: 'CH', name: 'スイス (Switzerland)' },
+  { code: 'HU', name: 'ハンガリー (Hungary)' },
+  { code: 'LU', name: 'ルクセンブルク (Luxembourg)' },
+  { code: 'SE', name: 'スウェーデン (Sweden)' },
+  { code: 'FI', name: 'フィンランド (Finland)' },
+  { code: 'DE', name: 'ドイツ (Germany)' },
+  { code: 'KR', name: '大韓民国（韓国） (Republic of Korea)' },
+  { code: 'AU', name: 'オーストラリア (Australia)' },
+  { code: 'BR', name: 'ブラジル (Brazil)' },
+  { code: 'IN', name: 'インド (India)' },
+  { code: 'CN', name: '中華人民共和国（中国） (People\'s Republic of China)' },
+  { code: 'PH', name: 'フィリピン (Philippines)' },
+  { code: 'SK', name: 'スロバキア (Slovakia)' },
+  { code: 'IE', name: 'アイルランド (Ireland)' },
+  { code: 'IT', name: 'イタリア (Italy)' },
+  { code: 'OTHER', name: 'その他' }
+];

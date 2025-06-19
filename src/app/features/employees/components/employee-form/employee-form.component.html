@@ -479,9 +479,9 @@
             <label>国籍<span class="required">*</span></label>
             <select formControlName="nationality">
               <option value="">選択してください</option>
-              <option *ngFor="let n of nationalities" [value]="n">{{ n }}</option>
+              <option *ngFor="let n of nationalities" [value]="n.code">{{ n.name }}</option>
             </select>
-            <input *ngIf="foreignWorker.get('nationality')?.value === 'その他'" formControlName="nationalityOther" placeholder="国名を入力" />
+            <input *ngIf="foreignWorker.get('nationality')?.value === 'OTHER'" formControlName="nationalityOther" placeholder="国名を入力" />
           </div>
           <div class="form-row">
             <label>在留資格<span class="required">*</span></label>

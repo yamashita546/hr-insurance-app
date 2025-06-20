@@ -306,14 +306,15 @@ export class FirestoreService {
   // 賞与計算結果保存
   async addInsuranceBonusCalculation(calculation: Omit<InsuranceBonusCalculation, 'createdAt' | 'updatedAt' | 'id'>) {
     if (!calculation.employeeId || !calculation.companyKey) return;
-    const col = collection(this.firestore, 'insuranceBonusCalculations');
     const now = Timestamp.now();
-    const docRef = await addDoc(col, {
+    const docId = `${calculation.companyKey}_${calculation.officeId}_${calculation.employeeId}_${calculation.applyYearMonth}`;
+    const docRef = doc(this.firestore, 'insuranceBonusCalculations', docId);
+    await setDoc(docRef, {
       ...calculation,
       createdAt: now,
-      updatedAt: now
-    });
-    await setDoc(docRef, { id: docRef.id }, { merge: true });
+      updatedAt: now,
+      id: docId
+    }, { merge: true });
   }
 
   // 給与計算結果一覧取得

@@ -81,6 +81,12 @@
           <ng-container *ngIf="form.get('salaryClosingDate')?.errors?.['range']">1～31の範囲で入力してください</ng-container>
         </div>
       </label>
+      <label>所定労働日数
+        <input type="text" class="input" formControlName="workingDays" placeholder="例：20" />
+      </label>
+      <label>所定労働時間
+        <input type="text" class="input" formControlName="workingHours" placeholder="例：8" />
+      </label>
     </div>
     <div class="dialog-actions">
       <button type="button" class="cancel-btn" (click)="onCancel()">キャンセル</button>

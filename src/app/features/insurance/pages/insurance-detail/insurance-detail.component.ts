@@ -37,6 +37,7 @@ export class InsuranceDetailComponent implements OnInit {
         this.employees = employees;
         this.insuranceSalaryCalculations = await this.firestoreService.getInsuranceSalaryCalculationsByCompanyKey(companyKey);
         this.insuranceBonusCalculations = await this.firestoreService.getInsuranceBonusCalculationsByCompanyKey(companyKey);
+        console.log('[賞与計算結果全件]', this.insuranceBonusCalculations);
         // isActiveがtrueの従業員のみ初期選択
         const active = this.activeEmployees;
         if (active.length > 0) {
@@ -56,12 +57,16 @@ export class InsuranceDetailComponent implements OnInit {
   get selectedEmployeeSalaryCalculations() {
     const emp = this.employees.find(e => String(e.employeeId) === String(this.selectedEmployeeId));
     if (!emp || emp.isActive === false) return [];
-    return this.insuranceSalaryCalculations.filter(row => row.employeeId === this.selectedEmployeeId);
+    return this.insuranceSalaryCalculations
+      .filter(row => row.employeeId === this.selectedEmployeeId)
+      .sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth));
   }
   get selectedEmployeeBonusCalculations() {
     const emp = this.employees.find(e => String(e.employeeId) === String(this.selectedEmployeeId));
     if (!emp || emp.isActive === false) return [];
-    return this.insuranceBonusCalculations.filter(row => row.employeeId === this.selectedEmployeeId);
+    return this.insuranceBonusCalculations
+      .filter(row => row.employeeId === this.selectedEmployeeId)
+      .sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth));
   }
 
   onEmployeeChange() {

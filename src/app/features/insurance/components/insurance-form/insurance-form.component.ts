@@ -586,44 +586,20 @@ export class InsuranceFormComponent implements OnInit {
     }
     // 当月データ存在チェック
     if (this.selectedType === 'salary') {
-      // 既存給与計算結果の重複チェック
-      const existingCalcs = this.insuranceSalaryCalculations.filter(s => s.applyYearMonth === applyYearMonth && s.companyKey === this.companyKey);
-      const duplicateRows = this.previewList.filter(row =>
-        existingCalcs.some(s => s.employeeId === row.employeeId && s.companyKey === this.companyKey)
+      // 既存データのIDセットを作成
+      const existingIds = new Set(
+        this.insuranceSalaryCalculations
+          .filter(s => s.applyYearMonth === applyYearMonth && s.companyKey === this.companyKey)
+          .map(s => `${s.companyKey}_${s.officeId}_${s.employeeId}_${s.applyYearMonth}`)
       );
-      if (duplicateRows.length > 0) {
-        const names = duplicateRows.map(row => `${row.officeName} ${row.employeeName}`).join('\n');
-        if (!confirm(`既に社会保険料計算結果が登録されている従業員がいます:\n${names}\n\n上書き保存しますか？`)) {
+      // 既存・新規を分ける
+      const existingRows = this.previewList.filter(row => existingIds.has(`${this.companyKey}_${row.officeId}_${row.employeeId}_${applyYearMonth}`));
+      const newRows = this.previewList.filter(row => !existingIds.has(`${this.companyKey}_${row.officeId}_${row.employeeId}_${applyYearMonth}`));
+      if (existingRows.length > 0) {
+        const names = existingRows.map(row => `${row.officeName} ${row.employeeName}`).join('\n');
+        if (!confirm(`${existingRows.length}件はすでに登録がありますが上書きしますか？\n\n${names}`)) {
           return;
         }
-        // 上書き保存
-        const promises = this.previewList.map(async row => {
-          const calculation: Omit<import('../../../../core/models/insurance-calculation.model').InsuranceSalaryCalculation, 'createdAt' | 'updatedAt'> = {
-            companyKey: this.companyKey,
-            officeId: row.officeId,
-            employeeId: row.employeeId,
-            applyYearMonth,
-            healthGrade: row.grade?.split('（')[0] || '',  // 健康保険等級のみ抽出
-            healthMonthly: Number(row.monthly.toString().replace(/,/g, '')),
-            pensionGrade: row.grade?.split('（')[1]?.replace('）', '') || '',  // 厚生年金等級のみ抽出
-            pensionMonthly: row.pensionMonthly,
-            salaryTotal: row.salaryTotal ? Number(row.salaryTotal.toString().replace(/,/g, '')) : 0,
-            salaryAvg: 0, // 必要に応じて計算
-            careInsurance: row.careInsurance === '〇',
-            healthInsurance: Number(row.healthInsurance.toString().replace(/,/g, '')),
-            healthInsuranceDeduction: Number(row.healthInsuranceDeduction.toString().replace(/,/g, '')),
-            pension: Number(row.pension.toString().replace(/,/g, '')),
-            pensionDeduction: Number(row.pensionDeduction.toString().replace(/,/g, '')),
-            deductionTotal: Number(row.deductionTotal.toString().replace(/,/g, '')),
-            childcare: Number(row.childcare.toString().replace(/,/g, '')),
-            companyShare: Number(row.companyShare.toString().replace(/,/g, '')),
-          };
-          await this.firestoreService.updateInsuranceSalaryCalculation(calculation);
-        });
-        await Promise.all(promises);
-        alert(`${this.previewList.length}件の給与社会保険料計算結果を上書き保存しました。`);
-        this.router.navigate(['/insurance-calc']);
-        return;
       }
       const hasSalary = this.previewList.some(row => row.salaryTotal && row.salaryTotal !== 'ー');
       if (!hasSalary) {
@@ -631,7 +607,7 @@ export class InsuranceFormComponent implements OnInit {
         return;
       }
       const promises = this.previewList.map(async row => {
-        const calculation: Omit<import('../../../../core/models/insurance-calculation.model').InsuranceSalaryCalculation, 'createdAt' | 'updatedAt'> = {
+        const calculation: Omit<import('../../../../core/models/insurance-calculation.model').InsuranceSalaryCalculation, 'createdAt' | 'updatedAt' | 'id'> = {
           companyKey: this.companyKey,
           officeId: row.officeId,
           employeeId: row.employeeId,
@@ -651,64 +627,39 @@ export class InsuranceFormComponent implements OnInit {
           childcare: Number(row.childcare.toString().replace(/,/g, '')),
           companyShare: Number(row.companyShare.toString().replace(/,/g, '')),
         };
-        await this.firestoreService.addInsuranceSalaryCalculation(calculation);
+        const docId = `${this.companyKey}_${row.officeId}_${row.employeeId}_${applyYearMonth}`;
+        try {
+          if (existingIds.has(docId)) {
+            await this.firestoreService.updateInsuranceSalaryCalculation(calculation);
+          } else {
+            await this.firestoreService.addInsuranceSalaryCalculation(calculation);
+          }
+        } catch (e) {
+          console.error('[給与保存エラー]', e, calculation);
+          alert('給与保存時にエラーが発生しました: ' + e);
+        }
       });
       await Promise.all(promises);
       alert(`${this.previewList.length}件の給与社会保険料計算結果を保存しました。`);
       this.router.navigate(['/insurance-calc']);
     } else if (this.selectedType === 'bonus') {
-      // 対象月に賞与データが未登録の従業員を抽出
-      const missingBonusEmployees = this.previewList.filter(row => !row.bonus || row.bonus === 'ー');
-      if (missingBonusEmployees.length > 0) {
-        const names = missingBonusEmployees.map(row => `${row.officeName} ${row.employeeName}`).join('\n');
-        alert(`当月賞与データが登録されていない従業員がいます:\n${names}`);
-        return;
-      }
-      // 既存賞与計算結果の重複チェック
-      const existingCalcs = this.insuranceBonusCalculations.filter(s => s.applyYearMonth === applyYearMonth && s.companyKey === this.companyKey);
-      const duplicateRows = this.previewList.filter(row =>
-        existingCalcs.some(s => s.employeeId === row.employeeId && s.companyKey === this.companyKey)
+      // 既存データのIDセットを作成
+      const existingIds = new Set(
+        this.insuranceBonusCalculations
+          .filter(s => s.applyYearMonth === applyYearMonth && s.companyKey === this.companyKey)
+          .map(s => `${s.companyKey}_${s.officeId}_${s.employeeId}_${s.applyYearMonth}`)
       );
-      if (duplicateRows.length > 0) {
-        const names = duplicateRows.map(row => `${row.officeName} ${row.employeeName}`).join('\n');
-        if (!confirm(`既に賞与社会保険料計算結果が登録されている従業員がいます:\n${names}\n\n上書き保存しますか？`)) {
+      // 既存・新規を分ける
+      const existingRows = this.previewList.filter(row => existingIds.has(`${this.companyKey}_${row.officeId}_${row.employeeId}_${applyYearMonth}`));
+      const newRows = this.previewList.filter(row => !existingIds.has(`${this.companyKey}_${row.officeId}_${row.employeeId}_${applyYearMonth}`));
+      if (existingRows.length > 0) {
+        const names = existingRows.map(row => `${row.officeName} ${row.employeeName}`).join('\n');
+        if (!confirm(`${existingRows.length}件はすでに登録がありますが上書きしますか？\n\n${names}`)) {
           return;
         }
-        // 上書き保存
-        const promises = this.previewList.map(async row => {
-          const calculation: Omit<import('../../../../core/models/insurance-calculation.model').InsuranceBonusCalculation, 'createdAt' | 'updatedAt'> = {
-            companyKey: this.companyKey,
-            officeId: row.officeId,
-            employeeId: row.employeeId,
-            applyYearMonth,
-            healthGrade: row.grade?.split('（')[0] || '',  // 健康保険等級のみ抽出
-            healthMonthly: Number(row.monthly.toString().replace(/,/g, '')),
-            pensionGrade: row.grade?.split('（')[1]?.replace('）', '') || '',  // 厚生年金等級のみ抽出
-            pensionMonthly: row.pensionMonthly,
-            bonusTotal: row.bonus ? Number(row.bonus.toString().replace(/,/g, '')) : 0,
-            bonusAvg: row.bonus ? Number(row.bonus.toString().replace(/,/g, '')) : 0, // 必要に応じて平均値を計算
-            careInsurance: row.careInsurance === '〇',
-            healthInsurance: Number(row.healthInsurance.toString().replace(/,/g, '')),
-            healthInsuranceDeduction: Number(row.healthInsuranceDeduction.toString().replace(/,/g, '')),
-            pension: Number(row.pension.toString().replace(/,/g, '')),
-            pensionDeduction: Number(row.pensionDeduction.toString().replace(/,/g, '')),
-            deductionTotal: Number(row.deductionTotal.toString().replace(/,/g, '')),
-            childcare: Number(row.childcare.toString().replace(/,/g, '')),
-            companyShare: Number(row.companyShare.toString().replace(/,/g, '')),
-            standardBonus: row.standardBonus ?? 0,
-            annualBonusTotal: row.annualBonusTotal ?? 0,
-            annualBonusTotalBefore: row.annualBonusTotalBefore ?? 0,
-            bonusDiff: row.bonusDiff ?? 0,
-          };
-          await this.firestoreService.updateInsuranceBonusCalculation(calculation);
-        });
-        await Promise.all(promises);
-        alert(`${this.previewList.length}件の賞与社会保険料計算結果を上書き保存しました。`);
-        this.router.navigate(['/insurance-calc']);
-        return;
       }
       const promises = this.previewList.map(async row => {
-        const calculation: Omit<import('../../../../core/models/insurance-calculation.model').InsuranceBonusCalculation, 'createdAt' | 'updatedAt'> = {
+        const calculation: Omit<import('../../../../core/models/insurance-calculation.model').InsuranceBonusCalculation, 'createdAt' | 'updatedAt' | 'id'> = {
           companyKey: this.companyKey,
           officeId: row.officeId,
           employeeId: row.employeeId,
@@ -732,7 +683,18 @@ export class InsuranceFormComponent implements OnInit {
           annualBonusTotalBefore: row.annualBonusTotalBefore ?? 0,
           bonusDiff: row.bonusDiff ?? 0,
         };
-        await this.firestoreService.addInsuranceBonusCalculation(calculation);
+        const docId = `${this.companyKey}_${row.officeId}_${row.employeeId}_${applyYearMonth}`;
+        console.log('[保存対象賞与データ]', calculation);
+        try {
+          if (existingIds.has(docId)) {
+            await this.firestoreService.updateInsuranceBonusCalculation(calculation);
+          } else {
+            await this.firestoreService.addInsuranceBonusCalculation(calculation);
+          }
+        } catch (e) {
+          console.error('[賞与保存エラー]', e, calculation);
+          alert('賞与保存時にエラーが発生しました: ' + e);
+        }
       });
       await Promise.all(promises);
       alert(`${this.previewList.length}件の賞与社会保険料計算結果を保存しました。`);

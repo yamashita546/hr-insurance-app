@@ -5,6 +5,7 @@ export const STANDARD_MONTHLY_DECISION_TYPES = [
   'entry',      // 入社時決定
   're',         // 再決定
   'other',      // その他
+  'childcare',  // 育児休業等終了時改定
 ] as const;
 
 export type StandardMonthlyDecisionType = typeof STANDARD_MONTHLY_DECISION_TYPES[number];
@@ -70,4 +71,5 @@ export const STANDARD_MONTHLY_DECISION_TYPE_LABELS: { [key in StandardMonthlyDec
   entry: '入社時決定',
   re: '再決定',
   other: 'その他',
+  childcare: '育児休業等終了時改定',
 };

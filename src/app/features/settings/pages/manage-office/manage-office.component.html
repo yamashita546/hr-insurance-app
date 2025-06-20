@@ -30,6 +30,8 @@
           <th>有効期間（開始）</th>
           <th>有効期間（終了）</th>
           <th>給与締め日</th>
+          <th>所定労働日数</th>
+          <th>所定労働時間</th>
           <th>有効</th>
         </tr>
       </thead>
@@ -54,6 +56,9 @@
           <td [ngClass]="{ 'highlight': isCellChanged(office, 'validFrom') }">{{ office.validFrom | date:'yyyy-MM-dd' }}</td>
           <td [ngClass]="{ 'highlight': isCellChanged(office, 'validTo') }">{{ office.validTo | date:'yyyy-MM-dd' }}</td>
           <td [ngClass]="{ 'highlight': isCellChanged(office, 'salaryClosingDate') }">{{ office.salaryClosingDate }}</td>
+          
+          <td [ngClass]="{ 'highlight': isCellChanged(office, 'workingDays') }">{{ office.workingDays }}</td>
+          <td [ngClass]="{ 'highlight': isCellChanged(office, 'workingHours') }">{{ office.workingHours }}</td>
           <td [ngClass]="{ 'highlight': isCellChanged(office, 'isActive') }">{{ office.isActive ? '有効' : '無効' }}</td>
         </tr>
       </tbody>

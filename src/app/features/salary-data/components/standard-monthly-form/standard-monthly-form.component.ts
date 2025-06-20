@@ -708,6 +708,22 @@ export class StandardMonthlyFormComponent implements OnInit {
         }
       }
     }
+    // 育児休業復帰時決定の等級チェック
+    if (this.decisionType === 'childcare' && this.resultList && this.resultList.length > 0) {
+      const current = this.currentDecision;
+      const newGrade = this.resultList[0].judgedGrade;
+      if (current && current.healthGrade && newGrade) {
+        const currentNum = Number(current.healthGrade);
+        const newNum = Number(newGrade);
+        if (!isNaN(currentNum) && !isNaN(newNum)) {
+          if (newNum >= currentNum) {
+            if (!confirm('決定種別は正しいですか？（現等級より下がっていません）')) {
+              return;
+            }
+          }
+        }
+      }
+    }
     if (this.decisionType === 'entry') {
       this.saveEntryDecision();
     } else {

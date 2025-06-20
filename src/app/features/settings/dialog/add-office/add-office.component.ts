@@ -40,8 +40,8 @@ export class AddOfficeComponent implements OnInit {
       name: ['', Validators.required],
       isHeadOffice: [false],
       address: this.fb.group({
-        postalCodeFirst: ['', [Validators.required, Validators.pattern(/^\d{3}$/)]],
-        postalCodeLast: ['', [Validators.required, Validators.pattern(/^\d{4}$/)]],
+        postalCodeFirst: ['', [Validators.required, Validators.pattern(/^[\d]{3}$/)]],
+        postalCodeLast: ['', [Validators.required, Validators.pattern(/^[\d]{4}$/)]],
         prefecture: [''],
         city: [''],
         town: [''],
@@ -55,7 +55,9 @@ export class AddOfficeComponent implements OnInit {
       officeCode: [''],
       validFrom: [''],
       validTo: [''],
-      salaryClosingDate: ['', [Validators.required, AddOfficeComponent.salaryClosingDateValidator]]
+      salaryClosingDate: ['', [Validators.required, AddOfficeComponent.salaryClosingDateValidator]],
+      workingDays: ['', [Validators.required, Validators.pattern(/^[0-9]+$/)]],
+      workingHours: ['', [Validators.required, Validators.pattern(/^[0-9]+(\.[0-9]+)?$/)]]
     });
 
     // 会社情報が変わったときは値だけpatch
@@ -111,7 +113,9 @@ export class AddOfficeComponent implements OnInit {
       updatedAt: new Date(),
       id: '', // Firestoreで自動生成 or 保存時に付与
       salaryClosingDate: this.form.value.salaryClosingDate,
-      isActive: true
+      isActive: true,
+      workingDays: raw.workingDays,
+      workingHours: raw.workingHours
     };
     this.saved.emit(office);
   }

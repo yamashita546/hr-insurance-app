@@ -4,7 +4,7 @@ export class InsuranceCalculator {
    */
   static calcHealthInsurance(stdMonthly: number, totalHealthRate: number, applicable: boolean): number {
     if (!applicable) return 0;
-    return Math.floor(stdMonthly * (totalHealthRate / 100));
+    return stdMonthly * (totalHealthRate / 100);
   }
 
   /**
@@ -12,7 +12,13 @@ export class InsuranceCalculator {
    */
   static calcHealthInsuranceDeduction(healthInsurance: number, applicable: boolean): number {
     if (!applicable) return 0;
-    return Math.floor(healthInsurance / 2);
+    const half = healthInsurance / 2;
+    const fraction = half - Math.floor(half);
+    if (fraction <= 0.5) {
+      return Math.floor(half);
+    } else {
+      return Math.ceil(half);
+    }
   }
 
   /**
@@ -36,7 +42,7 @@ export class InsuranceCalculator {
    */
   static calcChildcare(stdMonthly: number, childcareRate: number, applicable: boolean): number {
     if (!applicable) return 0;
-    return Math.floor(stdMonthly * (childcareRate / 100));
+    return stdMonthly * (childcareRate / 100);
   }
 
   /**

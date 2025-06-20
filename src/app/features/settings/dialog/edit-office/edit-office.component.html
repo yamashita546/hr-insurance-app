@@ -12,13 +12,13 @@
       <div class="error" *ngIf="headOfficeError">{{ headOfficeError }}</div>
       <div>
         <label>郵便番号
-          <div style="display: flex; gap: 4px; align-items: center;">
-            <input type="text" class="input" [(ngModel)]="office.address.postalCodeFirst" name="postalCodeFirst" maxlength="3" pattern="\\d{3}" inputmode="numeric" style="width: 60px;" />
-            －
-            <input type="text" class="input" [(ngModel)]="office.address.postalCodeLast" name="postalCodeLast" maxlength="4" pattern="\\d{4}" inputmode="numeric" style="width: 70px;" />
+          <div class="postal-code">
+            <input type="text" class="input" [(ngModel)]="office.address.postalCodeFirst" name="postalCodeFirst" placeholder="123" maxlength="3" />
+            <span>-</span>
+            <input type="text" class="input" [(ngModel)]="office.address.postalCodeLast" name="postalCodeLast" placeholder="4567" maxlength="4" />
           </div>
-          <div class="error" *ngIf="postalCodeError">
-            郵便番号は半角数字で3桁-4桁で入力してください
+          <div *ngIf="postalCodeError" class="error-message">
+            郵便番号は3桁-4桁の半角数字で入力してください。
           </div>
         </label>
         <label>都道府県
@@ -69,6 +69,12 @@
       </label>
       <label>給与締め日
         <input type="text" class="input" [(ngModel)]="office.salaryClosingDate" name="salaryClosingDate" placeholder="例：20" />
+      </label>
+      <label>所定労働日数
+        <input type="text" class="input" [(ngModel)]="office.workingDays" name="workingDays" placeholder="例：20" />
+      </label>
+      <label>所定労働時間
+        <input type="text" class="input" [(ngModel)]="office.workingHours" name="workingHours" placeholder="例：8" />
       </label>
     </div>
     <div class="dialog-actions">

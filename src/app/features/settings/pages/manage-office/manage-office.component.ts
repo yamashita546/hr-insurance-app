@@ -74,23 +74,21 @@ export class ManageOfficeComponent {
     this.dialogRef = this.dialog.open(EditOfficeComponent, {
       data: { ...targetOffice, offices: this.offices }
     });
-    this.dialogRef.componentInstance.dialogRef = this.dialogRef;
-    this.dialogRef.componentInstance.saved?.subscribe((updated: Office) => {
-      const idx = this.offices.findIndex(o => o.id === updated.id);
-      if (idx !== -1) {
-        this.offices[idx] = { ...updated };
+
+    console.log('[Parent] Dialog opened. Subscribing to afterClosed...');
+
+    this.dialogRef.afterClosed().subscribe((result: Office) => {
+      console.log('[Parent] afterClosed event received.');
+      console.log('[Parent] Result from dialog:', result);
+      if (result) {
+        const idx = this.offices.findIndex(o => o.id === result.id);
+        if (idx !== -1) {
+          this.offices[idx] = { ...result };
+          console.log('[Parent] Office list updated locally.');
+        }
       }
-      this.dialogRef?.close();
       this.dialogRef = null;
       this.selectedOffices = [];
-    });
-    this.dialogRef.componentInstance.cancelled?.subscribe(() => {
-      this.dialogRef?.close();
-      this.dialogRef = null;
-      this.selectedOffices = [];
-    });
-    this.dialogRef.afterClosed().subscribe(() => {
-      this.dialogRef = null;
     });
   }
 

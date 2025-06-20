@@ -17,7 +17,10 @@ export class EditOfficeComponent implements OnInit {
   @Output() saved = new EventEmitter<any>();
   @Output() cancelled = new EventEmitter<void>();
 
-  public dialogRef?: MatDialogRef<EditOfficeComponent>;
+  constructor(
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    public dialogRef: MatDialogRef<EditOfficeComponent>
+  ) {}
 
   office: any;
   prefectures = PREFECTURES;
@@ -26,8 +29,6 @@ export class EditOfficeComponent implements OnInit {
   headOfficeError: string = '';
   industryClassifications = INDUSTRY_CLASSIFICATIONS;
   postalCodeError: boolean = false;
-
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any) {}
 
   ngOnInit() {
     const { offices, ...officeData } = this.data;
@@ -63,17 +64,31 @@ export class EditOfficeComponent implements OnInit {
   }
 
   onSave() {
-    // 郵便番号バリデーション
-    const first = this.office.address.postalCodeFirst || '';
-    const last = this.office.address.postalCodeLast || '';
+    // 郵便番号バリデーション（trim()で前後の空白を除去）
+    const first = (this.office.address.postalCodeFirst || '').trim();
+    const last = (this.office.address.postalCodeLast || '').trim();
+
+    console.log(`保存ボタンクリック時の値を確認: 郵便番号1「${first}」, 郵便番号2「${last}」`);
+
     this.postalCodeError = !/^\d{3}$/.test(first) || !/^\d{4}$/.test(last);
-    if (this.postalCodeError) return;
+
+    if (this.postalCodeError) {
+      console.log('郵便番号バリデーションに失敗しました。');
+      return;
+    }
+
+    console.log('郵便番号バリデーションに成功しました。');
+
     this.office.address.postalCode = `${first}-${last}`;
-    this.saved.emit(this.office);
+    // 所定労働日数・時間を明示的にセット（未入力時は空文字）
+    this.office.workingDays = this.office.workingDays ?? '';
+    this.office.workingHours = this.office.workingHours ?? '';
+
+    this.dialogRef.close(this.office);
   }
 
   onCancel() {
-    this.cancelled.emit();
+    this.dialogRef.close();
   }
 
   onHeadOfficeChange(event: Event) {

@@ -34,6 +34,8 @@ export type Company = {
     businessCategoryId?: string; // 労災保険用の業種分類
     officeCode?: string;      // 社会保険・労災などの事業所番号
     salaryClosingDate?: string; // 給与締め日
+    workingDays?: number; // 労働日数
+    workingHours?: number; // 労働時間
     validFrom: string;
     validTo?: string;
     createdAt: Timestamp;

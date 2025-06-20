@@ -658,7 +658,9 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       'address.postalCode', 'address.prefecture', 'address.city', 'address.town', 'address.streetAddress',
       'officeName',
       'displayOfficeId',
-      'department', 'position', 'employeeType', 'workStyle', 'contractStartDate', 'contractEndDate', 'resignationReason',
+      'department', 'position', 'employeeType', 'workStyle',
+      'regularWorkDays', 'regularWorkHours',
+      'contractStartDate', 'contractEndDate', 'resignationReason',
       // 健康保険（ネスト構造）
       'healthInsuranceStatus.isApplicable',
       'healthInsuranceStatus.baseNumber',

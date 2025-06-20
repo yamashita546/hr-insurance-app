@@ -221,7 +221,21 @@
           </div>
         </div>
         <div class="form-row">
-         
+          <div class="form-item">
+            <label><input type="checkbox" formControlName="isOverseasAssignment" /> 海外赴任で国外居住</label>
+          </div>
+        </div>
+        <div class="form-row" *ngIf="form.get('isOverseasAssignment')?.value">
+          <div class="form-item">
+            <label>海外赴任開始日</label>
+            <input type="date" formControlName="overseasAssignmentStartDate" />
+          </div>
+          <div class="form-item">
+            <label>海外赴任終了日</label>
+            <input type="date" formControlName="overseasAssignmentEndDate" />
+          </div>
+        </div>
+        <div class="form-row">
           <div class="form-item">
             <label>学生</label>
             <input type="checkbox" formControlName="isStudent" />
@@ -257,12 +271,14 @@
             <input formControlName="resignationReason" />
           </div>
         </div>
+      
       </div>
       <div class="form-actions">
         <button mat-button type="button" (click)="goToPrevTab()">前へ</button>
         <button mat-raised-button color="primary" type="button" (click)="goToNextTab()">次へ</button>
       </div>
     </mat-tab>
+
     <!-- 社会保険情報 -->
     <mat-tab label="社会保険情報">
       <div class="form-grid insurance-grid">

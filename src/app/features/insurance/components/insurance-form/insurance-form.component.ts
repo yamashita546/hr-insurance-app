@@ -292,6 +292,12 @@ export class InsuranceFormComponent implements OnInit {
       if (missingSalaryEmployees.length > 0) {
         const names = missingSalaryEmployees.map(emp => `${this.offices.find(o => o.id === emp.officeId)?.name || ''} ${emp.lastName} ${emp.firstName}`).join('\n');
         excludedReasons.push(`当月給与データが登録されていない従業員:\n${names}`);
+        // 必須情報未登録リストにも追加
+        missingSalaryEmployees.forEach(emp => {
+          if (!this.missingStandardMonthlyEmployees.some(e => e.employeeId === emp.employeeId)) {
+            this.missingStandardMonthlyEmployees.push({ ...emp, missingReason: '当月給与データ未登録' });
+          }
+        });
       }
     }
 

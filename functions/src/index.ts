@@ -8,6 +8,7 @@
  */
 
 import {onRequest, onCall} from "firebase-functions/v2/https";
+import {onSchedule} from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
@@ -122,4 +123,64 @@ export const updateUserByAdmin = onCall(async (request) => {
 
   return {success: true};
 });
+
+/**
+ * 従業員の異動予定を毎日チェックし、
+ * 予定日を過ぎていれば自動で異動処理を実行するスケジュール化された関数
+ */
+export const applyScheduledTransfers = onSchedule(
+  {
+    schedule: "every day 01:00",
+    timeZone: "Asia/Tokyo",
+  },
+  async (event) => {
+    logger.info("applyScheduledTransfers started", {event});
+    const db = admin.firestore();
+    const today = new Date().toISOString().slice(0, 10);
+
+    const snapshot = await db.collection("employees")
+      .where("transferPlan", "!=", null)
+      .get();
+
+    if (snapshot.empty) {
+      logger.info("No employees with transfer plans found.");
+      return;
+    }
+
+    const batch = db.batch();
+
+    snapshot.forEach((doc) => {
+      const employee = doc.data();
+      if (employee.transferPlan && employee.transferPlan.transferDate <= today) {
+        logger.info(`Processing transfer for employeeId: ${employee.employeeId}`);
+
+        // 従業員情報を更新
+        const employeeRef = db.collection("employees").doc(doc.id);
+        batch.update(employeeRef, {
+          officeId: employee.transferPlan.targetOfficeId,
+          officeName: employee.transferPlan.targetOfficeName,
+          transferPlan: admin.firestore.FieldValue.delete(),
+        });
+
+        // 異動履歴を追加
+        const historyRef = db.collection("employeeTransferHistories").doc();
+        const historyData = {
+          employeeId: employee.employeeId,
+          fromOfficeId: employee.officeId,
+          fromOfficeName: employee.officeName,
+          toOfficeId: employee.transferPlan.targetOfficeId,
+          toOfficeName: employee.transferPlan.targetOfficeName,
+          transferDate: employee.transferPlan.transferDate,
+          registeredAt: admin.firestore.FieldValue.serverTimestamp(),
+          cancelled: false,
+        };
+        batch.set(historyRef, historyData);
+      }
+    });
+
+    await batch.commit();
+    logger.info("applyScheduledTransfers finished successfully.");
+    return;
+  }
+);
 

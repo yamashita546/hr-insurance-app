@@ -48,6 +48,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   tabCount = 6; // タブ数
 
   private autoCareInsuranceSub?: Subscription;
+  private myNumberSub?: Subscription;
 
   static readonly FORM_STORAGE_KEY = 'employeeFormData';
   static readonly TAB_STORAGE_KEY = 'employeeFormTabIndex';
@@ -138,18 +139,18 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       phoneNumber: ['', [Validators.pattern(/^[\d]+$/)]],
       insuranceNumber: ['', [Validators.pattern(/^[0-9]+$/)]],
       address: this.fb.group({
-        postalCodeFirst: ['', [Validators.required, Validators.pattern(/^\d{3}$/)]],
-        postalCodeLast: ['', [Validators.required, Validators.pattern(/^\d{4}$/)]],
+        postalCodeFirst: ['', [Validators.pattern(/^\d{3}$/)]],
+        postalCodeLast: ['', [Validators.pattern(/^\d{4}$/)]],
         prefecture: [''],
         city: [''],
         town: [''],
         streetAddress: ['']
-      }),
+      }, { validators: addressGroupValidator }),
       // 保険情報をInsuranceStatus型で管理
       healthInsuranceStatus: this.fb.group({
         isApplicable: [false],
         healthInsuranceSymbol: [''],
-      healthInsuranceNumber: [''],
+        healthInsuranceNumber: [''],
         insuranceNumber: [''],
         acquisitionDate: [''],
         acquisitionReported: [false],
@@ -200,7 +201,12 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       }),
       extraordinaryLeaves: this.fb.array([]),
       isExtraordinaryLeave: [false],
-    }, { validators: fullTimeInsuranceValidator });
+      isOverseasAssignment: [false],
+      overseasAssignmentStartDate: [''],
+      overseasAssignmentEndDate: [''],
+      regularWorkDays: [null],
+      regularWorkHours: [null],
+    }, { validators: [fullTimeInsuranceValidator, overseasAssignmentValidator, studentInsuranceValidator] });
 
     // localStorageからフォーム内容を復元
     const savedForm = localStorage.getItem(EmployeeFormComponent.FORM_STORAGE_KEY);
@@ -218,6 +224,16 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     // フォーム変更時にlocalStorageへ保存
     this.form.valueChanges.subscribe(val => {
       localStorage.setItem(EmployeeFormComponent.FORM_STORAGE_KEY, JSON.stringify(val));
+    });
+
+    // マイナンバー入力の自動半角変換
+    this.myNumberSub = this.form.get('myNumber')?.valueChanges.subscribe((value: string) => {
+      if (value) {
+        const newValue = value.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+        if (newValue !== value) {
+          this.form.get('myNumber')?.setValue(newValue, { emitEvent: false });
+        }
+      }
     });
 
     // 介護保険適用の自動判定
@@ -286,6 +302,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     localStorage.removeItem(EmployeeFormComponent.FORM_STORAGE_KEY);
     localStorage.removeItem(EmployeeFormComponent.TAB_STORAGE_KEY);
     this.autoCareInsuranceSub?.unsubscribe();
+    this.myNumberSub?.unsubscribe();
   }
 
   addDependent() {
@@ -482,11 +499,23 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     const errors: string[] = [];
     // formGroupレベルのエラーも取得
     if (formGroup.errors) {
-      if (formGroup.errors['healthInsuranceRequired']) {
-        errors.push('正社員の場合、健康保険適用は必須です');
+      if (formGroup.errors['healthRequiredForUnder70']) {
+        errors.push('70歳未満の正社員は、健康保険の適用が必須です。');
       }
-      if (formGroup.errors['pensionRequired']) {
-        errors.push('正社員の場合、厚生年金適用は必須です');
+      if (formGroup.errors['pensionRequiredForUnder70']) {
+        errors.push('70歳未満の正社員は、厚生年金の適用が必須です。');
+      }
+      if (formGroup.errors['healthRequiredFor70to74']) {
+        errors.push('70歳以上75歳未満の正社員は、健康保険の適用が必須です。');
+      }
+      if (formGroup.errors['addressIncomplete']) {
+        errors.push('住所の入力が不完全です。郵便番号、都道府県、市区町村、町域・番地は、すべて入力してください。');
+      }
+      if (formGroup.errors['overseasAssignmentStartDateRequired']) {
+        errors.push('海外赴任で国外居住が有効な場合は、開始日の入力は必須です。');
+      }
+      if (formGroup.errors['studentCannotHaveInsurance']) {
+        errors.push('学生は社会保険（健康保険・厚生年金）に加入できません。');
       }
     }
     Object.keys(formGroup.controls).forEach(key => {
@@ -508,18 +537,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   }
 
   getLabelForControl(key: string): string {
-    const labels: { [key: string]: string } = {
-      employeeId: '従業員ID',
-      lastName: '姓',
-      firstName: '名',
-      myNumber: 'マイナンバー',
-      lastNameKana: '姓（カナ）',
-      firstNameKana: '名（カナ）',
-      gender: '性別',
-      birthday: '生年月日',
-      // 必要に応じて追加
-    };
-    return labels[key] || key;
+    return EMPLOYEE_CSV_FIELD_LABELS[key] || key;
   }
 
   getErrorMessage(errorKey: string, errorValue: any): string {
@@ -976,16 +994,67 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
 
 function fullTimeInsuranceValidator(control: AbstractControl): ValidationErrors | null {
   const employeeType = control.get('employeeType')?.value;
-  const isFullTime = employeeType === 'fulltime'; // 正社員のコードに合わせて必要なら修正
-  if (!isFullTime) return null;
-  // 社会保険免除特例がtrueの場合はバリデーション免除
-  const isSpecialExemption = control.get('isForeignWorker')?.value && control.get('foreignWorker.hasSpecialExemption')?.value;
-  if (isSpecialExemption) return null;
+  const isFullTime = employeeType === 'regular'; // 正社員のコードを 'regular' に修正
+
+  console.log('[Validator] Running...');
+  console.log(`[Validator] employeeType: "${employeeType}", isFullTime: ${isFullTime}`);
+
+  if (!isFullTime) {
+    console.log('[Validator] Exit: Not a full-time employee.');
+    return null;
+  }
+
+  // 社会保険免除特例がtrueの場合はバリデーション免除（厳密な判定に修正）
+  const isForeigner = control.get('isForeignWorker')?.value === true;
+  const hasExemption = control.get('foreignWorker.hasSpecialExemption')?.value === true;
+  console.log(`[Validator] isForeigner: ${isForeigner}, hasExemption: ${hasExemption}`);
+
+  if (isForeigner && hasExemption) {
+    console.log('[Validator] Exit: Foreigner with special exemption.');
+    return null;
+  }
+
+  const birthdayStr = control.get('birthday')?.value;
+  const contractStartDateStr = control.get('contractStartDate')?.value;
+  console.log(`[Validator] birthday: "${birthdayStr}", contractStartDate: "${contractStartDateStr}"`);
+
+  // 日付が未入力の場合は年齢計算ができないため、バリデーションをスキップ
+  if (!birthdayStr || !contractStartDateStr) {
+    console.log('[Validator] Exit: Date is missing.');
+    return null;
+  }
+
+  const birthday = new Date(birthdayStr);
+  const contractStartDate = new Date(contractStartDateStr);
+
+  // 契約開始日時点の年齢を計算
+  let age = contractStartDate.getFullYear() - birthday.getFullYear();
+  const m = contractStartDate.getMonth() - birthday.getMonth();
+  if (m < 0 || (m === 0 && contractStartDate.getDate() < birthday.getDate())) {
+    age--;
+  }
+
   const health = control.get('healthInsuranceStatus.isApplicable')?.value;
   const pension = control.get('pensionStatus.isApplicable')?.value;
   const errors: any = {};
-  if (!health) errors.healthInsuranceRequired = true;
-  if (!pension) errors.pensionRequired = true;
+
+  console.log(`[Validator] age: ${age}, health.isApplicable: ${health}, pension.isApplicable: ${pension}`);
+
+  if (age < 70) {
+    if (!health) {
+      errors.healthRequiredForUnder70 = true;
+    }
+    if (!pension) {
+      errors.pensionRequiredForUnder70 = true;
+    }
+  } else if (age >= 70 && age < 75) {
+    if (!health) {
+      errors.healthRequiredFor70to74 = true;
+    }
+  }
+  
+  console.log('[Validator] Final errors:', errors);
+
   return Object.keys(errors).length ? errors : null;
 }
 
@@ -994,3 +1063,43 @@ const extraordinaryLeaveFields = [
   'leaveTypeCode', 'leaveStartDate', 'leaveEndDate', 'returnPlanDate', 'leaveReason',
   'isHealthInsuranceExempted', 'isPensionExempted', 'isCareInsuranceExempted'
 ];
+
+function addressGroupValidator(control: AbstractControl): ValidationErrors | null {
+  const postalCodeFirst = control.get('postalCodeFirst')?.value;
+  const postalCodeLast = control.get('postalCodeLast')?.value;
+  const prefecture = control.get('prefecture')?.value;
+  const city = control.get('city')?.value;
+  const town = control.get('town')?.value;
+
+  const fields = [postalCodeFirst, postalCodeLast, prefecture, city, town];
+  const filledCount = fields.filter(val => val && String(val).trim() !== '').length;
+
+  if (filledCount > 0 && filledCount < fields.length) {
+    return { addressIncomplete: true };
+  }
+
+  return null;
+}
+
+function overseasAssignmentValidator(control: AbstractControl): ValidationErrors | null {
+  const isOverseasAssignment = control.get('isOverseasAssignment')?.value;
+  const overseasAssignmentStartDate = control.get('overseasAssignmentStartDate')?.value;
+
+  if (isOverseasAssignment && !overseasAssignmentStartDate) {
+    return { overseasAssignmentStartDateRequired: true };
+  }
+
+  return null;
+}
+
+function studentInsuranceValidator(control: AbstractControl): ValidationErrors | null {
+  const isStudent = control.get('isStudent')?.value;
+  const healthApplicable = control.get('healthInsuranceStatus.isApplicable')?.value;
+  const pensionApplicable = control.get('pensionStatus.isApplicable')?.value;
+
+  if (isStudent && (healthApplicable || pensionApplicable)) {
+    return { studentCannotHaveInsurance: true };
+  }
+
+  return null;
+}

@@ -58,6 +58,12 @@
           <input type="date" [(ngModel)]="salaryForm.paymentDate">
         </div>
         <div class="salary-input-row">
+          <label>昇給/降給</label>
+          <select [(ngModel)]="salaryForm.promotion">
+            <option *ngFor="let key of promotionTypeKeys" [value]="key">{{ promotionTypeMap[key] }}</option>
+          </select>
+        </div>
+        <div class="salary-input-row">
           <label>基本給</label>
           <span>¥ <input type="number" [(ngModel)]="salaryForm.basicSalary" (ngModelChange)="calculateTotalSalary()"></span>
         </div>

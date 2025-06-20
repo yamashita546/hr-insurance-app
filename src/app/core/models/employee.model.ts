@@ -54,6 +54,11 @@ export type Employee = {
     emergencyContactPhone?: string; // 緊急連絡先電話番号
     hasDependents?: boolean;
     dependentsCount?: number; // 扶養人数
+    isOverseasAssignment?: boolean; // 海外赴任者かどうか
+    overseasAssignmentStartDate?: Date; // 海外赴任開始日
+    overseasAssignmentEndDate?: Date; // 海外赴任終了日
+    regularWorkDays?: number; // 所定労働日数
+    regularWorkHours?: number; // 所定労働時間
 
     healthInsuranceStatus: InsuranceStatus; // 健康保険
     pensionStatus: InsuranceStatus; // 厚生年金
@@ -178,5 +183,10 @@ export const EMPLOYEE_CSV_FIELD_LABELS: { [key: string]: string } = {
   createdAt: '作成日時',
   updatedAt: '更新日時',
   deletedAt: '削除日時',
-  name: '氏名'
+  name: '氏名',
+  overseasAssignmentStartDate: '海外赴任開始日',
+  overseasAssignmentEndDate: '海外赴任終了日',
+  regularWorkDays: '所定労働日数',
+  regularWorkHours: '所定労働時間',
+  isOverseasAssignment: '海外赴任で国外居住',
 };

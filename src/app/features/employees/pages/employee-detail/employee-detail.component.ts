@@ -95,8 +95,6 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
         if (this.selectedEmployeeId) {
           this.transferHistory = await this.firestoreService.getEmployeeTransferHistory(this.selectedEmployeeId);
         }
-        // 異動予定の自動反映
-        this.checkAndApplyTransferPlan();
       }
     });
   }
@@ -118,6 +116,12 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     if (!this.editEmployee.healthInsuranceStatus) this.editEmployee.healthInsuranceStatus = {};
     if (!this.editEmployee.pensionStatus) this.editEmployee.pensionStatus = {};
     if (!this.editEmployee.employmentInsuranceStatus) this.editEmployee.employmentInsuranceStatus = {};
+    // 新しい項目も初期化し、保存対象に含める
+    this.editEmployee.regularWorkDays = this.editEmployee.regularWorkDays ?? null;
+    this.editEmployee.regularWorkHours = this.editEmployee.regularWorkHours ?? null;
+    this.editEmployee.isOverseasAssignment = this.editEmployee.isOverseasAssignment ?? false;
+    this.editEmployee.overseasAssignmentStartDate = this.editEmployee.overseasAssignmentStartDate ?? '';
+    this.editEmployee.overseasAssignmentEndDate = this.editEmployee.overseasAssignmentEndDate ?? '';
   }
 
   cancelEdit() {
@@ -129,51 +133,109 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   async saveEdit() {
     this.validationErrors = [];
     this.saveMessage = '';
-    this.validateExtraordinaryLeaves();
     if (!this.docId) return;
-    // ① 社会保険免除特例がtrueの場合は国籍必須
+
+    // --- バリデーションチェック ---
+
+    // 1. 基本情報の必須チェック
+    if (!this.editEmployee.employeeType) {
+      this.validationErrors.push('雇用形態は必須です');
+    }
+    if (!this.editEmployee.contractStartDate) {
+      this.validationErrors.push('契約開始日は必須です');
+    }
+
+    // 2. 特別休暇のバリデーション
+    this.validateExtraordinaryLeaves();
+
+    // 3. 外国人関連のバリデーション
     const isForeignWorker = this.editEmployee.isForeignWorker;
     const hasSpecialExemption = this.editEmployee.foreignWorker?.hasSpecialExemption;
     const nationality = this.editEmployee.foreignWorker?.nationality;
     if (isForeignWorker && hasSpecialExemption && !nationality) {
       this.validationErrors.push('社会保険免除特例がある場合は国籍を選択してください。');
+    }
+
+    // 4. 保険適用時の必須項目チェック
+    const health = this.editEmployee.healthInsuranceStatus?.isApplicable;
+    if (health) {
+      if (!this.editEmployee.healthInsuranceStatus?.healthInsuranceSymbol) this.validationErrors.push('健康保険記号は必須です');
+      if (!this.editEmployee.healthInsuranceStatus?.healthInsuranceNumber) this.validationErrors.push('健康保険被保険者番号は必須です');
+      if (!this.editEmployee.healthInsuranceStatus?.acquisitionDate) this.validationErrors.push('健康保険資格取得日は必須です');
+    }
+    const pension = this.editEmployee.pensionStatus?.isApplicable;
+    if (pension) {
+      if (!this.editEmployee.pensionStatus?.baseNumber) this.validationErrors.push('基礎年金番号は必須です');
+      if (!this.editEmployee.pensionStatus?.acquisitionDate) this.validationErrors.push('厚生年金資格取得日は必須です');
+    }
+
+    // 5. 正社員の社会保険加入バリデーション（年齢考慮）
+    const employeeType = this.editEmployee.employeeType;
+    if (employeeType === 'regular') {
+      const isSpecialExemptionForValidation = this.editEmployee.isForeignWorker === true && this.editEmployee.foreignWorker?.hasSpecialExemption === true;
+
+      if (!isSpecialExemptionForValidation) {
+        const birthdayStr = this.editEmployee.birthday;
+        const contractStartDateStr = this.editEmployee.contractStartDate;
+
+        if (birthdayStr && contractStartDateStr) {
+          const birthday = new Date(birthdayStr);
+          const contractStartDate = new Date(contractStartDateStr);
+
+          let age = contractStartDate.getFullYear() - birthday.getFullYear();
+          const m = contractStartDate.getMonth() - birthday.getMonth();
+          if (m < 0 || (m === 0 && contractStartDate.getDate() < birthday.getDate())) {
+            age--;
+          }
+
+          const healthApplicable = this.editEmployee.healthInsuranceStatus?.isApplicable;
+          const pensionApplicable = this.editEmployee.pensionStatus?.isApplicable;
+
+          if (age < 70) {
+            if (!healthApplicable) this.validationErrors.push('70歳未満の正社員は、健康保険の適用が必須です。');
+            if (!pensionApplicable) this.validationErrors.push('70歳未満の正社員は、厚生年金の適用が必須です。');
+          } else if (age >= 70 && age < 75) {
+            if (!healthApplicable) this.validationErrors.push('70歳以上75歳未満の正社員は、健康保険の適用が必須です。');
+          }
+        }
+      }
+    }
+
+    // 6. 住所入力のバリデーション
+    if (this.editEmployee.address) {
+      const { postalCode, prefecture, city, town } = this.editEmployee.address;
+      const fields = [postalCode, prefecture, city, town];
+      const filledCount = fields.filter((val: any) => val && String(val).trim() !== '').length;
+      if (filledCount > 0 && filledCount < fields.length) {
+        this.validationErrors.push('住所の入力が不完全です。郵便番号、都道府県、市区町村、町域は、すべて入力してください。');
+      }
+    }
+
+    // 7. 海外赴任のバリデーション
+    if (this.editEmployee.isOverseasAssignment && !this.editEmployee.overseasAssignmentStartDate) {
+      this.validationErrors.push('海外赴任で国外居住が有効な場合は、開始日の入力は必須です。');
+    }
+
+    // 8. 学生の社会保険加入バリデーション
+    if (this.editEmployee.isStudent) {
+      if (this.editEmployee.healthInsuranceStatus?.isApplicable || this.editEmployee.pensionStatus?.isApplicable) {
+        this.validationErrors.push('学生は社会保険（健康保険・厚生年金）に加入できません。');
+      }
+    }
+
+    // バリデーションエラーがあれば処理を中断
+    if (this.validationErrors.length > 0) {
       return;
     }
-    // ② 社会保険免除特例がtrueの場合はアラートで確認
+
+    // --- 確認ダイアログ ---
     if (isForeignWorker && hasSpecialExemption) {
       const ok = window.confirm('社会保険免除特例が有効です。健康保険・厚生年金の適用状況は正しいですか？');
       if (!ok) return;
     }
-    // 健康保険・厚生年金の適用時の必須項目チェック
-    const health = this.editEmployee.healthInsuranceStatus?.isApplicable;
-    const healthSymbol = this.editEmployee.healthInsuranceStatus?.healthInsuranceSymbol;
-    const healthNumber = this.editEmployee.healthInsuranceStatus?.healthInsuranceNumber;
-    const healthAcq = this.editEmployee.healthInsuranceStatus?.acquisitionDate;
-    if (health) {
-      if (!healthSymbol) this.validationErrors.push('健康保険記号は必須です');
-      if (!healthNumber) this.validationErrors.push('健康保険被保険者番号は必須です');
-      if (!healthAcq) this.validationErrors.push('健康保険資格取得日は必須です');
-    }
-    const pension = this.editEmployee.pensionStatus?.isApplicable;
-    const pensionBase = this.editEmployee.pensionStatus?.baseNumber;
-    const pensionNumber = this.editEmployee.pensionStatus?.insuranceNumber;
-    const pensionAcq = this.editEmployee.pensionStatus?.acquisitionDate;
-    if (pension) {
-      if (!pensionBase) this.validationErrors.push('基礎年金番号は必須です');
-      if (!pensionAcq) this.validationErrors.push('厚生年金資格取得日は必須です');
-    }
-    // ③ 雇用形態・契約開始日必須
-    if (!this.editEmployee.employeeType) {
-      this.validationErrors.push('雇用形態は必須です');
-      return;
-    }
-    if (!this.editEmployee.contractStartDate) {
-      this.validationErrors.push('契約開始日は必須です');
-      return;
-    }
+
     this.isUploading = true;
     try {
-      const health = this.editEmployee.healthInsuranceStatus?.isApplicable;
       const birthday = this.editEmployee.birthday;
       let age = 0;
       if (birthday) {
@@ -189,6 +251,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
       // 1. 健康保険がfalseなのに介護保険がtrue → エラー
       if (!health && this.editEmployee.isCareInsuranceApplicable) {
         alert('健康保険が適用されていない場合、介護保険も適用できません。');
+        this.isUploading = false;
         return;
       }
 
@@ -196,6 +259,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
       if (health && age >= 40 && age < 65 && !this.editEmployee.isCareInsuranceApplicable) {
         const ok = confirm('この従業員は年齢が40歳以上65歳未満かつ健康保険適用のため、介護保険適用が必要です。\n介護保険を適用して保存してよろしいですか？');
         if (!ok) {
+          this.isUploading = false;
           return;
         }
         this.editEmployee.isCareInsuranceApplicable = true;
@@ -236,6 +300,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
         if (emptyRows.length > 0) {
           const ok = window.confirm('被扶養者情報の入力が不足しています。\n入力欄を削除して保存しますか？');
           if (!ok) {
+            this.isUploading = false;
             return;
           }
           this.editEmployee.dependents = this.editEmployee.dependents.filter((dep: any) =>
@@ -438,8 +503,6 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     if (this.employee?.employeeId) {
       this.transferHistory = await this.firestoreService.getEmployeeTransferHistory(this.employee.employeeId);
     }
-    // 異動予定の自動反映
-    this.checkAndApplyTransferPlan();
   }
 
   onNextEmployee() {
@@ -551,35 +614,6 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     await this.firestoreService.updateEmployee(this.employee.id, { transferPlan: deleteField() });
     alert('異動予定をキャンセルしました');
     window.location.reload();
-  }
-
-  async checkAndApplyTransferPlan() {
-    if (!this.employee?.transferPlan) {
-      // 対象がなければ何もしない
-      return;
-    }
-    const today = new Date().toISOString().slice(0, 10);
-    if (this.employee.transferPlan.transferDate && today >= this.employee.transferPlan.transferDate) {
-      // 異動予定日になったら自動反映
-      await this.firestoreService.updateEmployee(this.employee.id, {
-        officeId: this.employee.transferPlan.targetOfficeId,
-        officeName: this.employee.transferPlan.targetOfficeName,
-        transferPlan: deleteField()
-      });
-      // 履歴に本登録
-      await this.firestoreService.addEmployeeTransferHistory({
-        employeeId: this.employee.employeeId,
-        fromOfficeId: this.employee.officeId,
-        fromOfficeName: this.employee.officeName,
-        toOfficeId: this.employee.transferPlan.targetOfficeId,
-        toOfficeName: this.employee.transferPlan.targetOfficeName,
-        transferDate: this.employee.transferPlan.transferDate,
-        registeredAt: new Date().toISOString(),
-        cancelled: false
-      });
-      // ここではリロードしない
-      await this.onEmployeeChange();
-    }
   }
 
   async deleteEmployee() {

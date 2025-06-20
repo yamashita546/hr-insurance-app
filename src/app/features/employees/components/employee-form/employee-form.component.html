@@ -221,15 +221,7 @@
           </div>
         </div>
         <div class="form-row">
-          <div class="form-item">
-            <label>勤務形態</label>
-            <select formControlName="workStyle">
-              <option value="">選択してください</option>
-              <option *ngFor="let t of workStyleTypes" [value]="t.code">{{ t.name }}</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
+         
           <div class="form-item">
             <label>学生</label>
             <input type="checkbox" formControlName="isStudent" />
@@ -237,10 +229,22 @@
         </div>
         <div class="form-row">
           <div class="form-item">
-            <label>契約開始日</label>
+            <label>所定労働日数</label>
+            <input type="number" formControlName="regularWorkDays" />
+          </div>
+          <div class="form-item">
+            <label>週所定労働時間</label>
+            <input type="number" formControlName="regularWorkHours" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-item">
+            <label>雇用契約開始日 <span class="required">*</span></label>
             <input type="date" formControlName="contractStartDate" />
           </div>
         </div>
+
         <div class="form-row">
           <div class="form-item">
             <label>契約終了日</label>

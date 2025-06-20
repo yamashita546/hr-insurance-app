@@ -17,6 +17,7 @@ export interface Salary {
     otherAllowance?: number; // その他手当
     totalOtherAllowance?: number; // その他手当合計
     totalCurrency?: number; // 通貨合計
+    promotion?: string; // 昇給
   
     // 現物支給関連
     inKindAllowance?: number; // 現物支給
@@ -119,3 +120,8 @@ export const AllowanceFieldNameMap: Record<string, string> = {
   remarks: '備考',
 };
 
+export const PromotionTypeMap: Record<string, string> = {
+  promotion: '昇給',
+  demotion: '降給',
+  noChange: '変更なし',
+};

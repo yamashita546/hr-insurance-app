@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
@@ -8,7 +8,7 @@ import { Office } from '../../../../core/models/company.model';
 import { Employee } from '../../../../core/models/employee.model';
 import { filter, take } from 'rxjs/operators';
 import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
-import { SalaryFieldNameMap, BonusFieldNameMap } from '../../../../core/models/salary.model';
+import { Salary, Bonus, SalaryFieldNameMap, BonusFieldNameMap, PromotionTypeMap } from '../../../../core/models/salary.model';
 
 @Component({
   selector: 'app-salary-form',
@@ -30,8 +30,9 @@ export class SalaryFormComponent implements OnInit {
   selectedYear: number;
   selectedMonth: number;
   activeTab: 'salary' | 'bonus' = 'salary';
-  salaryForm: any = {};
-  bonus: any = {};
+  salaryForm: Partial<Salary> = this.getInitialSalaryForm();
+  bonuses: Bonus[] = [];
+  bonus: Partial<Bonus> = {};
   totalSalary: number = 0;
   isLoading = true;
   bonusRemark: string = '';
@@ -47,15 +48,19 @@ export class SalaryFormComponent implements OnInit {
   showCsvImportTypeDialog = false;
   editMode: 'salary' | 'bonus' | null = null;
   editTarget: any = null;
-  otherAllowances: any[] = [];
+  otherAllowances: { name: string, amount: number }[] = [];
   totalOtherAllowance: number = 0;
-  inKindAllowances: any[] = [];
+  inKindAllowances: { name: string, amount: number }[] = [];
   totalInKind: number = 0;
-  retroAllowances: any[] = [];
+  retroAllowances: { name: string, amount: number }[] = [];
   totalRetro: number = 0;
-  actualExpenses: any[] = [];
+  actualExpenses: { name: string, amount: number }[] = [];
   totalActualExpense: number = 0;
   allSalaries: any[] = [];
+  salaryData: any;
+
+  promotionTypeMap = PromotionTypeMap;
+  promotionTypeKeys = Object.keys(PromotionTypeMap);
 
   get bonusTotal() {
     return Number(this.bonus?.bonus) || 0;
@@ -230,6 +235,9 @@ export class SalaryFormComponent implements OnInit {
         commuteAllowancePeriodFrom: this.salaryForm.commuteAllowancePeriodFrom || '',
         commuteAllowancePeriodTo: this.salaryForm.commuteAllowancePeriodTo || '',
         commuteAllowanceMonths: this.salaryForm.commuteAllowanceMonths || 1,
+        promotion: this.salaryForm.promotion || 'noChange',
+        createdAt: this.salaryData?.createdAt ? this.salaryData.createdAt : new Date(),
+        updatedAt: new Date(),
       };
       try {
         await this.firestoreService.addSalary(salary);
@@ -278,17 +286,13 @@ export class SalaryFormComponent implements OnInit {
         targetYearMonth: ym,
         paymentDate: this.bonus.paymentDate || '',
         bonusName: this.bonus.bonusType === 'その他賞与' ? this.bonus.bonusName : '',
-        bonusType: this.bonus.bonusType,
+        bonusType: this.bonus.bonusType || '',
         bonus: Number(this.bonus.bonus) || 0,
         bonusTotal: this.bonusTotal,
         remarks: this.bonusRemark || '',
-        commuteAllowance: Number(this.salaryForm.commuteAllowance) || 0,
-        commuteAllowancePeriodFrom: this.salaryForm.commuteAllowancePeriodFrom || '',
-        commuteAllowancePeriodTo: this.salaryForm.commuteAllowancePeriodTo || '',
-        commuteAllowanceMonths: this.salaryForm.commuteAllowanceMonths || 1,
       };
       try {
-        await this.firestoreService.addBonus(bonusData);
+        await this.firestoreService.addBonus(bonusData as any);
       } catch (e: any) {
         alert('賞与保存時にエラーが発生しました: ' + (e?.message || e));
         return;
@@ -299,7 +303,7 @@ export class SalaryFormComponent implements OnInit {
   }
 
   onClear() {
-    this.salaryForm = {};
+    this.salaryForm = this.getInitialSalaryForm();
     this.bonus = {};
     this.totalSalary = 0;
   }
@@ -459,6 +463,9 @@ export class SalaryFormComponent implements OnInit {
           commuteAllowancePeriodFrom: row.commuteAllowancePeriodFrom || '',
           commuteAllowancePeriodTo: row.commuteAllowancePeriodTo || '',
           commuteAllowanceMonths: Number(row.commuteAllowanceMonths) || 1,
+          promotion: row.promotion || 'noChange',
+          createdAt: new Date(),
+          updatedAt: new Date(),
         };
         const isOverwrite = overwriteRows.some(orow => orow.employeeId === row.employeeId && orow.targetYear === row.targetYear && orow.targetMonth === row.targetMonth);
         if (isOverwrite) {
@@ -479,16 +486,12 @@ export class SalaryFormComponent implements OnInit {
           bonus: Number(row.bonus) || 0,
           bonusTotal: Number(row.bonus) || 0, // 単一行の場合は同額
           remarks: row.remarks || '',
-          commuteAllowance: Number(row.commuteAllowance) || 0,
-          commuteAllowancePeriodFrom: row.commuteAllowancePeriodFrom || '',
-          commuteAllowancePeriodTo: row.commuteAllowancePeriodTo || '',
-          commuteAllowanceMonths: Number(row.commuteAllowanceMonths) || 1,
         };
         const isOverwrite = overwriteRows.some(orow => orow.employeeId === row.employeeId && orow.targetYear === row.targetYear && orow.targetMonth === row.targetMonth);
         if (isOverwrite) {
-          await this.firestoreService.updateBonus(bonusData.companyKey!, bonusData.employeeId, bonusData.targetYearMonth, bonusData);
+          await this.firestoreService.updateBonus(bonusData.companyKey!, bonusData.employeeId, bonusData.targetYearMonth, bonusData as any);
         } else {
-          await this.firestoreService.addBonus(bonusData);
+          await this.firestoreService.addBonus(bonusData as any);
         }
       }
     }
@@ -672,6 +675,7 @@ export class SalaryFormComponent implements OnInit {
         commuteAllowancePeriodFrom: salary.commuteAllowancePeriodFrom || '',
         commuteAllowancePeriodTo: salary.commuteAllowancePeriodTo || '',
         commuteAllowanceMonths: salary.commuteAllowanceMonths || 1,
+        promotion: salary.promotion || 'noChange',
       };
       this.calculateTotalSalary();
     }
@@ -728,6 +732,9 @@ export class SalaryFormComponent implements OnInit {
         commuteAllowancePeriodFrom: this.salaryForm.commuteAllowancePeriodFrom || '',
         commuteAllowancePeriodTo: this.salaryForm.commuteAllowancePeriodTo || '',
         commuteAllowanceMonths: this.salaryForm.commuteAllowanceMonths || 1,
+        promotion: this.salaryForm.promotion || 'noChange',
+        createdAt: this.salaryData?.createdAt ? this.salaryData.createdAt : new Date(),
+        updatedAt: new Date(),
       };
       await this.firestoreService.updateSalary(salary.companyKey!, salary.employeeId, salary.targetYearMonth, salary);
       alert('給与情報を更新しました');
@@ -740,17 +747,13 @@ export class SalaryFormComponent implements OnInit {
         employeeId: this.selectedEmployeeObj.employeeId,
         targetYearMonth: ym,
         paymentDate: this.bonus.paymentDate || '',
-        bonusType: this.bonus.bonusType,
+        bonusType: this.bonus.bonusType || '',
         bonusName: this.bonus.bonusType === 'その他賞与' ? this.bonus.bonusName : '',
         bonus: Number(this.bonus.bonus) || 0,
         bonusTotal: this.bonusTotal,
         remarks: this.bonusRemark || '',
-        commuteAllowance: Number(this.salaryForm.commuteAllowance) || 0,
-        commuteAllowancePeriodFrom: this.salaryForm.commuteAllowancePeriodFrom || '',
-        commuteAllowancePeriodTo: this.salaryForm.commuteAllowancePeriodTo || '',
-        commuteAllowanceMonths: this.salaryForm.commuteAllowanceMonths || 1,
       };
-      await this.firestoreService.updateBonus(bonusData.companyKey!, bonusData.employeeId, bonusData.targetYearMonth, bonusData);
+      await this.firestoreService.updateBonus(bonusData.companyKey!, bonusData.employeeId, bonusData.targetYearMonth, bonusData as any);
       alert('賞与情報を更新しました');
       this.editMode = null;
       this.editTarget = null;
@@ -775,6 +778,28 @@ export class SalaryFormComponent implements OnInit {
     } else {
       this.salaryForm.commuteAllowanceMonths = 1;
     }
+  }
+
+  getInitialSalaryForm(): Partial<Salary> {
+    return {
+      paymentDate: '',
+      promotion: 'noChange', // デフォルトは「変更なし」
+      basicSalary: 0,
+      overtimeSalary: 0,
+      commuteAllowance: 0,
+      positionAllowance: 0,
+      otherAllowance: 0,
+      remarks: '',
+      totalAllowance: 0,
+      totalSalary: 0,
+      totalActualExpense: 0,
+      totalOtherAllowance: 0,
+      totalInKind: 0,
+      totalRetro: 0,
+      commuteAllowancePeriodFrom: '',
+      commuteAllowancePeriodTo: '',
+      commuteAllowanceMonths: 1,
+    };
   }
 }
 

@@ -222,25 +222,28 @@
         </td>
       </tr>
       <tr *ngIf="!isEditMode">
-        <th>勤務形態</th>
-        <td>{{ getWorkStyleName(employee.workStyle) }}</td>
-      </tr>
-      <tr *ngIf="isEditMode">
-        <th>勤務形態</th>
-        <td>
-          <select [(ngModel)]="editEmployee.workStyle">
-            <option value="">選択</option>
-            <option *ngFor="let t of workStyleTypes" [value]="t.code">{{ t.name }}</option>
-          </select>
-        </td>
-      </tr>
-      <tr *ngIf="!isEditMode">
         <th>学生</th>
         <td>{{ employee.isStudent ? '○' : '×' }}</td>
       </tr>
       <tr *ngIf="isEditMode">
         <th>学生</th>
         <td><input type="checkbox" [(ngModel)]="editEmployee.isStudent"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
+        <th>所定労働日数</th>
+        <td>{{ employee.regularWorkDays || '未入力' }}</td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>所定労働日数</th>
+        <td><input type="number" [(ngModel)]="editEmployee.regularWorkDays"></td>
+      </tr>
+      <tr *ngIf="!isEditMode">
+        <th>週所定労働時間</th>
+        <td>{{ employee.regularWorkHours || '未入力' }}</td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>週所定労働時間</th>
+        <td><input type="number" [(ngModel)]="editEmployee.regularWorkHours"></td>
       </tr>
       <tr *ngIf="!isEditMode">
         <th>契約開始日</th>
@@ -272,7 +275,43 @@
       </tr>
       <tr *ngIf="isEditMode">
         <th>退社済み</th>
-      
+        <td><input type="checkbox" [(ngModel)]="editEmployee.isResigned"></td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- 海外赴任情報 -->
+  <section class="detail-section">
+    <h3>海外赴任情報</h3>
+    <table class="detail-table">
+      <tr *ngIf="!isEditMode">
+        <th>海外赴任で国外居住</th>
+        <td>{{ employee.isOverseasAssignment ? '○' : '×' }}</td>
+      </tr>
+      <tr *ngIf="isEditMode">
+        <th>海外赴任で国外居住</th>
+        <td><input type="checkbox" [(ngModel)]="editEmployee.isOverseasAssignment"></td>
+      </tr>
+      <ng-container *ngIf="!isEditMode && employee.isOverseasAssignment">
+        <tr>
+          <th>海外赴任開始日</th>
+          <td>{{ employee.overseasAssignmentStartDate || '未入力' }}</td>
+        </tr>
+        <tr>
+          <th>海外赴任終了日</th>
+          <td>{{ employee.overseasAssignmentEndDate || '未入力' }}</td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="isEditMode && editEmployee.isOverseasAssignment">
+        <tr>
+          <th>海外赴任開始日</th>
+          <td><input type="date" [(ngModel)]="editEmployee.overseasAssignmentStartDate"></td>
+        </tr>
+        <tr>
+          <th>海外赴任終了日</th>
+          <td><input type="date" [(ngModel)]="editEmployee.overseasAssignmentEndDate"></td>
+        </tr>
+      </ng-container>
     </table>
   </section>
 

@@ -27,8 +27,8 @@
   color: #fff;
   border: none;
   border-radius: 6px;
-  padding: 8px 20px;
-  font-size: 1rem;
+  padding: 6px 16px;
+  font-size: 0.9rem;
   font-weight: bold;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
@@ -39,8 +39,8 @@
   color: #ff9800;
   border: 1px solid #ff9800;
   border-radius: 6px;
-  padding: 8px 20px;
-  font-size: 1rem;
+  padding: 6px 16px;
+  font-size: 0.9rem;
   font-weight: bold;
   cursor: pointer;
   transition: background 0.2s;
@@ -51,8 +51,8 @@
   color: #e53935;
   border: 1px solid #e53935;
   border-radius: 6px;
-  padding: 8px 20px;
-  font-size: 1rem;
+  padding: 6px 16px;
+  font-size: 0.9rem;
   font-weight: bold;
   cursor: pointer;
   transition: background 0.2s;
@@ -63,8 +63,8 @@
   color: #fff;
   border: none;
   border-radius: 6px;
-  padding: 8px 20px;
-  font-size: 1rem;
+  padding: 6px 16px;
+  font-size: 0.9rem;
   font-weight: bold;
   cursor: pointer;
   transition: background 0.2s;
@@ -75,8 +75,8 @@
   color: #1976d2;
   border: 1.5px solid #1976d2;
   border-radius: 6px;
-  padding: 8px 20px;
-  font-size: 1rem;
+  padding: 6px 16px;
+  font-size: 0.9rem;
   font-weight: bold;
   cursor: pointer;
   transition: background 0.2s, color 0.2s, border 0.2s;
@@ -102,10 +102,10 @@ table {
   margin-bottom: 18px;
 }
 th, td {
-  padding: 14px 12px;
+  padding: 10px 8px;
   text-align: left;
   border-bottom: 1px solid #e0e0e0;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 th {
   color: #1976d2;

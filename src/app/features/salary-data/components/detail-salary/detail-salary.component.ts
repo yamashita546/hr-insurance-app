@@ -4,7 +4,7 @@ import { FirestoreService } from '../../../../core/services/firestore.service';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SalaryFieldNameMap, BonusFieldNameMap } from '../../../../core/models/salary.model';
+import { SalaryFieldNameMap, BonusFieldNameMap, PromotionTypeMap } from '../../../../core/models/salary.model';
 import { Location } from '@angular/common';
 import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
 
@@ -54,6 +54,9 @@ export class DetailSalaryComponent implements OnInit {
   editBonusIndex: number | null = null;
   isAddingBonus: boolean = false;
   editBonusForm: any = {};
+
+  promotionTypeMap = PromotionTypeMap;
+  promotionTypeKeys = Object.keys(this.promotionTypeMap);
 
   constructor(
     private route: ActivatedRoute,
@@ -341,6 +344,7 @@ export class DetailSalaryComponent implements OnInit {
       commuteAllowancePeriodFrom: this.editSalaryForm.commuteAllowancePeriodFrom || '',
       commuteAllowancePeriodTo: this.editSalaryForm.commuteAllowancePeriodTo || '',
       commuteAllowanceMonths: this.editSalaryForm.commuteAllowanceMonths || 1,
+      promotion: this.editSalaryForm.promotion || '',
     };
     await this.firestoreService.updateSalary(this.companyKey, this.employee.employeeId, ym, newSalary);
     await this.saveHistory('salary', this.salary, newSalary);
@@ -371,8 +375,14 @@ export class DetailSalaryComponent implements OnInit {
   async onSaveBonusEdit(i: number) {
     if (!this.employee) return;
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+    const beforeBonuses = JSON.parse(JSON.stringify(this.bonuses));
     const bonus = { ...this.editBonusForm, employeeId: this.employee.employeeId, companyKey: this.companyKey, targetYearMonth: ym, paymentDate: this.editBonusForm.paymentDate || '', bonus: Number(this.editBonusForm.bonus) || 0 };
     await this.firestoreService.updateBonus(this.companyKey, this.employee.employeeId, ym, bonus);
+    
+    const afterBonuses = JSON.parse(JSON.stringify(this.bonuses));
+    afterBonuses[i] = bonus;
+    await this.saveHistory('bonus', beforeBonuses, afterBonuses);
+
     this.editBonusIndex = null;
     this.editBonusForm = {};
     await this.loadSalaryAndBonus();
@@ -382,8 +392,13 @@ export class DetailSalaryComponent implements OnInit {
   async onSaveBonusAdd() {
     if (!this.employee) return;
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+    const beforeBonuses = JSON.parse(JSON.stringify(this.bonuses));
     const bonus = { ...this.editBonusForm, employeeId: this.employee.employeeId, companyKey: this.companyKey, targetYearMonth: ym, paymentDate: this.editBonusForm.paymentDate || '', bonus: Number(this.editBonusForm.bonus) || 0 };
     await this.firestoreService.updateBonus(this.companyKey, this.employee.employeeId, ym, bonus);
+
+    const afterBonuses = [...beforeBonuses, bonus];
+    await this.saveHistory('bonus', beforeBonuses, afterBonuses);
+
     this.isAddingBonus = false;
     this.editBonusForm = {};
     await this.loadSalaryAndBonus();
@@ -467,10 +482,17 @@ export class DetailSalaryComponent implements OnInit {
 
   // ボーナス削除
   async onDeleteBonus(i: number) {
+    if (!confirm('この賞与情報を削除しますか？')) return;
     if (!this.employee) return;
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
-    const bonus = this.bonuses[i];
-    await this.firestoreService.deleteBonus(this.companyKey, this.employee.employeeId, ym, bonus.paymentDate);
+    const bonusToDelete = this.bonuses[i];
+
+    const beforeBonuses = JSON.parse(JSON.stringify(this.bonuses));
+    const afterBonuses = this.bonuses.filter((_, index) => index !== i);
+
+    await this.firestoreService.deleteBonus(this.companyKey, this.employee.employeeId, ym, bonusToDelete.paymentDate);
+    await this.saveHistory('bonus', beforeBonuses, afterBonuses);
+
     await this.loadSalaryAndBonus();
     await this.loadHistory();
   }

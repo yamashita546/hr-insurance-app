@@ -11,6 +11,7 @@ import { isMaternityLeaveExempted, isChildcareLeaveExempted, checkInsuranceExemp
 import { getAllAgeArrivalDates } from '../../../../core/services/age.determination';
 import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
 import { generateBonusPreviewList } from '../../service/bonus.check';
+import { processBonusesForCalculation } from '../../service/extra.bonus.calculate';
 import { NATIONALITIES } from '../../../../core/models/nationalities';
 import { AgeCheck } from '../../service/age.check';
 import { checkEmployeeInputMissing } from '../../service/null.check';
@@ -544,9 +545,16 @@ export class InsuranceFormComponent implements OnInit {
           };
         });
     } else if (this.selectedType === 'bonus') {
+      const processedBonuses = processBonusesForCalculation(
+        targetEmployees,
+        this.bonuses,
+        this.selectedYear,
+        this.selectedMonth
+      );
       this.previewList = generateBonusPreviewList({
         employees: targetEmployees,
-        bonuses: this.bonuses,
+        bonuses: processedBonuses,
+        allBonuses: this.bonuses,
         standardMonthlyDecisions: this.standardMonthlyDecisions,
         offices: this.offices,
         insuranceRates: this.insuranceRates,
@@ -554,7 +562,10 @@ export class InsuranceFormComponent implements OnInit {
         selectedMonth: this.selectedMonth,
         excludeNoBonusEmployees: this.excludeNoBonusEmployees,
         getStandardMonthlyForEmployee: this.getStandardMonthlyForEmployee.bind(this),
-        getBonusForEmployee: this.getBonusForEmployee.bind(this),
+        getBonusForEmployee: (employeeId: string) => {
+          const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+          return processedBonuses.find(b => b.employeeId === employeeId && b.targetYearMonth === ym) || null;
+        },
         getInsuranceRateForOffice: this.getInsuranceRateForOffice.bind(this),
         getAgeAtYearMonth1st: this.getAgeAtYearMonth1st.bind(this),
         isAgeArrivalInMonth: this.isAgeArrivalInMonth.bind(this),
@@ -664,12 +675,12 @@ export class InsuranceFormComponent implements OnInit {
           officeId: row.officeId,
           employeeId: row.employeeId,
           applyYearMonth,
-          healthGrade: row.grade?.split('（')[0] || '',  // 健康保険等級のみ抽出
+          healthGrade: row.grade?.split('（')[0] || '',
           healthMonthly: Number(row.monthly.toString().replace(/,/g, '')),
-          pensionGrade: row.grade?.split('（')[1]?.replace('）', '') || '',  // 厚生年金等級のみ抽出
+          pensionGrade: row.grade?.split('（')[1]?.replace('）', '') || '',
           pensionMonthly: row.pensionMonthly,
           bonusTotal: row.bonus ? Number(row.bonus.toString().replace(/,/g, '')) : 0,
-          bonusAvg: row.bonus ? Number(row.bonus.toString().replace(/,/g, '')) : 0, // 必要に応じて平均値を計算
+          bonusAvg: row.bonus ? Number(row.bonus.toString().replace(/,/g, '')) : 0,
           careInsurance: row.careInsurance === '〇',
           healthInsurance: Number(row.healthInsurance.toString().replace(/,/g, '')),
           healthInsuranceDeduction: Number(row.healthInsuranceDeduction.toString().replace(/,/g, '')),
@@ -678,9 +689,9 @@ export class InsuranceFormComponent implements OnInit {
           deductionTotal: Number(row.deductionTotal.toString().replace(/,/g, '')),
           childcare: Number(row.childcare.toString().replace(/,/g, '')),
           companyShare: Number(row.companyShare.toString().replace(/,/g, '')),
-          standardBonus: row.standardBonus ?? 0,
-          annualBonusTotal: row.annualBonusTotal ?? 0,
-          annualBonusTotalBefore: row.annualBonusTotalBefore ?? 0,
+          standardBonus: row.standardBonusValue ?? 0,
+          annualBonusTotal: row.annualBonusTotalValue ?? 0,
+          annualBonusTotalBefore: row.annualBonusTotalBeforeValue ?? 0,
           bonusDiff: row.bonusDiff ?? 0,
         };
         const docId = `${this.companyKey}_${row.officeId}_${row.employeeId}_${applyYearMonth}`;

@@ -6,7 +6,21 @@
     <h2>標準報酬月額管理</h2>
   </div>
   
-  <div class="standard-monthly-actions">
+  <div class="standard-monthly-actions" style="display: flex; align-items: center; justify-content: space-between;">
+    <div class="selector-group">
+      <label class="selector-label">事業所
+        <select class="selector-select" [(ngModel)]="selectedOfficeId" (change)="onOfficeFilterChange()">
+          <option value="">全て</option>
+          <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
+        </select>
+      </label>
+      <label class="selector-label">従業員
+        <select class="selector-select" [(ngModel)]="selectedEmployeeId" (change)="onEmployeeFilterChange()">
+          <option value="">全て</option>
+          <option *ngFor="let emp of employees" [value]="emp.employeeId">{{ emp.employeeId }} {{ emp.lastName }} {{ emp.firstName }}</option>
+        </select>
+      </label>
+    </div>
     <button class="add-standard-monthly-btn" routerLink="/standard-monthly-form">標準報酬月額を登録</button>
   </div>
 
@@ -27,7 +41,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let row of getCurrentStandardMonthlyList()">
+        <tr *ngFor="let row of getFilteredStandardMonthlyList()">
           <td>{{ getOfficeName(getLatestOfficeId(row.employeeId) || '') }}</td>
           <td>{{ row.employeeId }}</td>
           <td>{{ getEmployeeName(row.employeeId) }}</td>

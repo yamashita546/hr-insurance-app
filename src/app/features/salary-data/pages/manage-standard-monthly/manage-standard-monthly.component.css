@@ -70,3 +70,35 @@
 .add-standard-monthly-btn:hover {
   background: #1565c0;
 }
+
+/* セレクター用デザイン */
+.selector-group {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+}
+.selector-label {
+  font-weight: 500;
+  color: #333;
+  margin-right: 0.5em;
+  display: flex;
+  flex-direction: column;
+  font-size: 1em;
+}
+.selector-select {
+  margin-top: 0.2em;
+  padding: 0.3em 1.2em 0.3em 0.6em;
+  border: 1px solid #bfc7d1;
+  border-radius: 6px;
+  background: #f8fafc;
+  font-size: 1em;
+  color: #222;
+  min-width: 10em;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  transition: border 0.2s;
+}
+.selector-select:focus {
+  border: 1.5px solid #1976d2;
+  outline: none;
+  background: #fff;
+}

@@ -180,15 +180,21 @@ export class SalaryFormComponent implements OnInit {
   }
 
   async onSave() {
+    if (!this.companyKey) return;
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+
     if (this.activeTab === 'salary') {
-      // 給与バリデーション
+      // 給与保存
       if (!this.selectedEmployeeObj) {
         alert('従業員IDを選択してください');
         return;
       }
-      if (!this.salaryForm.basicSalary || isNaN(Number(this.salaryForm.basicSalary))) {
+      if (!this.salaryForm.basicSalary) {
         alert('基本給を入力してください');
+        return;
+      }
+      if (!this.salaryForm.paymentDate) {
+        alert('支給日を選択してください');
         return;
       }
       if (!this.selectedYear || !this.selectedMonth) {
@@ -249,9 +255,13 @@ export class SalaryFormComponent implements OnInit {
         return;
       }
     } else if (this.activeTab === 'bonus') {
-      // 賞与バリデーション
+      // 賞与保存
       if (!this.selectedEmployeeObj) {
         alert('従業員IDを選択してください');
+        return;
+      }
+      if (!this.bonus.paymentDate) {
+        alert('支給日を選択してください');
         return;
       }
       if (!this.selectedYear || !this.selectedMonth) {

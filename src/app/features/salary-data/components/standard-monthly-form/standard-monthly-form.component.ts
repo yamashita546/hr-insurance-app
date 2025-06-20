@@ -13,6 +13,7 @@ import { EMPLOYEE_TYPES, EmployeeType } from '../../../../core/models/employee.t
 import { AppUser } from '../../../../core/models/user.model';
 import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
 import { StandardMonthlyCheckService } from '../../../../core/services/standard.monthly.check.service';
+import { StandardMonthlyAlertChecks } from '../../service/alert.check';
 
 @Component({
   selector: 'app-standard-monthly-form',
@@ -404,31 +405,48 @@ export class StandardMonthlyFormComponent implements OnInit {
       alert('従業員を選択してください');
       return;
     }
-    // 契約開始年月チェック
     const emp = this.employees.find(e => e.employeeId === this.selectedEmployeeId);
-    const applyYm = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
-    if (emp && emp.contractStartDate) {
-      const contractDate = new Date(emp.contractStartDate);
-      if (!isNaN(contractDate.getTime())) {
-        const contractYm = `${contractDate.getFullYear()}-${String(contractDate.getMonth() + 1).padStart(2, '0')}`;
-        if (applyYm < contractYm) {
-          alert('適用開始年月が契約開始年月より前になっています。適用開始年月を正しく設定してください。');
-          return;
-        }
-      }
-    }
-    // 算出根拠年月が適用対象年月より未来の場合のチェック
-    const salaryFromYm = `${this.salaryFromYear}-${String(this.salaryFromMonth).padStart(2, '0')}`;
-    const salaryToYm = `${this.salaryToYear}-${String(this.salaryToMonth).padStart(2, '0')}`;
-    if (salaryFromYm > applyYm || salaryToYm > applyYm) {
-      alert('算出根拠年月が適用対象年月より未来になっています。算出根拠年月を正しく設定してください。');
+
+    const missingInfoError = StandardMonthlyAlertChecks.checkMissingEmployeeInfo(emp);
+    if (missingInfoError) {
+      alert(missingInfoError);
       return;
     }
-    if (emp && !this.isFixedDecisionTarget(emp)) {
-      if (!confirm('定時算定の非対象者が選択されています。続けて操作をしますか？')) {
+
+    const contractDateError = StandardMonthlyAlertChecks.checkContractDate(emp, this.startYear, this.startMonth);
+    if (contractDateError) {
+      alert(contractDateError);
+      return;
+    }
+
+    const calcPeriodError = StandardMonthlyAlertChecks.checkCalculationPeriod(this.startYear, this.startMonth, this.salaryFromYear, this.salaryFromMonth, this.salaryToYear, this.salaryToMonth);
+    if (calcPeriodError) {
+      alert(calcPeriodError);
+      return;
+    }
+
+    if (this.decisionType === 'occasional') {
+      const startYm = `${this.salaryFromYear}-${String(this.salaryFromMonth).padStart(2, '0')}`;
+      const targetSalary = this.salaries.find(s => s.employeeId === this.selectedEmployeeId && s.targetYearMonth === startYm);
+      const promotionConfirmMsg = StandardMonthlyAlertChecks.confirmPromotionStatusForOccasional(targetSalary, this.salaryFromYear, this.salaryFromMonth);
+      if (promotionConfirmMsg && !confirm(promotionConfirmMsg)) {
         return;
       }
     }
+
+    const salaryList = this.getSalaryListForSelectedEmployeeAndPeriod(this.selectedEmployeeId);
+    const salaryExistsConfirm = StandardMonthlyAlertChecks.confirmSalaryDataExists(salaryList);
+    if (salaryExistsConfirm && !confirm(salaryExistsConfirm)) {
+      return;
+    }
+
+    if (emp) {
+      const fixedTargetConfirm = StandardMonthlyAlertChecks.confirmFixedDecisionTarget(emp, this.startYear);
+      if (fixedTargetConfirm && !confirm(fixedTargetConfirm)) {
+        return;
+      }
+    }
+
     if (this.decisionType === 'entry') {
       this.onEntryDecision();
       this.isConfirmed = false;
@@ -690,40 +708,23 @@ export class StandardMonthlyFormComponent implements OnInit {
    * 保存ボタンクリック時の処理
    */
   onSave(): void {
-    // 随時改定の等級差チェック
-    if (this.decisionType === 'occasional' && this.resultList && this.resultList.length > 0) {
-      const current = this.currentDecision;
-      const newGrade = this.resultList[0].judgedGrade;
-      if (current && current.healthGrade && newGrade) {
-        // 等級を数値化して比較（数字以外はパース不可なのでNumberで）
-        const currentNum = Number(current.healthGrade);
-        const newNum = Number(newGrade);
-        if (!isNaN(currentNum) && !isNaN(newNum)) {
-          const diff = Math.abs(newNum - currentNum);
-          if (diff < 2) {
-            if (!confirm('新しい等級は現在の等級から2等級以上離れていません。このまま保存しますか？')) {
-              return;
-            }
-          }
-        }
+    const resultRow = this.resultList?.[0];
+    if (!resultRow) return;
+
+    if (this.decisionType === 'occasional') {
+      const msg = StandardMonthlyAlertChecks.confirmGradeDifferenceOnOccasional(this.currentDecision, resultRow.judgedGrade);
+      if (msg && !confirm(msg)) {
+        return;
       }
     }
-    // 育児休業復帰時決定の等級チェック
-    if (this.decisionType === 'childcare' && this.resultList && this.resultList.length > 0) {
-      const current = this.currentDecision;
-      const newGrade = this.resultList[0].judgedGrade;
-      if (current && current.healthGrade && newGrade) {
-        const currentNum = Number(current.healthGrade);
-        const newNum = Number(newGrade);
-        if (!isNaN(currentNum) && !isNaN(newNum)) {
-          if (newNum >= currentNum) {
-            if (!confirm('決定種別は正しいですか？（現等級より下がっていません）')) {
-              return;
-            }
-          }
-        }
+
+    if (this.decisionType === 'childcare') {
+      const msg = StandardMonthlyAlertChecks.confirmGradeOnChildcare(this.currentDecision, resultRow.judgedGrade);
+      if (msg && !confirm(msg)) {
+        return;
       }
     }
+
     if (this.decisionType === 'entry') {
       this.saveEntryDecision();
     } else {
@@ -737,43 +738,85 @@ export class StandardMonthlyFormComponent implements OnInit {
   private async saveEntryDecision(): Promise<void> {
     if (!this.resultList || this.resultList.length === 0) return;
 
-    const result = this.resultList[0];
-    // 従業員のofficeIdを必ずセット
-    const emp = this.employees.find(e => e.employeeId === this.selectedEmployeeId);
-    const officeId = emp ? emp.officeId : this.selectedOfficeId;
-    const data = {
-      companyId: this.companyId,
-      companyKey: this.companyKey,
-      employeeId: this.selectedEmployeeId,
-      officeId: officeId,
-      decisionType: this.decisionType,
-      type: this.decisionType,
-      applyYearMonth: `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`,
-      estimatedSalary: {
-        baseSalary: result.estimatedBaseSalary || 0,
-        overtime: result.estimatedOvertime || 0,
-        commute: result.estimatedCommute || 0,
-        positionAllowance: result.estimatedPositionAllowance || 0,
-        otherAllowance: result.estimatedOtherAllowance || 0,
-        inKind: result.estimatedInKind || 0,
-        total: result.estimatedTotal || 0
-      },
-      healthGrade: result.judgedGrade,
-      healthMonthly: result.judgedMonthly,
-      pensionGrade: result.pensionJudgedGrade,
-      pensionMonthly: result.pensionJudgedMonthly,
-      salaryAvg: result.estimatedTotal || 0,
-      salaryTotal: result.estimatedTotal || 0,
-      isActive: true,
-      createdAt: new Date()
-    };
+    const applyYearMonth = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
+    const userId = this.currentUser?.uid || '';
+    const userName = this.currentUser?.displayName || '';
+
+    // 既にデータが存在する従業員をリストアップ
+    const decisionsToOverwrite: any[] = [];
+    const employeeNamesToConfirm: string[] = [];
+    this.resultList.forEach(row => {
+      const existing = this.standardMonthlyDecisions.find(dec =>
+        dec.employeeId === row.employeeId &&
+        dec.applyYearMonth === applyYearMonth &&
+        dec.type === this.decisionType &&
+        dec.isActive === true
+      );
+      if (existing) {
+        decisionsToOverwrite.push(existing);
+        employeeNamesToConfirm.push(row.employeeName);
+      }
+    });
+
+    // 確認ダイアログを表示
+    if (decisionsToOverwrite.length > 0) {
+      if (!confirm(`${employeeNamesToConfirm.join('、')} には既に標準報酬月額が登録されています。\n等級を上書きしますか？`)) {
+        return; // ユーザーがキャンセルした場合は処理を中断
+      }
+    }
 
     try {
-      // 履歴保存
-      await this.firestoreService.addStandardMonthlyDecisionHistory(data);
-      // 本体保存
-      await this.firestoreService.addStandardMonthlyDecision(data);
+      // 既存のデータを論理削除（上書きのため）
+      const deletePromises = decisionsToOverwrite.map(decision =>
+        this.firestoreService.deleteStandardMonthlyDecisionWithHistory({ ...decision, isActive: false }, userId, userName)
+      );
+      await Promise.all(deletePromises);
+
+      // 新しいデータを登録
+      const addPromises = this.resultList.map(async (row) => {
+        const emp = this.employees.find(e => e.employeeId === row.employeeId);
+        const officeId = emp ? emp.officeId : (row.officeId || this.selectedOfficeId);
+
+        const data = {
+          companyId: this.companyId,
+          companyKey: this.companyKey,
+          employeeId: row.employeeId,
+          officeId: officeId,
+          decisionType: this.decisionType,
+          type: this.decisionType,
+          applyYearMonth: applyYearMonth,
+          estimatedSalary: {
+            baseSalary: row.estimatedBaseSalary || 0,
+            overtime: row.estimatedOvertime || 0,
+            commute: row.estimatedCommute || 0,
+            positionAllowance: row.estimatedPositionAllowance || 0,
+            otherAllowance: row.estimatedOtherAllowance || 0,
+            inKind: row.estimatedInKind || 0,
+            total: row.estimatedTotal || 0,
+          },
+          healthGrade: row.judgedGrade,
+          healthMonthly: row.judgedMonthly,
+          pensionGrade: row.pensionJudgedGrade,
+          pensionMonthly: row.pensionJudgedMonthly,
+          salaryAvg: row.estimatedTotal || 0,
+          salaryTotal: row.estimatedTotal || 0,
+          isActive: true,
+        };
+
+        await this.firestoreService.addStandardMonthlyDecisionHistory({
+          ...data,
+          createdAt: new Date(),
+          operationType: 'create',
+          operatedByUserId: userId,
+          operatedByUserName: userName,
+        });
+        await this.firestoreService.addStandardMonthlyDecision(data as any);
+      });
+
+      await Promise.all(addPromises);
       alert('保存が完了しました。');
+      this.router.navigate(['/manage-standard-monthly']);
+
     } catch (error) {
       console.error('保存エラー:', error);
       alert('保存に失敗しました。');
@@ -785,49 +828,34 @@ export class StandardMonthlyFormComponent implements OnInit {
    */
   private async saveStandardMonthlyDecision(): Promise<void> {
     const applyYearMonth = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
-    const isEntry = this.decisionType === 'entry';
     const userId = this.currentUser?.uid || '';
     const userName = this.currentUser?.displayName || '';
-    // 異常値チェック
-    const row = this.resultList[0];
-    const abnormal =
-      (row.judgedMonthly <= 0 || row.judgedMonthly >= 1000000) ||
-      (row.pensionJudgedMonthly <= 0 || row.pensionJudgedMonthly >= 1000000) ||
-      (row.salaryAvg <= 0 || row.salaryAvg >= 1000000);
-    if (abnormal) {
-      if (!confirm('標準報酬月額または平均月額が異常な値です。本当に保存しますか？')) {
-        return;
-      }
+
+    const abnormalConfirm = StandardMonthlyAlertChecks.confirmAbnormalValues(this.resultList?.[0]);
+    if (abnormalConfirm && !confirm(abnormalConfirm)) {
+      return;
     }
+
     if (this.editMode && this.editingDecisionId) {
       const decision = {
         companyKey: this.companyKey,
         officeId: this.selectedOfficeId,
         employeeId: this.selectedEmployeeId,
         applyYearMonth,
-        healthGrade: row.judgedGrade ?? row.healthGrade,
-        healthMonthly: row.judgedMonthly ?? row.healthMonthly,
-        pensionGrade: row.pensionJudgedGrade ?? row.pensionGrade,
-        pensionMonthly: row.pensionJudgedMonthly ?? row.pensionMonthly,
-        salaryTotal: isEntry ? row.estimatedTotal : row.salaryTotal ?? 0,
-        salaryAvg: isEntry ? row.estimatedTotal : row.salaryAvg ?? 0,
-        type: isEntry ? 'entry' : row.type ?? 'fixed',
-        aprilSalary: row.aprilSalary ?? null,
-        maySalary: row.maySalary ?? null,
-        juneSalary: row.juneSalary ?? null,
-        usedMonths: row.usedMonths ?? '',
+        healthGrade: this.resultList[0].judgedGrade ?? this.resultList[0].healthGrade,
+        healthMonthly: this.resultList[0].judgedMonthly ?? this.resultList[0].healthMonthly,
+        pensionGrade: this.resultList[0].pensionJudgedGrade ?? this.resultList[0].pensionGrade,
+        pensionMonthly: this.resultList[0].pensionJudgedMonthly ?? this.resultList[0].pensionMonthly,
+        salaryTotal: this.resultList[0].salaryTotal ?? 0,
+        salaryAvg: this.resultList[0].salaryAvg ?? 0,
+        type: this.decisionType,
+        aprilSalary: this.resultList[0].aprilSalary ?? null,
+        maySalary: this.resultList[0].maySalary ?? null,
+        juneSalary: this.resultList[0].juneSalary ?? null,
+        usedMonths: this.resultList[0].usedMonths ?? '',
         isActive: true,
-        checklist: row.checklist,
-        calculationRows: row.calculationRows,
-        ...(isEntry && {
-          estimatedBaseSalary: row.estimatedBaseSalary ?? 0,
-          estimatedOvertime: row.estimatedOvertime ?? 0,
-          estimatedCommute: row.estimatedCommute ?? 0,
-          estimatedPositionAllowance: row.estimatedPositionAllowance ?? 0,
-          estimatedOtherAllowance: row.estimatedOtherAllowance ?? 0,
-          estimatedInKind: row.estimatedInKind ?? 0,
-          estimatedTotal: row.estimatedTotal ?? 0
-        })
+        checklist: this.resultList[0].checklist,
+        calculationRows: this.resultList[0].calculationRows,
       };
       await this.firestoreService.updateStandardMonthlyDecisionWithHistory(
         decision, userId, userName
@@ -836,40 +864,52 @@ export class StandardMonthlyFormComponent implements OnInit {
       this.router.navigate(['/manage-standard-monthly']);
       return;
     }
+
     try {
-      // 既存データ該当者をリストアップ
-      const alreadyRegistered: string[] = [];
+      const decisionsToOverwrite: any[] = [];
+      const employeeNamesToConfirm: string[] = [];
+
       for (const row of this.resultList) {
-        const emp = this.employees.find(e => `${e.lastName} ${e.firstName}` === row.employeeName);
-        const exists = this.standardMonthlyDecisions.some(dec =>
-          dec.employeeId === (emp ? emp.employeeId : '') &&
+        const existing = this.standardMonthlyDecisions.find(dec =>
+          dec.employeeId === row.employeeId &&
           dec.applyYearMonth === applyYearMonth &&
-          dec.type === 'fixed' &&
+          dec.type === this.decisionType &&
           dec.isActive === true
         );
-        if (exists) {
-          alreadyRegistered.push(`${row.employeeName} の ${this.startYear}年${this.startMonth}月適用には既に標準報酬月額が登録されています。`);
+        if (existing) {
+          decisionsToOverwrite.push(existing);
+          employeeNamesToConfirm.push(row.employeeName);
         }
       }
-      if (alreadyRegistered.length > 0) {
-        alert(alreadyRegistered.join('\n'));
-        return;
+
+      if (decisionsToOverwrite.length > 0) {
+        const decisionTypeName = this.decisionTypeLabels[this.decisionType];
+        if (!confirm(`${employeeNamesToConfirm.join('、')} には${this.startYear}年${this.startMonth}月適用の「${decisionTypeName}」が既に登録されています。\n上書きしますか？`)) {
+          return;
+        }
       }
-      const promises = this.resultList.map(async row => {
-        const emp = this.employees.find(e => `${e.lastName} ${e.firstName}` === row.employeeName);
-        const officeId = emp ? emp.officeId : '';
+
+      const deletePromises = decisionsToOverwrite.map(decision =>
+        this.firestoreService.deleteStandardMonthlyDecisionWithHistory({ ...decision, isActive: false }, userId, userName)
+      );
+      await Promise.all(deletePromises);
+
+      const promises = this.resultList.map(async (row) => {
+        const emp = this.employees.find(e => e.employeeId === row.employeeId);
+        const officeId = emp ? emp.officeId : row.officeId;
+
         const decision: Omit<StandardMonthlyDecision, 'createdAt' | 'updatedAt'> = {
           companyKey: this.companyKey,
           officeId: officeId,
-          employeeId: emp ? emp.employeeId : '',
+          employeeId: row.employeeId,
           applyYearMonth,
           healthGrade: row.judgedGrade,
           healthMonthly: row.judgedMonthly,
           pensionGrade: row.pensionJudgedGrade,
           pensionMonthly: row.pensionJudgedMonthly,
-          salaryTotal: isEntry ? row.estimatedTotal : row.salaryTotal ?? 0,
-          salaryAvg: isEntry ? row.estimatedTotal : row.salaryAvg ?? 0,
-          type: isEntry ? 'entry' : 'fixed',
+          salaryTotal: row.salaryTotal ?? 0,
+          salaryAvg: row.salaryAvg ?? 0,
+          type: this.decisionType,
           aprilSalary: row.aprilSalary ?? null,
           maySalary: row.maySalary ?? null,
           juneSalary: row.juneSalary ?? null,
@@ -877,17 +917,8 @@ export class StandardMonthlyFormComponent implements OnInit {
           isActive: true,
           checklist: row.checklist,
           calculationRows: row.calculationRows,
-          ...(isEntry && {
-            estimatedBaseSalary: row.estimatedBaseSalary ?? 0,
-            estimatedOvertime: row.estimatedOvertime ?? 0,
-            estimatedCommute: row.estimatedCommute ?? 0,
-            estimatedPositionAllowance: row.estimatedPositionAllowance ?? 0,
-            estimatedOtherAllowance: row.estimatedOtherAllowance ?? 0,
-            estimatedInKind: row.estimatedInKind ?? 0,
-            estimatedTotal: row.estimatedTotal ?? 0
-          })
         };
-        // 履歴保存
+
         await this.firestoreService.addStandardMonthlyDecisionHistory({
           ...decision,
           operationType: 'create',
@@ -895,14 +926,15 @@ export class StandardMonthlyFormComponent implements OnInit {
           operatedByUserId: userId,
           operatedByUserName: userName
         });
-        // 本体保存
         await this.firestoreService.addStandardMonthlyDecision(decision);
       });
       await Promise.all(promises);
+
       alert('保存が完了しました');
       this.router.navigate(['/manage-standard-monthly']);
       this.isConfirmed = false;
       this.isCalculated = false;
+
     } catch (error: any) {
       alert('保存に失敗しました: ' + (error?.message || error));
     }
@@ -980,7 +1012,7 @@ export class StandardMonthlyFormComponent implements OnInit {
       isCareInsuranceApplicable: false
     }));
     if (this.resultList.length === 0) {
-      alert('選択した対象年月に入社の従業員ではありません。');
+      alert('選択した対象年月に資格を取得した従業員ではありません。');
     }
     this.isConfirmed = false;
   }
@@ -1035,7 +1067,38 @@ export class StandardMonthlyFormComponent implements OnInit {
   }
 
   onConfirmEstimated() {
-    // 入力済みの見込み報酬額から等級・月額を自動判定
+    // 1. 基本給の未入力チェック
+    const missingSalaryErrors: string[] = [];
+    for (const row of this.resultList) {
+      const baseSalary = Number(row.estimatedBaseSalary);
+      if (!baseSalary || baseSalary === 0) {
+        missingSalaryErrors.push(`${row.employeeName} の基本給`);
+      }
+    }
+
+    if (missingSalaryErrors.length > 0) {
+      alert(`以下の項目を入力してください。\n・${missingSalaryErrors.join('\n・')}`);
+      return; // 処理を中断
+    }
+
+    // 2. 基本給が88,000円未満のチェック
+    const lowSalaryWarnings: string[] = [];
+    for (const row of this.resultList) {
+        const baseSalary = Number(row.estimatedBaseSalary);
+        if (baseSalary > 0 && baseSalary < 88000) {
+            lowSalaryWarnings.push(row.employeeName);
+        }
+    }
+
+    if (lowSalaryWarnings.length > 0) {
+        const employeeList = lowSalaryWarnings.join('、');
+        const confirmed = confirm(`${employeeList} の基本給が過少な可能性があります。\nこのまま操作を続けますか？`);
+        if (!confirmed) {
+            return; // 処理を中断
+        }
+    }
+
+    // すべてのバリデーションを通過した場合、算定処理を実行
     this.resultList.forEach((row, i) => this.onEstimatedSalaryChange(row, i));
     this.isConfirmed = true;
   }

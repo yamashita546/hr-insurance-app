@@ -47,6 +47,33 @@ export class InsuranceListComponent implements OnInit {
     return this.offices.filter(o => o.isActive !== false);
   }
 
+  get summary() {
+    if (!this.resultList || this.resultList.length === 0) return {};
+    // デバッグ用: resultListの中身を出力
+    console.log('【DEBUG】resultList:', this.resultList);
+    // 給与・賞与で合計するフィールドを分ける
+    const salaryFields = [
+      'salaryTotal', 'healthInsurance', 'healthInsuranceDeduction', 'pension',
+      'pensionDeduction', 'deductionTotal', 'childcare', 'companyShare'
+    ];
+    const bonusFields = [
+      'bonus', 'standardBonus', 'annualBonusTotal', 'healthInsurance',
+      'healthInsuranceDeduction', 'pension', 'pensionDeduction',
+      'deductionTotal', 'childcare', 'companyShare'
+    ];
+    const fields = this.selectedType === 'salary' ? salaryFields : bonusFields;
+    const sum: any = {};
+    for (const field of fields) {
+      // デバッグ用: 各フィールドの値を出力
+      const values = this.resultList.map(row => row[field]);
+      console.log(`【DEBUG】field: ${field}, values:`, values);
+      sum[field] = values
+        .map(val => typeof val === 'string' ? Number(val.toString().replace(/,/g, '')) : Number(val) || 0)
+        .reduce((a, b) => a + b, 0);
+    }
+    return sum;
+  }
+
   constructor(
     private firestoreService: FirestoreService,
     private userCompanyService: UserCompanyService

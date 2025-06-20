@@ -1,22 +1,26 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { FirestoreService } from '../../../../core/services/firestore.service';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { filter, take } from 'rxjs/operators';
 import { PREFECTURES } from '../../../../core/models/prefecture.model';
 import { isEmployeeSelectable } from '../../../../core/services/empoloyee.active';
 import { EMPLOYEE_TYPES } from '../../../../core/models/employee.type';
+import { Firestore, collection, query, where, getDocs } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-insurance-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './insurance-detail.component.html',
   styleUrl: './insurance-detail.component.css'
 })
 export class InsuranceDetailComponent implements OnInit {
   employees: any[] = [];
+  offices: any[] = [];
+  selectedOfficeId: string = '';
   selectedEmployeeId: string = '';
   insuranceSalaryCalculations: any[] = [];
   insuranceBonusCalculations: any[] = [];
@@ -24,7 +28,8 @@ export class InsuranceDetailComponent implements OnInit {
 
   constructor(
     private firestoreService: FirestoreService,
-    private userCompanyService: UserCompanyService
+    private userCompanyService: UserCompanyService,
+    private firestore: Firestore
   ) {}
 
   async ngOnInit() {
@@ -32,7 +37,12 @@ export class InsuranceDetailComponent implements OnInit {
       .pipe(filter(company => !!company && !!company.companyKey), take(1))
       .subscribe(async company => {
         const companyKey = company!.companyKey;
-        let employees = await this.firestoreService.getEmployeesByCompanyKey(companyKey);
+        this.offices = await this.firestoreService.getOffices(companyKey);
+        const employeesCol = collection(this.firestore, 'employees');
+        const q = query(employeesCol, where('companyKey', '==', companyKey));
+        const snap = await getDocs(q);
+        let employees = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+
         employees = employees.sort((a, b) => String(a.employeeId).localeCompare(String(b.employeeId), 'ja'));
         this.employees = employees;
         this.insuranceSalaryCalculations = await this.firestoreService.getInsuranceSalaryCalculationsByCompanyKey(companyKey);
@@ -52,6 +62,7 @@ export class InsuranceDetailComponent implements OnInit {
 
   setEmployeeInfo() {
     this.employeeInfo = this.employees.find(e => String(e.employeeId) === String(this.selectedEmployeeId));
+    console.log('選択された従業員情報（デバッグ用）:', this.employeeInfo);
   }
 
   get selectedEmployeeSalaryCalculations() {
@@ -73,6 +84,16 @@ export class InsuranceDetailComponent implements OnInit {
     this.setEmployeeInfo();
   }
 
+  onOfficeChange() {
+    const active = this.activeEmployees;
+    if (active.length > 0) {
+      this.selectedEmployeeId = String(active[0].employeeId);
+    } else {
+      this.selectedEmployeeId = '';
+    }
+    this.setEmployeeInfo();
+  }
+
   isNumber(val: any): boolean {
     return typeof val === 'number' && !isNaN(val);
   }
@@ -84,7 +105,15 @@ export class InsuranceDetailComponent implements OnInit {
 
   // isActiveがtrueの従業員のみ返すgetterを追加
   get activeEmployees() {
-    return this.employees.filter(e => e.isActive !== false);
+    let list = this.employees.filter(e => e.isActive !== false);
+    if (this.selectedOfficeId) {
+      list = list.filter(emp => emp.officeId === this.selectedOfficeId);
+    }
+    return list;
+  }
+
+  get activeOffices() {
+    return this.offices.filter(o => o.isActive !== false);
   }
 
   // 年齢到達月以降かどうか判定

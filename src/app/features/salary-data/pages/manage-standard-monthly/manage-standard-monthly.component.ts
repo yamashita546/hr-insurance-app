@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { UserCompanyService } from '../../../../core/services/user-company.service';
 import { filter } from 'rxjs/operators';
 import { Router, RouterModule } from '@angular/router';
@@ -9,7 +10,7 @@ import { Office } from '../../../../core/models/company.model';
 @Component({
   selector: 'app-manage-standard-monthly',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './manage-standard-monthly.component.html',
   styleUrl: './manage-standard-monthly.component.css'
 })
@@ -24,6 +25,9 @@ export class ManageStandardMonthlyComponent implements OnInit {
   // ソート用
   sortColumn: string = '';
   sortDirection: 'asc' | 'desc' = 'asc';
+
+  selectedOfficeId: string = '';
+  selectedEmployeeId: string = '';
 
   constructor(private userCompanyService: UserCompanyService, private firestoreService: FirestoreService, private router: Router) {}
 
@@ -189,5 +193,25 @@ export class ManageStandardMonthlyComponent implements OnInit {
       });
     }
     return arr;
+  }
+
+  onOfficeFilterChange() {
+    // 事業所選択時、従業員選択をリセット
+    this.selectedEmployeeId = '';
+  }
+
+  onEmployeeFilterChange() {
+    // 従業員選択時、特に何もしない
+  }
+
+  getFilteredStandardMonthlyList(): StandardMonthlyDecision[] {
+    let list = this.getCurrentStandardMonthlyList();
+    if (this.selectedOfficeId) {
+      list = list.filter(row => this.getLatestOfficeId(row.employeeId) === this.selectedOfficeId);
+    }
+    if (this.selectedEmployeeId) {
+      list = list.filter(row => row.employeeId === this.selectedEmployeeId);
+    }
+    return list;
   }
 }

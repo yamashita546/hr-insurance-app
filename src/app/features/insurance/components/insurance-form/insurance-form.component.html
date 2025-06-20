@@ -184,6 +184,9 @@
                         <div>
                           <strong>賞与支給額:</strong> {{ row.bonus }}円
                         </div>
+                        <div *ngIf="row.remarks" style="margin-top:0.5em; color: #b85c00; font-weight: bold;">
+                          <strong>備考:</strong> {{ row.remarks }}
+                        </div>
                         <div style="margin-top:0.5em;">
                           <strong>標準賞与額:</strong> {{ row.standardBonus }}円
                         </div>

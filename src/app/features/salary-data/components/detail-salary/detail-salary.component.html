@@ -46,7 +46,16 @@
       <form *ngIf="editMode === 'salary'" (ngSubmit)="onSaveSalaryEdit()" class="edit-form">
         <table class="detail-table">
           <tr><th>支給日</th><td><input type="date" [(ngModel)]="editSalaryForm.paymentDate" name="paymentDate"></td></tr>
+          
           <tr><th>基本給</th><td><input type="number" [(ngModel)]="editSalaryForm.basicSalary" name="basicSalary" required></td></tr>
+          <tr>
+            <th>昇給/降給</th>
+            <td>
+              <select [(ngModel)]="editSalaryForm.promotion" name="promotion">
+                <option *ngFor="let key of promotionTypeKeys" [value]="key">{{ promotionTypeMap[key] }}</option>
+              </select>
+            </td>
+          </tr>
           <tr><th>時間外手当</th><td><input type="number" [(ngModel)]="editSalaryForm.overtimeSalary" name="overtimeSalary"></td></tr>
           <tr><th>通勤手当</th><td><input type="number" [(ngModel)]="editSalaryForm.commuteAllowance" name="commuteAllowance"></td></tr>
           <tr><th>通勤手当期間</th>
@@ -103,6 +112,10 @@
       <table class="detail-table" *ngIf="!editMode">
         <tr><th>支給日</th><td>{{ salary?.paymentDate }}</td></tr>
         <tr><th>基本給</th><td>{{ salary?.basicSalary | number }} 円</td></tr>
+        <tr>
+          <th>昇給/降給</th>
+          <td>{{ promotionTypeMap[salary?.promotion] || 'ー' }}</td>
+        </tr>
         <tr><th>時間外手当</th><td>{{ salary?.overtimeSalary | number }} 円</td></tr>
         <tr><th>通勤手当</th><td>{{ salary?.commuteAllowance | number }} 円</td></tr>
         <tr><th>通勤手当期間</th>
@@ -190,28 +203,6 @@
                 <button type="button" (click)="onCancelBonusEdit()">キャンセル</button>
               </td>
             </ng-container>
-          </tr>
-          <tr *ngIf="editBonusIndex === -1 && isAddingBonus">
-            <td>
-              <select [(ngModel)]="editBonusForm.bonusType" name="bonusTypeAdd" required>
-                <option value="">選択</option>
-                <option value="年間賞与">年間賞与</option>
-                <option value="半年賞与">半年賞与</option>
-                <option value="四半期賞与">四半期賞与</option>
-                <option value="月次賞与">月次賞与</option>
-                <option value="その他賞与">その他賞与</option>
-              </select>
-            </td>
-            <td>
-              <input type="text" [(ngModel)]="editBonusForm.bonusName" name="bonusNameAdd" *ngIf="editBonusForm.bonusType === 'その他賞与'">
-            </td>
-            <td><input type="date" [(ngModel)]="editBonusForm.paymentDate" name="bonusPaymentDateAdd"></td>
-            <td><input type="number" [(ngModel)]="editBonusForm.bonus" name="bonusAdd"></td>
-            <td><input type="text" [(ngModel)]="editBonusForm.remarks" name="remarksAdd"></td>
-            <td>
-              <button type="button" (click)="onSaveBonusAdd()">保存</button>
-              <button type="button" (click)="onCancelBonusEdit()">キャンセル</button>
-            </td>
           </tr>
         </tbody>
       </table>

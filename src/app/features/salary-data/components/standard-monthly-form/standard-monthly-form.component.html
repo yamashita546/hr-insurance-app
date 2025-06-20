@@ -231,8 +231,6 @@
     <button type="button" *ngIf="decisionType !== 'entry' && isConfirmed" (click)="onStandardMonthlyDecision()">算定</button>
   </div> 
 
-
-
   <!-- 判定結果一覧（定時決定）は常に表示 -->
   <div *ngIf="decisionType !== 'entry' && isCalculated" class="result-table-block">
     <h3>判定結果一覧</h3>
@@ -271,7 +269,6 @@
       <button type="button" (click)="onSave()">保存</button>
     </div>
   </div>
-
 
   <!-- 入社時決定用 --> 
   <div *ngIf="decisionType === 'entry'">
@@ -325,19 +322,22 @@
             <td><input type="number" [(ngModel)]="row.estimatedCommute" name="commute{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
             <td><input type="number" [(ngModel)]="row.estimatedPositionAllowance" name="positionAllowance{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
             <td><input type="number" [(ngModel)]="row.estimatedOtherAllowance" name="otherAllowance{{i}}" (change)="onEstimatedSalaryChange(row, i)"></td>
-            <td><input type="number" [(ngModel)]="row.estimatedInKind" name="inKind{{i}}" (input)="updateRowSum(i)" /></td>
+            <td><input type="number" [(ngModel)]="row.estimatedInKind" name="inKind{{i}}" (change)="onEstimatedSalaryChange(row, i)" /></td>
             <td>{{ row.estimatedTotal | currency:'JPY':'symbol':'1.0-0' }}</td>
           </tr>
         </tbody>
       </table>
-      <div class="form-actions">
-        <button type="button" (click)="onConfirmEstimated()">決定</button>
-      </div>
     </div>
   </div>
 
-  <div *ngIf="decisionType === 'entry' && resultList && resultList.length > 0" class="result-table-block">
-    <h3>判定結果一覧（入社時決定）</h3>
+  <!-- 算定ボタン（資格取得時決定） -->
+  <div *ngIf="decisionType === 'entry' && resultList && resultList.length > 0" class="form-actions">
+    <button type="button" (click)="onConfirmEstimated()">算定</button>
+  </div>
+
+  <!-- 判定結果：資格取得時 -->
+  <div *ngIf="decisionType === 'entry' && resultList && resultList.length > 0 && isConfirmed" class="result-table-block">
+    <h3>判定結果一覧（資格取得時決定）</h3>
     <table class="result-table">
       <thead>
         <tr>

@@ -27,9 +27,58 @@
         <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}月</option>
       </select>
     </div>
+    <!-- 集計テーブルをここに追加 -->
+    <div class="summary-table-block" *ngIf="resultList.length > 0">
+      <table class="summary-table">
+        <thead>
+          <tr *ngIf="selectedType === 'salary'">
+            <th>合計</th>
+            <th>当月給与総支給</th>
+            <th>健康保険料</th>
+            <th>厚生年金保険料</th>
+            <th>控除額合計</th>
+            <th>子ども子育て拠出金</th>
+            <th>会社負担</th>
+          </tr>
+          <tr *ngIf="selectedType === 'bonus'">
+            <th>合計</th>
+            <th>当月賞与</th>
+            <th>標準賞与額</th>
+            <th>年度賞与合計</th>
+            <th>健康保険料</th>
+            <th>厚生年金保険料</th>
+            <th>控除額合計</th>
+            <th>子ども子育て拠出金</th>
+            <th>会社負担</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="selectedType === 'salary'">
+            <td>合計</td>
+            <td>{{ summary.salaryTotal | number }}</td>
+            <td>{{ summary.healthInsurance | number }}</td>
+            <td>{{ summary.pension | number }}</td>
+            <td>{{ summary.deductionTotal | number }}</td>
+            <td>{{ summary.childcare | number }}</td>
+            <td>{{ summary.companyShare | number }}</td>
+          </tr>
+          <tr *ngIf="selectedType === 'bonus'">
+            <td>合計</td>
+            <td>{{ summary.bonus | number }}</td>
+            <td>{{ summary.standardBonus | number }}</td>
+            <td>{{ summary.annualBonusTotal | number }}</td>
+            <td>{{ summary.healthInsurance | number }}</td>
+            <td>{{ summary.pension | number }}</td>
+            <td>{{ summary.deductionTotal | number }}</td>
+            <td>{{ summary.childcare | number }}</td>
+            <td>{{ summary.companyShare | number }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <div class="button-container">
       <button type="button" routerLink="/insurance-form">社会保険料登録</button>
-      <button type="button" routerLink="/insurance-detail">従業員詳細</button>
+      <button type="button" routerLink="/insurance-detail">従業員毎の保険料</button>
       <button type="button" (click)="exportCsv()">CSV出力</button>
     </div>
   </form>

@@ -101,7 +101,7 @@
                             健康保険料率: {{ row.healthRate }}%<span *ngIf="row.careInsurance === '〇' && row.careRate && row.careRate > 0">（介護保険料率: {{ row.careRate }}% も加算）</span><br>
                             厚生年金保険料率: {{ row.pensionRate }}%<br>
                             子ども子育て拠出金率: {{ row.childcareRate }}%<br>
-                            保険料総額: {{ row.insuranceTotal | number:'1.0-2' }}円（健康保険料＋厚生年金保険料＋子ども子育て拠出金）<br>
+                            保険料総額: {{ row.insuranceTotal | number:'1.0-2' }}円（健康保険料＋厚生年金保険料）<br>
                             健康保険料: {{ row.healthInsurance }}円（標準報酬月額×料率）<br>
                             健康保険料控除額: {{ row.healthInsuranceDeduction }}円（健康保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
                             厚生年金保険料: {{ row.pension }}円（標準報酬月額×料率）<br>
@@ -202,14 +202,14 @@
                           健康保険料率: {{ row.healthRate }}%<span *ngIf="row.careInsurance === '〇' && row.careRate && row.careRate > 0">（介護保険料率: {{ row.careRate }}% も加算）</span><br>
                           厚生年金保険料率: {{ row.pensionRate }}%<br>
                           子ども子育て拠出金率: {{ row.childcareRate }}%<br>
-                          保険料総額: {{ row.insuranceTotal | number:'1.0-2' }}円（健康保険料＋厚生年金保険料＋子ども子育て拠出金）<br>
+                          保険料総額: {{ row.insuranceTotal | number:'1.0-2' }}円（健康保険料＋厚生年金保険料）<br>
                           健康保険料: {{ row.healthInsurance }}円（標準賞与額×料率）<br>
                           健康保険料控除額: {{ row.healthInsuranceDeduction }}円（健康保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
                           厚生年金保険料: {{ row.pension }}円（標準賞与額×料率）<br>
                           厚生年金保険料控除額: {{ row.pensionDeduction }}円（厚生年金保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
                           控除額合計: {{ row.deductionTotal }}円<br>
                           子ども子育て拠出金: {{ row.childcare }}円（標準賞与額×子ども子育て拠出金率）<br>
-                          会社負担: {{ row.companyShare }}円（保険料総額－労働者負担額＋子ども子育て拠出金）
+                          会社負担: {{ row.companyShare }}円（保険料総額－控除額合計＋子ども子育て拠出金）
                         </div>
                         <div style="margin-top:0.5em;">
                           <strong>適用された免除特例:</strong>

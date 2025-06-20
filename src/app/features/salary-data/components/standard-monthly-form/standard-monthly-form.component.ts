@@ -619,7 +619,7 @@ export class StandardMonthlyFormComponent implements OnInit {
   }
 
   // 算定ボタン押下時
-  onStandardMonthlyDecision() {
+  async onStandardMonthlyDecision() {
     this.isConfirmed = true;
     const officeId = this.selectedOfficeId || this.getOfficeIdForSelectedEmployee();
     if (!this.selectedEmployeeId || !officeId) return;
@@ -629,6 +629,31 @@ export class StandardMonthlyFormComponent implements OnInit {
     const applyYm = `${this.startYear}-${String(this.startMonth).padStart(2, '0')}`;
     const health = this.judgeStandardMonthlyGrade(avg, 'health', insuranceType, applyYm);
     const pension = this.judgeStandardMonthlyGrade(avg, 'pension', insuranceType, applyYm);
+
+    // entry以外の登録時、算定根拠の各月で0円や8.8万円未満の月がある場合にアラート
+    if (this.decisionType !== 'entry') {
+      const zeroMonths: string[] = [];
+      const lowMonths: string[] = [];
+      for (const row of this.calculationRows) {
+        if (!row.excluded) {
+          const ym = `${row.year}年${row.month}月`;
+          const sum = Number(row.sum || 0);
+          if (sum === 0) {
+            zeroMonths.push(ym);
+          } else if (sum > 0 && sum < 88000) {
+            lowMonths.push(ym);
+          }
+        }
+      }
+      if (zeroMonths.length > 0) {
+        const msg = zeroMonths.map(m => `${m}の算定金額が0円`).join('\n') + '\nこのまま算定を続けてよろしいですか？';
+        if (!confirm(msg)) return;
+      }
+      if (lowMonths.length > 0) {
+        const msg = lowMonths.map(m => `${m}の給与情報が過少な可能性があります。`).join('\n') + '\nこのまま算定を続けてよろしいですか？';
+        if (!confirm(msg)) return;
+      }
+    }
 
     const current = this.currentDecision;
     const currentHealthGrade = current ? current.healthGrade : '';
@@ -1218,10 +1243,6 @@ export class StandardMonthlyFormComponent implements OnInit {
     this.resultList.splice(index, 1);
   }
 
-  
-
-  
-
   // 随時改定：適用開始月変更時に算出根拠月を自動設定
   onOccasionalStartMonthChange() {
     // 適用開始月の前3ヶ月を算出
@@ -1261,7 +1282,6 @@ export class StandardMonthlyFormComponent implements OnInit {
     this.router.navigate(['/manage-standard-monthly']);
   }
 
- 
   onOfficeChange() {
     // 事業所変更時に従業員選択をリセット
     this.selectedEmployeeId = '';
@@ -1345,4 +1365,7 @@ export class StandardMonthlyFormComponent implements OnInit {
   }
 }
 
+  
+
+  
 

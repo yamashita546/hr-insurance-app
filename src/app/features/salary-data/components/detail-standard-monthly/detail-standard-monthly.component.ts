@@ -47,7 +47,7 @@ export class DetailStandardMonthlyComponent implements OnInit {
         .map(d => ({ ...d, companyKey: this.companyKey }))
         .sort((a, b) => b.applyYearMonth.localeCompare(a.applyYearMonth));
       // 履歴も取得（officeIdは検索条件から除外）
-      this.historyList = await this.firestoreService.getStandardMonthlyDecisionHistory(this.companyKey, this.employeeId, '');
+      this.historyList = await this.firestoreService.getStandardMonthlyDecisionHistory(this.companyKey, this.employeeId);
       // 適用年月で現在・今後を正しく判定
       const today = new Date();
       const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;

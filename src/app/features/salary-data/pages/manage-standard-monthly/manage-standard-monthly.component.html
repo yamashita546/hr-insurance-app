@@ -17,7 +17,7 @@
       <label class="selector-label">従業員
         <select class="selector-select" [(ngModel)]="selectedEmployeeId" (change)="onEmployeeFilterChange()">
           <option value="">全て</option>
-          <option *ngFor="let emp of employees" [value]="emp.employeeId">{{ emp.employeeId }} {{ emp.lastName }} {{ emp.firstName }}</option>
+          <option *ngFor="let emp of filteredEmployeesForSelector" [value]="emp.employeeId">{{ emp.employeeId }} {{ emp.lastName }} {{ emp.firstName }}</option>
         </select>
       </label>
     </div>

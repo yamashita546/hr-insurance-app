@@ -418,13 +418,12 @@ export class FirestoreService {
   }
 
   // 履歴取得
-  async getStandardMonthlyDecisionHistory(companyKey: string, employeeId: string, officeId: string): Promise<any[]> {
+  async getStandardMonthlyDecisionHistory(companyKey: string, employeeId: string): Promise<any[]> {
     const colRef = collection(this.firestore, 'standardMonthlyDecisionHistory');
     const q_ = query(
       colRef,
       where('companyKey', '==', companyKey),
-      where('employeeId', '==', employeeId),
-      where('officeId', '==', officeId)
+      where('employeeId', '==', employeeId)
     );
     const snap = await getDocs(q_);
     return snap.docs

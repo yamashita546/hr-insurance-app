@@ -223,6 +223,16 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
       }
     }
 
+    // パート・アルバイトの社会保険適用時の確認アラート
+    const isPartOrArubaito = this.editEmployee.employeeType === 'parttime' || this.editEmployee.employeeType === 'parttimejob';
+    const healthApplicable = this.editEmployee.healthInsuranceStatus?.isApplicable;
+    const pensionApplicable = this.editEmployee.pensionStatus?.isApplicable;
+    if (isPartOrArubaito && (healthApplicable || pensionApplicable)) {
+      const msg = `短時間労働者の社会保険加入を適用しようとしています。\n条件に適合した社員であるかどうかもう一度ご確認ください。\n\n週の労働時間と月の労働日数が、同じ会社の正社員の4分の3以上ありますか？\n\nもしくは以下のすべてに当てはまりますか？\n\n・従業員数が51人以上の会社である\n・週の労働時間が20時間以上\n・月額の賃金が88,000円以上（※残業代、賞与、交通費は除いて計算）\n・雇用期間が2ヶ月を超える見込み\n・学生ではない`;
+      const ok = window.confirm(msg);
+      if (!ok) return;
+    }
+
     // バリデーションエラーがあれば処理を中断
     if (this.validationErrors.length > 0) {
       return;

@@ -214,4 +214,17 @@ export class ManageStandardMonthlyComponent implements OnInit {
     }
     return list;
   }
+
+  // 事業所に応じた従業員リスト（ID+氏名でソート）
+  get filteredEmployeesForSelector() {
+    let list = this.employees;
+    if (this.selectedOfficeId) {
+      list = list.filter(emp => emp.officeId === this.selectedOfficeId);
+    }
+    return list.sort((a, b) => {
+      const aKey = `${a.employeeId}${a.lastName}${a.firstName}`;
+      const bKey = `${b.employeeId}${b.lastName}${b.firstName}`;
+      return aKey.localeCompare(bKey, 'ja');
+    });
+  }
 }

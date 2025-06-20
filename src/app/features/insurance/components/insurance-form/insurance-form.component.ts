@@ -441,14 +441,14 @@ export class InsuranceFormComponent implements OnInit {
 
             childcareVal = InsuranceCalculator.calcChildcare(pensionBaseAmount, childcareRate, pensionApplicable);
 
-            insuranceTotal = healthTotal + pensionTotal + childcareVal;
+            insuranceTotal = healthTotal + pensionTotal;
             healthInsurance = this.formatDecimal(healthTotal);
             healthInsuranceDeduction = healthDeduct.toLocaleString();
             pension = this.formatDecimal(pensionTotal);
             pensionDeduction = pensionDeduct.toLocaleString();
             childcare = this.formatDecimal(childcareVal);
             deductionTotal = (healthDeduct + pensionDeduct).toLocaleString();
-            companyShare = this.formatDecimal(InsuranceCalculator.calcCompanyShare(healthCompany, pensionCompany, childcareVal));
+            companyShare = this.formatDecimal(insuranceTotal - (healthDeduct + pensionDeduct) + childcareVal);
             // 都道府県名
             const office = this.offices.find(o => o.id === emp.officeId);
             if (office && office.insurancePrefecture) {
@@ -494,8 +494,8 @@ export class InsuranceFormComponent implements OnInit {
             insuranceTotal = 0;
           } else {
             deductionTotal = (healthDeduct + pensionDeduct).toLocaleString();
-            companyShare = this.formatDecimal(InsuranceCalculator.calcCompanyShare(healthCompany, pensionCompany, childcareVal));
-            insuranceTotal = healthTotal + pensionTotal + childcareVal;
+            companyShare = this.formatDecimal(insuranceTotal - (healthDeduct + pensionDeduct) + childcareVal);
+            insuranceTotal = healthTotal + pensionTotal;
           }
           // ここで免除特例を取得
           const appliedExemptions = this.getAppliedExemptions(emp, this.selectedYear, this.selectedMonth);

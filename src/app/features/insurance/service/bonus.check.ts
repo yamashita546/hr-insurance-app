@@ -226,11 +226,11 @@ export function generateBonusPreviewList({
       // 控除額合計
       const deductionSum = healthDeduct + pensionDeduct;
       deductionTotal = deductionSum.toLocaleString();
-      // 会社負担
-      const companyShareVal = deductionSum + childcareVal;
+      // 会社負担（保険料総額－控除額合計＋子ども子育て拠出金）
+      const companyShareVal = (health + pensionVal) - deductionSum + childcareVal;
       companyShare = formatDecimal(companyShareVal);
       // 保険料総額
-      insuranceTotal = health + pensionVal + childcareVal;
+      insuranceTotal = health + pensionVal;
     }
     // 年齢による資格喪失を金額に反映
     if (!healthApplicable) {

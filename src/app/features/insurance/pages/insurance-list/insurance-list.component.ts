@@ -53,12 +53,12 @@ export class InsuranceListComponent implements OnInit {
     // console.log('【DEBUG】resultList:', this.resultList);
     // 給与・賞与で合計するフィールドを分ける
     const salaryFields = [
-      'salaryTotal', 'healthInsurance', 'healthInsuranceDeduction', 'pension',
+      'salaryTotal', 'healthInsurance', 'healthInsuranceDeduction', 'careInsuranceMonthly', 'careInsuranceDeduction', 'pension',
       'pensionDeduction', 'deductionTotal', 'childcare', 'companyShare'
     ];
     const bonusFields = [
       'bonus', 'standardBonus', 'annualBonusTotal', 'healthInsurance',
-      'healthInsuranceDeduction', 'pension', 'pensionDeduction',
+      'healthInsuranceDeduction', 'careInsuranceMonthly', 'careInsuranceDeduction', 'pension', 'pensionDeduction',
       'deductionTotal', 'childcare', 'companyShare'
     ];
     const fields = this.selectedType === 'salary' ? salaryFields : bonusFields;
@@ -176,6 +176,8 @@ export class InsuranceListComponent implements OnInit {
           monthly: format((row as any).healthMonthly),
           healthInsurance: format((row as any).healthInsurance),
           healthInsuranceDeduction: format((row as any).healthInsuranceDeduction),
+          careInsuranceMonthly: format((row as any).careInsuranceMonthly),
+          careInsuranceDeduction: format((row as any).careInsuranceDeduction),
           pension: format((row as any).pension),
           pensionDeduction: format((row as any).pensionDeduction),
           deductionTotal: format((row as any).deductionTotal),
@@ -200,6 +202,8 @@ export class InsuranceListComponent implements OnInit {
           annualBonusTotal: format(annualBonusTotal),
           healthInsurance: format((row as any).healthInsurance),
           healthInsuranceDeduction: format((row as any).healthInsuranceDeduction),
+          careInsuranceMonthly: format((row as any).careInsuranceMonthly),
+          careInsuranceDeduction: format((row as any).careInsuranceDeduction),
           pension: format((row as any).pension),
           pensionDeduction: format((row as any).pensionDeduction),
           deductionTotal: format((row as any).deductionTotal),
@@ -232,6 +236,8 @@ export class InsuranceListComponent implements OnInit {
         '標準報酬月額',
         '健康保険料',
         '健康保険料控除額',
+        '介護保険料',
+        '介護保険料控除額',
         '厚生年金保険料',
         '厚生年金保険料控除額',
         '控除額合計',
@@ -245,6 +251,8 @@ export class InsuranceListComponent implements OnInit {
         '年度賞与合計',
         '健康保険料',
         '健康保険料控除額',
+        '介護保険料',
+        '介護保険料控除額',
         '厚生年金保険料',
         '厚生年金保険料控除額',
         '控除額合計',
@@ -280,6 +288,8 @@ export class InsuranceListComponent implements OnInit {
           row.monthly,
           row.healthInsurance,
           row.healthInsuranceDeduction,
+          row.careInsuranceMonthly,
+          row.careInsuranceDeduction,
           row.pension,
           row.pensionDeduction,
           row.deductionTotal,
@@ -293,6 +303,8 @@ export class InsuranceListComponent implements OnInit {
           row.annualBonusTotal,
           row.healthInsurance,
           row.healthInsuranceDeduction,
+          row.careInsuranceMonthly,
+          row.careInsuranceDeduction,
           row.pension,
           row.pensionDeduction,
           row.deductionTotal,

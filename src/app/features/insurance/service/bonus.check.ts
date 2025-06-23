@@ -185,6 +185,8 @@ export function generateBonusPreviewList({
     let deductionTotal = 'ー';
     let companyShare = 'ー';
     let insuranceTotal = 0;
+    let careInsuranceMonthly = 0;
+    let careInsuranceDeduction = 0;
     let pensionMonthly = std && std.pensionMonthly !== undefined && std.pensionMonthly !== null
       ? Number(std.pensionMonthly)
       : (std ? Number(std.healthMonthly) : null);
@@ -205,10 +207,20 @@ export function generateBonusPreviewList({
       // 料率
       let healthRate = rate.healthInsuranceRate;
       let careRate = isCare && rate.careInsuranceRate ? rate.careInsuranceRate : 0;
-      let totalHealthRate = healthRate + careRate;
-      // 健康保険料
-      const health = targetBonus * (totalHealthRate / 100);
-      healthInsurance = formatDecimal(health);
+      // 健康保険料（端数処理なし）
+      const healthInsuranceAmount = targetBonus * (healthRate / 100);
+      // 介護保険料（端数処理なし）
+      const careInsuranceAmount = targetBonus * (careRate / 100);
+      // 健康保険料控除額（ここで端数処理）
+      const healthDeduct = roundSocialInsurance(healthInsuranceAmount / 2);
+      // 介護保険料控除額（ここで端数処理）
+      const careDeduct = roundSocialInsurance(careInsuranceAmount / 2);
+      // 合計
+      const health = healthInsuranceAmount + careInsuranceAmount;
+      healthInsurance = formatDecimal(healthInsuranceAmount);
+      careInsuranceMonthly = careInsuranceAmount;
+      healthInsuranceDeduction = healthDeduct.toLocaleString();
+      careInsuranceDeduction = careDeduct;
       // 厚生年金保険料（標準賞与額は150万円上限）
       const pensionTarget = Math.min(standardBonus ?? 0, 1500000);
       const pensionVal = pensionTarget * (rate.employeePensionInsuranceRate / 100);
@@ -217,14 +229,11 @@ export function generateBonusPreviewList({
       const childcareRate = Number(ChildcareInsuranceRate.CHILDCARE_INSURANCE_RATE);
       const childcareVal = pensionTarget * (childcareRate / 100);
       childcare = formatDecimal(childcareVal);
-      // 健康保険料控除額
-      const healthDeduct = roundSocialInsurance(health / 2);
-      healthInsuranceDeduction = healthDeduct.toLocaleString();
       // 厚生年金保険料控除額
       const pensionDeduct = roundSocialInsurance(pensionVal / 2);
       pensionDeduction = pensionDeduct.toLocaleString();
       // 控除額合計
-      const deductionSum = healthDeduct + pensionDeduct;
+      const deductionSum = healthDeduct + careDeduct + pensionDeduct;
       deductionTotal = deductionSum.toLocaleString();
       // 会社負担（保険料総額－控除額合計＋子ども子育て拠出金）
       const companyShareVal = (health + pensionVal) - deductionSum + childcareVal;
@@ -308,6 +317,8 @@ export function generateBonusPreviewList({
       annualBonusTotalBefore: annualBonusTotalBeforeDisplay,
       healthInsurance,
       healthInsuranceDeduction,
+      careInsuranceMonthly,
+      careInsuranceDeduction,
       pension,
       pensionDeduction,
       deductionTotal,

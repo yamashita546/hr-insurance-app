@@ -3,11 +3,13 @@ import { Auth, onAuthStateChanged, signOut, User as FirebaseUser, GoogleAuthProv
 import { Firestore, doc, getDoc, updateDoc, collection, query, where, getDocs, setDoc, deleteDoc } from '@angular/fire/firestore';
 import { BehaviorSubject } from 'rxjs';
 import { AppUser } from '../models/user.model';
+import { Router } from '@angular/router';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private auth = inject(Auth);
   private firestore = inject(Firestore);
+  private router = inject(Router);
   private appUserSubject = new BehaviorSubject<AppUser | null>(null);
   user$ = this.appUserSubject.asObservable();
 
@@ -34,8 +36,13 @@ export class AuthService {
     return this.appUserSubject.value;
   }
 
-  logout() {
-    return signOut(this.auth);
+  async logout(message?: string) {
+    await signOut(this.auth);
+    this.appUserSubject.next(null);
+    await this.router.navigate(['/login']);
+    if (message) {
+      alert(message);
+    }
   }
 
   // usersコレクションからAppUserを取得

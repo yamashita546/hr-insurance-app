@@ -1,5 +1,9 @@
+body, .insurance-detail-root, .history-table, .employee-info, .exemption-info {
+  font-size: 0.85em;
+}
+
 h2 {
-  font-size: 1.6em;
+  font-size: 1.1em;
   margin-bottom: 1.2em;
   color: #333;
   border-bottom: 2px solid #1976d2;
@@ -68,7 +72,7 @@ h2 {
 
 .history-table h3 {
   color: #1976d2;
-  font-size: 1.2em;
+  font-size: 1em;
   margin-top: 0;
   margin-bottom: 1em;
   border-left: 4px solid #1976d2;
@@ -79,12 +83,13 @@ h2 {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 0.5em;
-  font-size: 0.9em;
+  font-size: 0.8em;
+  table-layout: auto;
 }
 
 .history-table th, .history-table td {
   border: 1px solid #e9ecef;
-  padding: 0.5em 0.5em;
+  padding: 0.3em 0.3em;
   text-align: center;
   word-break: keep-all;
   white-space: nowrap;
@@ -127,7 +132,7 @@ select:focus {
     padding: 1em;
   }
   .history-table table, .history-table th, .history-table td {
-    font-size: 0.82em;
+    font-size: 0.7em;
   }
   select {
     width: 100%;

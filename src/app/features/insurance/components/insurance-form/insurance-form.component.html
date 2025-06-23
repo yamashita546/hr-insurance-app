@@ -58,6 +58,8 @@
                       <th>標準報酬<br>月額</th>
                       <th>健康保険料</th>
                       <th>健康保険料<br>控除額</th>
+                      <th>介護保険料</th>
+                      <th>介護保険料<br>控除額</th>
                       <th>厚生年金保険料</th>
                       <th>厚生年金保険料<br>控除額</th>
                       <th>控除額合計</th>
@@ -78,6 +80,8 @@
                       <td>{{ row.monthly }}円<br>（{{ row.pensionMonthly !== undefined && row.pensionMonthly !== null ? row.pensionMonthly : row.monthly }}円）</td>
                       <td>{{ row.healthInsurance }}</td>
                       <td>{{ row.healthInsuranceDeduction }}</td>
+                      <td>{{ row.careInsuranceMonthly }}</td>
+                      <td>{{ row.careInsuranceDeduction }}</td>
                       <td>{{ row.pension }}</td>
                       <td>{{ row.pensionDeduction }}</td>
                       <td>{{ row.deductionTotal }}</td>
@@ -98,12 +102,15 @@
                           <div style="margin-top:0.5em;">
                             <strong>控除・会社負担計算根拠:</strong><br>
                             適用都道府県: {{ row.prefectureName || 'ー' }}<br>
-                            健康保険料率: {{ row.healthRate }}%<span *ngIf="row.careInsurance === '〇' && row.careRate && row.careRate > 0">（介護保険料率: {{ row.careRate }}% も加算）</span><br>
+                            健康保険料率: {{ row.healthRate }}%<br>
+                            介護保険料率: {{ row.careRate }}%<br>
                             厚生年金保険料率: {{ row.pensionRate }}%<br>
                             子ども子育て拠出金率: {{ row.childcareRate }}%<br>
-                            保険料総額: {{ row.insuranceTotal | number:'1.0-2' }}円（健康保険料＋厚生年金保険料）<br>
-                            健康保険料: {{ row.healthInsurance }}円（標準報酬月額×料率）<br>
+                            保険料総額: {{ row.insuranceTotal | number:'1.0-2' }}円（健康保険料＋介護保険料＋厚生年金保険料）<br>
+                            健康保険料: {{ row.healthInsurance }}円（標準報酬月額×健康保険料率）<br>
                             健康保険料控除額: {{ row.healthInsuranceDeduction }}円（健康保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
+                            介護保険料: {{ row.careInsuranceMonthly }}円（標準報酬月額×介護保険料率）<br>
+                            介護保険料控除額: {{ row.careInsuranceDeduction }}円（介護保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
                             厚生年金保険料: {{ row.pension }}円（標準報酬月額×料率）<br>
                             厚生年金保険料控除額: {{ row.pensionDeduction }}円（厚生年金保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
                             控除額合計: {{ row.deductionTotal }}円<br>
@@ -135,12 +142,13 @@
                     <th>介護保険適用</th>
                     <th>賞与支給額</th>
                     <th>賞与支給日</th>
-                    <th>標準賞与額</th> <!-- 1000円未満切り捨て -->
-                    <th>累計賞与額</th>
+                    <th>標準賞与額</th>
                     <th>年度賞与合計</th>
                     <th>累積賞与差額</th>
                     <th>健康保険料</th>
                     <th>健康保険料控除額</th>
+                    <th>介護保険料</th>
+                    <th>介護保険料控除額</th>
                     <th>厚生年金保険料</th>
                     <th>厚生年金保険料控除額</th>
                     <th>控除額合計</th>
@@ -159,11 +167,12 @@
                     <td>{{ row.bonus}}</td>
                     <td>{{ row.bonusDate }}</td>
                     <td>{{ row.standardBonus }}</td>
-                    <td>{{ row.annualBonusTotalBefore }}</td>
                     <td>{{ row.annualBonusTotal }}</td>
                     <td>{{ row.bonusDiff }}</td>
                     <td>{{ row.healthInsurance }}</td>
                     <td>{{ row.healthInsuranceDeduction }}</td>
+                    <td>{{ row.careInsuranceMonthly || 'ー' }}</td>
+                    <td>{{ row.careInsuranceDeduction || 'ー' }}</td>
                     <td>{{ row.pension }}</td>
                     <td>{{ row.pensionDeduction }}</td>
                     <td>{{ row.deductionTotal }}</td>
@@ -199,12 +208,15 @@
                         <div style="margin-top:0.5em;">
                           <strong>控除・会社負担計算根拠:</strong><br>
                           適用都道府県: {{ row.prefectureName || 'ー' }}<br>
-                          健康保険料率: {{ row.healthRate }}%<span *ngIf="row.careInsurance === '〇' && row.careRate && row.careRate > 0">（介護保険料率: {{ row.careRate }}% も加算）</span><br>
+                          健康保険料率: {{ row.healthRate }}%<br>
+                          介護保険料率: {{ row.careRate }}%<br>
                           厚生年金保険料率: {{ row.pensionRate }}%<br>
                           子ども子育て拠出金率: {{ row.childcareRate }}%<br>
-                          保険料総額: {{ row.insuranceTotal | number:'1.0-2' }}円（健康保険料＋厚生年金保険料）<br>
-                          健康保険料: {{ row.healthInsurance }}円（標準賞与額×料率）<br>
+                          保険料総額: {{ row.insuranceTotal | number:'1.0-2' }}円（健康保険料＋介護保険料＋厚生年金保険料）<br>
+                          健康保険料: {{ row.healthInsurance }}円（標準賞与額×健康保険料率）<br>
                           健康保険料控除額: {{ row.healthInsuranceDeduction }}円（健康保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
+                          介護保険料: {{ row.careInsuranceMonthly || 'ー' }}円（標準賞与額×介護保険料率）<br>
+                          介護保険料控除額: {{ row.careInsuranceDeduction || 'ー' }}円（介護保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
                           厚生年金保険料: {{ row.pension }}円（標準賞与額×料率）<br>
                           厚生年金保険料控除額: {{ row.pensionDeduction }}円（厚生年金保険料÷2（0.50円以下切り捨て、0.51円以上切り上げ））<br>
                           控除額合計: {{ row.deductionTotal }}円<br>

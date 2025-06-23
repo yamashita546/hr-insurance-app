@@ -413,6 +413,8 @@ export class InsuranceFormComponent implements OnInit {
           let healthCompany = 0;
           let pensionCompany = 0;
           let isCare = false;
+          let careInsuranceMonthly = 0;
+          let careInsuranceDeduction = 0;
 
 
           // 必須項目の未入力チェック
@@ -432,13 +434,22 @@ export class InsuranceFormComponent implements OnInit {
 
             healthRate = rate.healthInsuranceRate || 0;
             careRate = careInsuranceFlag && rate.careInsuranceRate ? rate.careInsuranceRate : 0;
-            let totalHealthRate = healthRate + careRate;
             pensionRate = rate.employeePensionInsuranceRate;
             childcareRate = Number(ChildcareInsuranceRate.CHILDCARE_INSURANCE_RATE);
 
-            healthTotal = InsuranceCalculator.calcHealthInsurance(std.healthMonthly, totalHealthRate, healthApplicable);
-            healthDeduct = InsuranceCalculator.calcHealthInsuranceDeduction(healthTotal, healthApplicable);
-            healthCompany = healthApplicable ? healthTotal - healthDeduct : 0;
+            // 健康保険料（端数処理なし）
+            let healthInsuranceAmount = InsuranceCalculator.calcHealthInsurance(std.healthMonthly, healthRate, healthApplicable);
+            // 介護保険料（端数処理なし）
+            let careInsuranceAmount = InsuranceCalculator.calcHealthInsurance(std.healthMonthly, careRate, careInsuranceFlag);
+            // 合計（従来のhealthTotal）は健康＋介護の合算
+            healthTotal = healthInsuranceAmount + careInsuranceAmount;
+
+            // 健康保険料控除額（ここで端数処理）
+            healthDeduct = this.roundSocialInsurance(InsuranceCalculator.calcHealthInsuranceDeduction(healthInsuranceAmount, healthApplicable));
+            // 介護保険料控除額（ここで端数処理）
+            careInsuranceDeduction = this.roundSocialInsurance(InsuranceCalculator.calcHealthInsuranceDeduction(careInsuranceAmount, careInsuranceFlag));
+
+            healthCompany = healthApplicable ? healthTotal - (healthDeduct + careInsuranceDeduction) : 0;
 
             const pensionBaseAmount = std.pensionMonthly !== undefined && std.pensionMonthly !== null ? std.pensionMonthly : std.healthMonthly;
             pensionTotal = InsuranceCalculator.calcPensionInsurance(pensionBaseAmount, pensionRate, pensionApplicable);
@@ -448,13 +459,15 @@ export class InsuranceFormComponent implements OnInit {
             childcareVal = InsuranceCalculator.calcChildcare(pensionBaseAmount, childcareRate, pensionApplicable);
 
             insuranceTotal = healthTotal + pensionTotal;
-            healthInsurance = this.formatDecimal(healthTotal);
+            healthInsurance = this.formatDecimal(healthInsuranceAmount);
+            careInsuranceMonthly = careInsuranceAmount;
             healthInsuranceDeduction = healthDeduct.toLocaleString();
+            careInsuranceDeduction = careInsuranceDeduction;
             pension = this.formatDecimal(pensionTotal);
             pensionDeduction = pensionDeduct.toLocaleString();
             childcare = this.formatDecimal(childcareVal);
-            deductionTotal = (healthDeduct + pensionDeduct).toLocaleString();
-            companyShare = this.formatDecimal(insuranceTotal - (healthDeduct + pensionDeduct) + childcareVal);
+            deductionTotal = (healthDeduct + careInsuranceDeduction + pensionDeduct).toLocaleString();
+            companyShare = this.formatDecimal(insuranceTotal - (healthDeduct + careInsuranceDeduction + pensionDeduct) + childcareVal);
             // 都道府県名
             const office = this.offices.find(o => o.id === emp.officeId);
             if (office && office.insurancePrefecture) {
@@ -499,8 +512,8 @@ export class InsuranceFormComponent implements OnInit {
             childcare = '0';
             insuranceTotal = 0;
           } else {
-            deductionTotal = (healthDeduct + pensionDeduct).toLocaleString();
-            companyShare = this.formatDecimal(insuranceTotal - (healthDeduct + pensionDeduct) + childcareVal);
+            deductionTotal = (healthDeduct + careInsuranceDeduction + pensionDeduct).toLocaleString();
+            companyShare = this.formatDecimal(insuranceTotal - (healthDeduct + careInsuranceDeduction + pensionDeduct) + childcareVal);
             insuranceTotal = healthTotal + pensionTotal;
           }
           // ここで免除特例を取得
@@ -548,6 +561,8 @@ export class InsuranceFormComponent implements OnInit {
             childcareRate,
             insuranceTotal,
             appliedExemptions,
+            careInsuranceMonthly,
+            careInsuranceDeduction,
           };
         });
     } else if (this.selectedType === 'bonus') {
@@ -643,6 +658,8 @@ export class InsuranceFormComponent implements OnInit {
           deductionTotal: Number(row.deductionTotal.toString().replace(/,/g, '')),
           childcare: Number(row.childcare.toString().replace(/,/g, '')),
           companyShare: Number(row.companyShare.toString().replace(/,/g, '')),
+          careInsuranceMonthly: row.careInsuranceMonthly,
+          careInsuranceDeduction: row.careInsuranceDeduction,
         };
         const docId = `${this.companyKey}_${row.officeId}_${row.employeeId}_${applyYearMonth}`;
         try {
@@ -699,6 +716,8 @@ export class InsuranceFormComponent implements OnInit {
           annualBonusTotal: row.annualBonusTotalValue ?? 0,
           annualBonusTotalBefore: row.annualBonusTotalBeforeValue ?? 0,
           bonusDiff: row.bonusDiff ?? 0,
+          careInsuranceMonthly: row.careInsuranceMonthly,
+          careInsuranceDeduction: row.careInsuranceDeduction,
         };
         const docId = `${this.companyKey}_${row.officeId}_${row.employeeId}_${applyYearMonth}`;
         // console.log('[保存対象賞与データ]', calculation);

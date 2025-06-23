@@ -11,6 +11,8 @@ export interface InsuranceSalaryCalculation {
   salaryTotal: number;
   salaryAvg: number;
   careInsurance: boolean;
+  careInsuranceMonthly: number;
+  careInsuranceDeduction: number;
   healthInsurance: number;
   healthInsuranceDeduction: number;
   pension: number;
@@ -35,6 +37,8 @@ export interface InsuranceBonusCalculation {
   bonusTotal: number;
   bonusAvg: number;
   careInsurance: boolean;
+  careInsuranceMonthly: number;
+  careInsuranceDeduction: number;
   healthInsurance: number;
   healthInsuranceDeduction: number;
   pension: number;

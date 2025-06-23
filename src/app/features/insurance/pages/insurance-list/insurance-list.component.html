@@ -33,6 +33,9 @@
             <th>合計</th>
             <th>当月給与総支給</th>
             <th>健康保険料</th>
+            <th>健康保険料控除額</th>
+            <th>介護保険料</th>
+            <th>介護保険料控除額</th>
             <th>厚生年金保険料</th>
             <th>控除額合計</th>
             <th>子ども子育て拠出金</th>
@@ -44,6 +47,9 @@
             <th>標準賞与額</th>
             <th>年度賞与合計</th>
             <th>健康保険料</th>
+            <th>健康保険料控除額</th>
+            <th>介護保険料</th>
+            <th>介護保険料控除額</th>
             <th>厚生年金保険料</th>
             <th>控除額合計</th>
             <th>子ども子育て拠出金</th>
@@ -55,6 +61,9 @@
             <td>合計</td>
             <td>{{ summary.salaryTotal | number }}</td>
             <td>{{ summary.healthInsurance | number }}</td>
+            <td>{{ summary.healthInsuranceDeduction | number }}</td>
+            <td>{{ summary.careInsuranceMonthly | number }}</td>
+            <td>{{ summary.careInsuranceDeduction | number }}</td>
             <td>{{ summary.pension | number }}</td>
             <td>{{ summary.deductionTotal | number }}</td>
             <td>{{ summary.childcare | number }}</td>
@@ -66,6 +75,9 @@
             <td>{{ summary.standardBonus | number }}</td>
             <td>{{ summary.annualBonusTotal | number }}</td>
             <td>{{ summary.healthInsurance | number }}</td>
+            <td>{{ summary.healthInsuranceDeduction | number }}</td>
+            <td>{{ summary.careInsuranceMonthly | number }}</td>
+            <td>{{ summary.careInsuranceDeduction | number }}</td>
             <td>{{ summary.pension | number }}</td>
             <td>{{ summary.deductionTotal | number }}</td>
             <td>{{ summary.childcare | number }}</td>
@@ -94,6 +106,8 @@
           <th (click)="sortBy('monthly')" style="cursor:pointer">標準報酬<br>月額<span *ngIf="sortColumn==='monthly'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
           <th (click)="sortBy('healthInsurance')" style="cursor:pointer">健康保険料<span *ngIf="sortColumn==='healthInsurance'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
           <th (click)="sortBy('healthInsuranceDeduction')" style="cursor:pointer">健康保険料<br>控除額<span *ngIf="sortColumn==='healthInsuranceDeduction'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('careInsuranceMonthly')" style="cursor:pointer">介護保険料<span *ngIf="sortColumn==='careInsuranceMonthly'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('careInsuranceDeduction')" style="cursor:pointer">介護保険料<br>控除額<span *ngIf="sortColumn==='careInsuranceDeduction'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
           <th (click)="sortBy('pension')" style="cursor:pointer">厚生年金保険料<span *ngIf="sortColumn==='pension'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
           <th (click)="sortBy('pensionDeduction')" style="cursor:pointer">厚生年金保険料<br>控除額<span *ngIf="sortColumn==='pensionDeduction'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
           <th (click)="sortBy('deductionTotal')" style="cursor:pointer">控除額合計<span *ngIf="sortColumn==='deductionTotal'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
@@ -110,6 +124,8 @@
           <th (click)="sortBy('annualBonusTotal')" style="cursor:pointer">年度賞与<br>合計<span *ngIf="sortColumn==='annualBonusTotal'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
           <th (click)="sortBy('healthInsurance')" style="cursor:pointer">健康保険料<span *ngIf="sortColumn==='healthInsurance'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
           <th (click)="sortBy('healthInsuranceDeduction')" style="cursor:pointer">健康保険料<br>控除額<span *ngIf="sortColumn==='healthInsuranceDeduction'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('careInsuranceMonthly')" style="cursor:pointer">介護保険料<span *ngIf="sortColumn==='careInsuranceMonthly'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
+          <th (click)="sortBy('careInsuranceDeduction')" style="cursor:pointer">介護保険料<br>控除額<span *ngIf="sortColumn==='careInsuranceDeduction'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
           <th (click)="sortBy('pension')" style="cursor:pointer">厚生年金保険料<span *ngIf="sortColumn==='pension'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
           <th (click)="sortBy('pensionDeduction')" style="cursor:pointer">厚生年金保険料<br>控除額<span *ngIf="sortColumn==='pensionDeduction'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
           <th (click)="sortBy('deductionTotal')" style="cursor:pointer">控除額合計<span *ngIf="sortColumn==='deductionTotal'">{{ sortDirection==='asc'?'▲':'▼' }}</span></th>
@@ -129,6 +145,8 @@
             <td>{{ row.monthly }}</td>
             <td>{{ row.healthInsurance }}</td>
             <td>{{ row.healthInsuranceDeduction }}</td>
+            <td>{{ row.careInsuranceMonthly || 'ー' }}</td>
+            <td>{{ row.careInsuranceDeduction || 'ー' }}</td>
             <td>{{ row.pension }}</td>
             <td>{{ row.pensionDeduction }}</td>
             <td>{{ row.deductionTotal }}</td>
@@ -147,6 +165,8 @@
             <td>{{ row.annualBonusTotal }}</td>
             <td>{{ row.healthInsurance }}</td>
             <td>{{ row.healthInsuranceDeduction }}</td>
+            <td>{{ row.careInsuranceMonthly || 'ー' }}</td>
+            <td>{{ row.careInsuranceDeduction || 'ー' }}</td>
             <td>{{ row.pension }}</td>
             <td>{{ row.pensionDeduction }}</td>
             <td>{{ row.deductionTotal }}</td>

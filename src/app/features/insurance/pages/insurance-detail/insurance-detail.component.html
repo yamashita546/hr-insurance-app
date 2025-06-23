@@ -71,6 +71,8 @@
         <th>介護保険料<br>適用</th>
         <th>健康保険料<br>合計</th>
         <th>健康保険料<br>個人負担</th>
+        <th>介護保険料</th>
+        <th>介護保険料控除額</th>
         <th>厚生年金保険料<br>合計</th>
         <th>厚生年金保険料<br>個人負担</th>
         <th>控除額<br>合計</th>
@@ -85,6 +87,8 @@
         <td>{{ row.careInsurance === true ? '〇' : row.careInsurance === false ? '×' : 'ー' }}</td>
         <td>{{ isNumber(row.healthInsurance) ? (row.healthInsurance | number) : 'ー' }}</td>
         <td>{{ isNumber(row.healthInsuranceDeduction) ? (row.healthInsuranceDeduction | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.careInsuranceMonthly) ? (row.careInsuranceMonthly | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.careInsuranceDeduction) ? (row.careInsuranceDeduction | number) : 'ー' }}</td>
         <td>{{ isNumber(row.pension) ? (row.pension | number) : 'ー' }}</td>
         <td>{{ isNumber(row.pensionDeduction) ? (row.pensionDeduction | number) : 'ー' }}</td>
         <td>{{ isNumber(row.deductionTotal) ? (row.deductionTotal | number) : 'ー' }}</td>
@@ -107,6 +111,8 @@
         <th>介護保険<br>適用</th>
         <th>健康保険料<br>合計</th>
         <th>健康保険料<br>個人負担</th>
+        <th>介護保険料</th>
+        <th>介護保険料控除額</th>
         <th>厚生年金保険料<br>合計</th>
         <th>厚生年金保険料<br>個人負担</th>
         <th>子ども子育て<br>拠出金</th>
@@ -120,6 +126,8 @@
         <td>{{ row.careInsurance === true ? '〇' : row.careInsurance === false ? '×' : 'ー' }}</td>
         <td>{{ isNumber(row.healthInsurance) ? (row.healthInsurance | number) : 'ー' }}</td>
         <td>{{ isNumber(row.healthInsuranceDeduction) ? (row.healthInsuranceDeduction | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.careInsuranceMonthly) ? (row.careInsuranceMonthly | number) : 'ー' }}</td>
+        <td>{{ isNumber(row.careInsuranceDeduction) ? (row.careInsuranceDeduction | number) : 'ー' }}</td>
         <td>{{ isNumber(row.pension) ? (row.pension | number) : 'ー' }}</td>
         <td>{{ isNumber(row.pensionDeduction) ? (row.pensionDeduction | number) : 'ー' }}</td>
         <td>{{ isNumber(row.childcare) ? (row.childcare | number) : 'ー' }}</td>

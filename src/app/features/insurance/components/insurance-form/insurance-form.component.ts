@@ -349,6 +349,10 @@ export class InsuranceFormComponent implements OnInit {
           let employmentApplicable = emp.employmentInsuranceStatus?.isApplicable;
           let careApplicable = emp.isCareInsuranceApplicable;
 
+          // ここで宣言
+          let careInsuranceMonthly = 0;
+          let careInsuranceDeduction = 0;
+
           // 外国人特例（国籍ごとに判定）
           const specialExemption = this.getSpecialExemptionType(emp);
           if (specialExemption === 'pension') {
@@ -382,6 +386,9 @@ export class InsuranceFormComponent implements OnInit {
           if (isMaternityExempted || isChildcareExempted) {
             healthApplicable = false;
             pensionApplicable = false;
+            // 介護保険料も必ず0にする
+            careInsuranceMonthly = 0;
+            careInsuranceDeduction = 0;
           }
 
           // 標準報酬月額の有効性チェック
@@ -413,9 +420,6 @@ export class InsuranceFormComponent implements OnInit {
           let healthCompany = 0;
           let pensionCompany = 0;
           let isCare = false;
-          let careInsuranceMonthly = 0;
-          let careInsuranceDeduction = 0;
-
 
           // 必須項目の未入力チェック
           let missingReason = '';
@@ -511,6 +515,9 @@ export class InsuranceFormComponent implements OnInit {
             companyShare = '0';
             childcare = '0';
             insuranceTotal = 0;
+            // 介護保険料も0に
+            careInsuranceMonthly = 0;
+            careInsuranceDeduction = 0;
           } else {
             deductionTotal = (healthDeduct + careInsuranceDeduction + pensionDeduct).toLocaleString();
             companyShare = this.formatDecimal(insuranceTotal - (healthDeduct + careInsuranceDeduction + pensionDeduct) + childcareVal);
@@ -531,6 +538,9 @@ export class InsuranceFormComponent implements OnInit {
             childcare = '0';
             companyShare = '0';
             appliedExemptions.push(exemptionResult.exemptionType || '');
+            // 介護保険料も0に
+            careInsuranceMonthly = 0;
+            careInsuranceDeduction = 0;
           } else if (exemptionResult.exemptionType === '同月得喪') {
             appliedExemptions.push('同月得喪');
           }

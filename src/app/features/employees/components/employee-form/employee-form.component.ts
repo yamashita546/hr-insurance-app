@@ -868,12 +868,10 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   }
 
   async confirmImport() {
-    console.log('--- confirmImport start ---');
-    console.log('importErrors:', this.importErrors);
-    console.log('duplicateEmployees:', this.duplicateEmployees);
+    
     if (this.importErrors.length > 0) {
       alert('エラーがあります。修正してください。');
-      console.log('importErrorsが残っているためreturn');
+      // console.log('importErrorsが残っているためreturn');
       return;
     }
     // 1. 事前に全オフィスを取得
@@ -931,13 +929,13 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
         toAdd.push(emp);
       }
     }
-    console.log('duplicateEmployees after check:', this.duplicateEmployees);
+    // console.log('duplicateEmployees after check:', this.duplicateEmployees);
     // 重複があればUIで上書き可否を選択させる
     if (this.duplicateEmployees.length > 0) {
-      console.log('重複従業員のoverwrite状態:', this.duplicateEmployees.map(e => e.overwrite));
+      // console.log('重複従業員のoverwrite状態:', this.duplicateEmployees.map(e => e.overwrite));
       if (this.duplicateEmployees.some(e => !e.overwrite)) {
         alert('重複している従業員があります。上書きする場合はチェックを入れてください。');
-        console.log('overwriteがfalseの従業員がいるためreturn');
+        // console.log('overwriteがfalseの従業員がいるためreturn');
         return;
       }
     }
@@ -960,12 +958,12 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
           }
         });
         const docRef = doc(this.firestore, 'employees', emp._docId);
-        console.log('updateDoc:', docRef, updateData);
+        // console.log('updateDoc:', docRef, updateData);
         await updateDoc(docRef, updateData);
       }
     }
     for (const emp of toAdd) {
-      console.log('addDoc:', emp);
+      // console.log('addDoc:', emp);
       await addDoc(collection(this.firestore, 'employees'), emp);
     }
     alert('インポートが完了しました');
@@ -973,7 +971,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     this.fileName = '';
     this.duplicateEmployees = [];
     this.importErrors = [];
-    console.log('--- confirmImport end ---');
+    // console.log('--- confirmImport end ---');
   }
 
   cancelImport() {
@@ -998,31 +996,31 @@ function fullTimeInsuranceValidator(control: AbstractControl): ValidationErrors 
   const employeeType = control.get('employeeType')?.value;
   const isFullTime = employeeType === 'regular'; // 正社員のコードを 'regular' に修正
 
-  console.log('[Validator] Running...');
-  console.log(`[Validator] employeeType: "${employeeType}", isFullTime: ${isFullTime}`);
+  // console.log('[Validator] Running...');
+  // console.log(`[Validator] employeeType: "${employeeType}", isFullTime: ${isFullTime}`);
 
   if (!isFullTime) {
-    console.log('[Validator] Exit: Not a full-time employee.');
+    // console.log('[Validator] Exit: Not a full-time employee.');
     return null;
   }
 
   // 社会保険免除特例がtrueの場合はバリデーション免除（厳密な判定に修正）
   const isForeigner = control.get('isForeignWorker')?.value === true;
   const hasExemption = control.get('foreignWorker.hasSpecialExemption')?.value === true;
-  console.log(`[Validator] isForeigner: ${isForeigner}, hasExemption: ${hasExemption}`);
+  // console.log(`[Validator] isForeigner: ${isForeigner}, hasExemption: ${hasExemption}`);
 
   if (isForeigner && hasExemption) {
-    console.log('[Validator] Exit: Foreigner with special exemption.');
+    // console.log('[Validator] Exit: Foreigner with special exemption.');
     return null;
   }
 
   const birthdayStr = control.get('birthday')?.value;
   const contractStartDateStr = control.get('contractStartDate')?.value;
-  console.log(`[Validator] birthday: "${birthdayStr}", contractStartDate: "${contractStartDateStr}"`);
+  // console.log(`[Validator] birthday: "${birthdayStr}", contractStartDate: "${contractStartDateStr}"`);
 
   // 日付が未入力の場合は年齢計算ができないため、バリデーションをスキップ
   if (!birthdayStr || !contractStartDateStr) {
-    console.log('[Validator] Exit: Date is missing.');
+    // console.log('[Validator] Exit: Date is missing.');
     return null;
   }
 
@@ -1040,7 +1038,7 @@ function fullTimeInsuranceValidator(control: AbstractControl): ValidationErrors 
   const pension = control.get('pensionStatus.isApplicable')?.value;
   const errors: any = {};
 
-  console.log(`[Validator] age: ${age}, health.isApplicable: ${health}, pension.isApplicable: ${pension}`);
+  // console.log(`[Validator] age: ${age}, health.isApplicable: ${health}, pension.isApplicable: ${pension}`);
 
   if (age < 70) {
     if (!health) {
@@ -1055,7 +1053,7 @@ function fullTimeInsuranceValidator(control: AbstractControl): ValidationErrors 
     }
   }
   
-  console.log('[Validator] Final errors:', errors);
+  // console.log('[Validator] Final errors:', errors);
 
   return Object.keys(errors).length ? errors : null;
 }

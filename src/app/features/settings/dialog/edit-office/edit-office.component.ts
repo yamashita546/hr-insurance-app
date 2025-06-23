@@ -68,16 +68,16 @@ export class EditOfficeComponent implements OnInit {
     const first = (this.office.address.postalCodeFirst || '').trim();
     const last = (this.office.address.postalCodeLast || '').trim();
 
-    console.log(`保存ボタンクリック時の値を確認: 郵便番号1「${first}」, 郵便番号2「${last}」`);
+    // console.log(`保存ボタンクリック時の値を確認: 郵便番号1「${first}」, 郵便番号2「${last}」`);
 
     this.postalCodeError = !/^\d{3}$/.test(first) || !/^\d{4}$/.test(last);
 
     if (this.postalCodeError) {
-      console.log('郵便番号バリデーションに失敗しました。');
+      // console.log('郵便番号バリデーションに失敗しました。');
       return;
     }
 
-    console.log('郵便番号バリデーションに成功しました。');
+    // console.log('郵便番号バリデーションに成功しました。');
 
     this.office.address.postalCode = `${first}-${last}`;
     // 所定労働日数・時間を明示的にセット（未入力時は空文字）

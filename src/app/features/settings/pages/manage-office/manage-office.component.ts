@@ -75,16 +75,16 @@ export class ManageOfficeComponent {
       data: { ...targetOffice, offices: this.offices }
     });
 
-    console.log('[Parent] Dialog opened. Subscribing to afterClosed...');
+    // console.log('[Parent] Dialog opened. Subscribing to afterClosed...');
 
     this.dialogRef.afterClosed().subscribe((result: Office) => {
-      console.log('[Parent] afterClosed event received.');
-      console.log('[Parent] Result from dialog:', result);
+      // console.log('[Parent] afterClosed event received.');
+      // console.log('[Parent] Result from dialog:', result);
       if (result) {
         const idx = this.offices.findIndex(o => o.id === result.id);
         if (idx !== -1) {
           this.offices[idx] = { ...result };
-          console.log('[Parent] Office list updated locally.');
+          // console.log('[Parent] Office list updated locally.');
         }
       }
       this.dialogRef = null;

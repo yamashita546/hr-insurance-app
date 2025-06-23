@@ -47,7 +47,7 @@ export class InsuranceDetailComponent implements OnInit {
         this.employees = employees;
         this.insuranceSalaryCalculations = await this.firestoreService.getInsuranceSalaryCalculationsByCompanyKey(companyKey);
         this.insuranceBonusCalculations = await this.firestoreService.getInsuranceBonusCalculationsByCompanyKey(companyKey);
-        console.log('[賞与計算結果全件]', this.insuranceBonusCalculations);
+        // console.log('[賞与計算結果全件]', this.insuranceBonusCalculations);
         // isActiveがtrueの従業員のみ初期選択
         const active = this.activeEmployees;
         if (active.length > 0) {
@@ -62,7 +62,7 @@ export class InsuranceDetailComponent implements OnInit {
 
   setEmployeeInfo() {
     this.employeeInfo = this.employees.find(e => String(e.employeeId) === String(this.selectedEmployeeId));
-    console.log('選択された従業員情報（デバッグ用）:', this.employeeInfo);
+    // console.log('選択された従業員情報（デバッグ用）:', this.employeeInfo);
   }
 
   get selectedEmployeeSalaryCalculations() {

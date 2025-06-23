@@ -332,7 +332,7 @@ export class InsuranceFormComponent implements OnInit {
     }
     targetEmployees = filteredEmployees;
 
-    console.log('filteredEmployees:', filteredEmployees.map(e => e.employeeId));
+    // console.log('filteredEmployees:', filteredEmployees.map(e => e.employeeId));
 
     if (this.selectedType === 'salary') {
       this.previewList = targetEmployees
@@ -701,7 +701,7 @@ export class InsuranceFormComponent implements OnInit {
           bonusDiff: row.bonusDiff ?? 0,
         };
         const docId = `${this.companyKey}_${row.officeId}_${row.employeeId}_${applyYearMonth}`;
-        console.log('[保存対象賞与データ]', calculation);
+        // console.log('[保存対象賞与データ]', calculation);
         try {
           if (existingIds.has(docId)) {
             await this.firestoreService.updateInsuranceBonusCalculation(calculation);

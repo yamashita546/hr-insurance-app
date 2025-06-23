@@ -96,18 +96,18 @@ export function generateBonusPreviewList({
     const careInsuranceFlag = isCareInsuranceApplicableForDisplay(
       emp, std, rate, selectedYear, selectedMonth, healthApplicable, ymStr, true
     );
-    console.log('【介護保険判定】', {
-      employeeId: emp.employeeId,
-      name: emp.lastName + emp.firstName,
-      age: getAgeAtYearMonth1st(emp.birthday, selectedYear, selectedMonth),
-      healthApplicable,
-      std,
-      rate,
-      careInsuranceApplicable: careInsuranceFlag,
-      careInsuranceRate: rate?.careInsuranceRate,
-      healthInsuranceStatus: emp.healthInsuranceStatus,
-      appliedExemptions: getAppliedExemptions(emp, selectedYear, selectedMonth)
-    });
+    // console.log('【介護保険判定】', {
+    //   employeeId: emp.employeeId,
+    //   name: emp.lastName + emp.firstName,
+    //   age: getAgeAtYearMonth1st(emp.birthday, selectedYear, selectedMonth),
+    //   healthApplicable,
+    //   std,
+    //   rate,
+    //   careInsuranceApplicable: careInsuranceFlag,
+    //   careInsuranceRate: rate?.careInsuranceRate,
+    //   healthInsuranceStatus: emp.healthInsuranceStatus,
+    //   appliedExemptions: getAppliedExemptions(emp, selectedYear, selectedMonth)
+    // });
     careInsurance = careInsuranceFlag ? '〇' : '×';
     isCare = careInsuranceFlag;
     let bonusAmount = bonus ? Number(bonus.bonus) : null;

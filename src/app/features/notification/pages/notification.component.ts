@@ -45,10 +45,10 @@ export class NotificationComponent implements OnInit, OnDestroy {
         firstValueFrom(this.firestoreService.getStandardMonthlyGrades())
       ]);
       // デバッグ用ログ出力
-      console.log('【DEBUG】取得した勤怠データ:', attendances);
-      console.log('【DEBUG】取得した従業員データ:', employees);
-      console.log('【DEBUG】取得した給与データ:', salaries);
-      console.log('【DEBUG】取得したcompanyKey:', companyKey);
+      // console.log('【DEBUG】取得した勤怠データ:', attendances);
+      // console.log('【DEBUG】取得した従業員データ:', employees);
+      // console.log('【DEBUG】取得した給与データ:', salaries);
+      // console.log('【DEBUG】取得したcompanyKey:', companyKey);
       // アラート生成
       this.alerts = await this.alertService.getSocialInsuranceRecommendationAlerts(
         attendances,
@@ -62,7 +62,7 @@ export class NotificationComponent implements OnInit, OnDestroy {
         employees, salaries, standardMonthlyDecisions, gradeMaster as (HealthInsuranceGrade | PensionInsuranceGrade)[], now.getFullYear(), now.getMonth() + 1
       );
       // アラート判定結果のデバッグ出力
-      console.log('【DEBUG】アラート判定結果:', this.alerts);
+      // console.log('【DEBUG】アラート判定結果:', this.alerts);
       this.loading = false;
     });
   }

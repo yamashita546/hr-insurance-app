@@ -130,8 +130,7 @@ export class DashboardComponent implements OnInit {
   }
 
   async updateCurrentMonthStatus() {
-    console.log('[updateCurrentMonthStatus] called');
-    console.log('  selectedOfficeId:', this.selectedOfficeId);
+   
     const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
     
 
@@ -139,7 +138,7 @@ export class DashboardComponent implements OnInit {
     this.filteredOffices = this.selectedOfficeId
       ? this.offices.filter(o => o.id === this.selectedOfficeId && o.isActive !== false)
       : this.offices.filter(o => o.isActive !== false);
-    console.log('  filteredOffices:', this.filteredOffices.map(o => ({id: o.id, name: o.name})));
+    
 
     // Firestoreから給与・賞与データ取得
     const insuranceSalaryList = (await this.firestoreService.getInsuranceSalaryCalculations()).filter((c: any) => c.companyKey === this.companyKey && c.applyYearMonth === ym);
@@ -150,10 +149,9 @@ export class DashboardComponent implements OnInit {
     if (hokkaidoOffice) {
       const hokkaidoSalary = insuranceSalaryList.filter(row => row.officeId === hokkaidoOffice.id);
       const hokkaidoBonus = insuranceBonusList.filter(row => row.officeId === hokkaidoOffice.id);
-      console.log('【北海道支社】給与データ:', hokkaidoSalary);
-      console.log('【北海道支社】賞与データ:', hokkaidoBonus);
+      
     } else {
-      console.log('北海道支社のofficeIdが見つかりません');
+     
     }
 
     // 1. 事業所ごとに給与データを集計
@@ -209,7 +207,7 @@ export class DashboardComponent implements OnInit {
         companyShareTotal
       };
     });
-    console.log('  officeInsuranceInfo:', this.officeInsuranceInfo.map(o => ({officeId: o.officeId, officeName: o.officeName})));
+    // console.log('  officeInsuranceInfo:', this.officeInsuranceInfo.map(o => ({officeId: o.officeId, officeName: o.officeName})));
     // 会社負担額合計（子ども子育て拠出金含む）
     this.officeCompanyShareTotal = Math.floor(this.officeInsuranceInfo.reduce((sum, o) => sum + o.companyShareTotal, 0));
 
@@ -321,7 +319,7 @@ export class DashboardComponent implements OnInit {
   }
 
   async ngOnInit() {
-    console.log('[ngOnInit] called');
+    // console.log('[ngOnInit] called');
     this.userCompanyService.company$.subscribe(company => {
       if (company) {
         this.companyId = company.companyId || '';
@@ -331,7 +329,7 @@ export class DashboardComponent implements OnInit {
     this.userCompanyService.company$
       .pipe(filter(company => !!company && !!company.companyKey), take(1))
       .subscribe(async company => {
-        console.log('[ngOnInit] company$ loaded, companyKey:', company!.companyKey);
+        // console.log('[ngOnInit] company$ loaded, companyKey:', company!.companyKey);
         this.companyKey = company!.companyKey;
         // 支社・従業員数取得
         const [offices, employees] = await Promise.all([
@@ -340,7 +338,7 @@ export class DashboardComponent implements OnInit {
         ]);
         this.offices = offices;
         this.officeCount = offices.length;
-        console.log('[ngOnInit] offices loaded:', offices.map(o => ({id: o.id, name: o.name, isActive: o.isActive})));
+        // console.log('[ngOnInit] offices loaded:', offices.map(o => ({id: o.id, name: o.name, isActive: o.isActive})));
 
         // === 集計処理 ===
         const now = new Date();
@@ -392,11 +390,11 @@ export class DashboardComponent implements OnInit {
   }
 
   async onOfficeChange() {
-    console.log('[onOfficeChange] called, selectedOfficeId:', this.selectedOfficeId);
+    // console.log('[onOfficeChange] called, selectedOfficeId:', this.selectedOfficeId);
     // 追加: 選択直後の状態を出力
-    console.log('  selectedOfficeName:', this.selectedOfficeName);
-    console.log('  filteredOffices:', this.filteredOffices.map(o => ({id: o.id, name: o.name})));
-    console.log('  displayedOfficeInsuranceInfo:', this.displayedOfficeInsuranceInfo.map(i => ({officeId: i.officeId, officeName: i.officeName})));
+    // console.log('  selectedOfficeName:', this.selectedOfficeName);
+    // console.log('  filteredOffices:', this.filteredOffices.map(o => ({id: o.id, name: o.name})));
+    // console.log('  displayedOfficeInsuranceInfo:', this.displayedOfficeInsuranceInfo.map(i => ({officeId: i.officeId, officeName: i.officeName})));
     await this.updateCurrentMonthStatus();
   }
 
@@ -433,10 +431,7 @@ export class DashboardComponent implements OnInit {
       .filter((c: any) => c.companyKey === this.companyKey && c.applyYearMonth === ym && targetOffices.some(o => o.id === c.officeId));
 
     // デバッグ用ログ
-    console.log('[openInsuranceDetailModal] officeId:', officeId);
-    console.log('  targetOffices:', targetOffices);
-    console.log('  salaryList:', insuranceSalaryList);
-    console.log('  bonusList:', insuranceBonusList);
+  
 
     // 給与集計
     const salaryDetail = {
@@ -451,7 +446,7 @@ export class DashboardComponent implements OnInit {
     };
     salaryDetail.companyShare = salaryDetail.insuranceTotal - salaryDetail.employeeDeduction;
     salaryDetail.companyShareTotal = salaryDetail.companyShare + salaryDetail.childcare;
-    console.log('  salaryDetail:', salaryDetail);
+    
 
     // 賞与集計
     const bonusDetail = {
@@ -466,7 +461,7 @@ export class DashboardComponent implements OnInit {
     };
     bonusDetail.companyShare = bonusDetail.insuranceTotal - bonusDetail.employeeDeduction;
     bonusDetail.companyShareTotal = bonusDetail.companyShare + bonusDetail.childcare;
-    console.log('  bonusDetail:', bonusDetail);
+    
 
     this.detailModalData = { salaryDetail, bonusDetail };
     this.detailModalVisible = true;

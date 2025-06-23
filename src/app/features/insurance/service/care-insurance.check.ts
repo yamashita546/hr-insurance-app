@@ -42,18 +42,18 @@ export function isCareInsuranceApplicableForDisplay(
     isBonus: boolean = false
   ): boolean {
     if (!healthApplicable) {
-      console.log(`[careInsurance] ×: healthApplicable=false`, emp, std, rate, year, month);
-      console.log('[careInsurance判定結果]', false);
+      // console.log(`[careInsurance] ×: healthApplicable=false`, emp, std, rate, year, month);
+      // console.log('[careInsurance判定結果]', false);
       return false;
     }
     if (!rate || !rate.careInsuranceRate || rate.careInsuranceRate <= 0) {
-      console.log(`[careInsurance] ×: careInsuranceRate missing or 0`, emp, std, rate, year, month);
-      console.log('[careInsurance判定結果]', false);
+      // console.log(`[careInsurance] ×: careInsuranceRate missing or 0`, emp, std, rate, year, month);
+      // console.log('[careInsurance判定結果]', false);
       return false;
     }
     if (!isBonus && !std) {
-      console.log(`[careInsurance] ×: std missing`, emp, std, rate, year, month);
-      console.log('[careInsurance判定結果]', false);
+      // console.log(`[careInsurance] ×: std missing`, emp, std, rate, year, month);
+      // console.log('[careInsurance判定結果]', false);
       return false;
     }
 
@@ -69,23 +69,23 @@ export function isCareInsuranceApplicableForDisplay(
     const care65thPrevDayMonthStart = new Date(care65thPrevDay.getFullYear(), care65thPrevDay.getMonth(), 1);
     const care65thPrevDayMonthEnd = new Date(care65thPrevDay.getFullYear(), care65thPrevDay.getMonth() + 1, 0);
     if (care40thPrevDay > monthEnd || care65thPrevDay < monthStart || (monthStart <= care65thPrevDay && care65thPrevDay <= monthEnd)) {
-      console.log('[careInsurance] ×: 40歳前日/65歳前日が月範囲外または65歳前日月', emp, std, rate, year, month, care40thPrevDay, care65thPrevDay, monthStart, monthEnd);
-      console.log('[careInsurance判定結果]', false);
+      // console.log('[careInsurance] ×: 40歳前日/65歳前日が月範囲外または65歳前日月', emp, std, rate, year, month, care40thPrevDay, care65thPrevDay, monthStart, monthEnd);
+      // console.log('[careInsurance判定結果]', false);
       return false;
     }
 
     if (isMaternityLeaveExempted(emp, ymStr) || isChildcareLeaveExempted(emp, ymStr)) {
-      console.log(`[careInsurance] ×: maternity/childcare exemption`, emp, std, rate, year, month);
-      console.log('[careInsurance判定結果]', false);
+      // console.log(`[careInsurance] ×: maternity/childcare exemption`, emp, std, rate, year, month);
+      // console.log('[careInsurance判定結果]', false);
       return false;
     }
     if (emp.foreignWorker?.hasSpecialExemption) {
-      console.log(`[careInsurance] ×: foreign worker special exemption`, emp, std, rate, year, month);
-      console.log('[careInsurance判定結果]', false);
+      // console.log(`[careInsurance] ×: foreign worker special exemption`, emp, std, rate, year, month);
+      // console.log('[careInsurance判定結果]', false);
       return false;
     }
-    console.log(`[careInsurance] 〇: all conditions met`, emp, std, rate, year, month);
-    console.log('[careInsurance判定結果]', true);
+    //  console.log(`[careInsurance] 〇: all conditions met`, emp, std, rate, year, month);
+    // console.log('[careInsurance判定結果]', true);
     return true;
   }
   

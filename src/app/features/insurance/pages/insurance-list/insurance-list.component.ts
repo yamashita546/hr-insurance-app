@@ -50,7 +50,7 @@ export class InsuranceListComponent implements OnInit {
   get summary() {
     if (!this.resultList || this.resultList.length === 0) return {};
     // デバッグ用: resultListの中身を出力
-    console.log('【DEBUG】resultList:', this.resultList);
+    // console.log('【DEBUG】resultList:', this.resultList);
     // 給与・賞与で合計するフィールドを分ける
     const salaryFields = [
       'salaryTotal', 'healthInsurance', 'healthInsuranceDeduction', 'pension',
@@ -66,7 +66,7 @@ export class InsuranceListComponent implements OnInit {
     for (const field of fields) {
       // デバッグ用: 各フィールドの値を出力
       const values = this.resultList.map(row => row[field]);
-      console.log(`【DEBUG】field: ${field}, values:`, values);
+      // console.log(`【DEBUG】field: ${field}, values:`, values);
       sum[field] = values
         .map(val => typeof val === 'string' ? Number(val.toString().replace(/,/g, '')) : Number(val) || 0)
         .reduce((a, b) => a + b, 0);
@@ -93,10 +93,10 @@ export class InsuranceListComponent implements OnInit {
         ]);
         this.salaryList = salarySnap;
         this.bonusList = bonusSnap;
-        console.log('salaryList:', this.salaryList);
-        console.log('bonusList:', this.bonusList);
+        // console.log('salaryList:', this.salaryList);
+        // console.log('bonusList:', this.bonusList);
         this.updateResultList();
-        console.log('resultList:', this.resultList);
+        // console.log('resultList:', this.resultList);
       });
   }
 
@@ -187,7 +187,7 @@ export class InsuranceListComponent implements OnInit {
         const bonusTotal = (row as any).bonusTotal;
         const standardBonus = (row as any).standardBonus;
         const annualBonusTotal = (row as any).annualBonusTotal;
-        console.log('bonus row:', { employeeName, bonusTotal, standardBonus, annualBonusTotal, row });
+        // console.log('bonus row:', { employeeName, bonusTotal, standardBonus, annualBonusTotal, row });
         return {
           officeName,
           employeeId: row.employeeId,
